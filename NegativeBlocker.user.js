@@ -4,7 +4,7 @@
 // @version        0.1.0
 // @description    Use the configured negative word or url to replace the sentence or block the element.
 // @description:ja 設定した ネガティブワード または URL を使用して、文章を置換えたり、要素をブロックします。
-// @author         Yoko
+// @author         mx5vrota63
 // @match          *://*/*
 // @run-at         document-start
 // @grant          GM.getValue
@@ -23,9 +23,9 @@
 (async () => {
     'use strict';
 
-    let ElementRootShadow;
+    let divElement_RootShadow;
     let settingsbox_Element;
-    let settingsboxMain_divElement;
+    let DashboardMain_div;
     let settingsbox_2_ele_stack = new Array();
     let settingbuttonEle;
     let BlockCounter = 0;
@@ -333,6 +333,7 @@
                 if (keyNgname !== "") {
                     const NGListTextKey = "NGList_" + keyNgname;
                     let NGListTextObj = await StorageApiRead(NGListTextKey);
+                    NGListTextObj = JSON.parse(NGListTextObj);
                     if (NGListTextObj) {
                         const ngarr = NGListTextObj.text.split("\n");
                         if (SetObj.nglist_urlMethod_enable === true) return ngarr;
@@ -701,13 +702,13 @@
     }
 
     async function initInsertElement() {
-        if (!ElementRootShadow) {
+        if (!divElement_RootShadow) {
             await BG_WebAbron_Obj.initReadyElement();
 
-            ElementRootShadow = document.createElement("div");
-            ElementRootShadow.style.all = "initial";
-            ElementRootShadow.attachShadow({ mode: "open" });
-            document.body.append(ElementRootShadow);
+            divElement_RootShadow = document.createElement("div");
+            divElement_RootShadow.style.all = "initial";
+            divElement_RootShadow.attachShadow({ mode: "open" });
+            document.body.append(divElement_RootShadow);
 
             if (!PreferenceSetting["hideButton"] || PreferenceSetting["hideButton"] === false) {
                 if (!inIframeDetect()) {
@@ -720,7 +721,7 @@
                     settingbuttonEle.style.height = "40px";
                     settingbuttonEle.style.backgroundColor = "#AFFFAF";
                     settingbuttonEle.addEventListener("click", SettingWindow, false);
-                    ElementRootShadow.shadowRoot.append(settingbuttonEle);
+                    divElement_RootShadow.shadowRoot.append(settingbuttonEle);
                     BlockCounterUpdate();
                 }
             }
@@ -759,223 +760,219 @@
 
     async function SettingWindow() {
         settingsbox_Element = document.createElement("div");
-        settingsbox_Element.style.all = "initial";
-        settingsbox_Element.style.position = "fixed";
-        settingsbox_Element.style.top = 0;
-        settingsbox_Element.style.right = "1px";
-        settingsbox_Element.style.zIndex = 9999;
-        settingsbox_Element.style.padding = "1px 2px";
-        settingsbox_Element.style.backgroundColor = "#ffffff";
-        settingsbox_Element.style.border = "solid 1px #888888";
-        settingsbox_Element.style.borderRadius = "10px";
-        settingsbox_Element.style.textAlign = "center";
-        settingsbox_Element.style.margin = "0em auto";
-        settingsbox_Element.style.height = "calc(100vh - 150px)";
-        settingsbox_Element.style.fontSize = 0;
-        settingsbox_Element.style.fontFamily = "Roboto,HelveticaNeue,Arial,sans-serif";
-        function settingsboxWidthLimit() {
-            if (window.innerWidth <= 400) {
-                settingsbox_Element.style.width = "calc(100vw - 7px)";
-            } else {
-                settingsbox_Element.style.width = "400px";
+        settingsbox_Element.innerHTML = `
+<style type="text/css">
+  div#frameBack {
+    all: initial;
+    position: fixed;
+    top: 0;
+    right: 1px;
+    z-index: 2147483647;
+    padding: 1px 2px;
+    background-color: #ffffff;
+    border: solid 1px #888888;
+    border-radius: 10px;
+    text-align: center;
+    margin: 0em auto;
+    height: calc(100vh - 150px);
+    font-size: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  }
+  div#frameBackHeader {
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  p#frameBackHeaderTitle {
+    margin: 0px;
+    font-size: medium;
+  }
+  button.frameBackHeaderButton {
+    display: block;
+    margin: 0 0 0 auto;
+    width: 60px;
+    height: inherit;
+  }
+  div#DashboadMain {
+    overflow: auto;
+    width: 97%;
+    height: calc(100% - 60px);
+    margin: 0em auto;
+    margin-top: 2px;
+    margin-bottom: 0px;
+    word-wrap: break-word;
+    padding: 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    text-align: left;
+    font-size: medium;
+    background-color: #ffffb2;
+  }
+</style>
+
+<div id="frameBack">
+  <div id="frameBackHeader">
+    <p id="frameBackHeaderTitle"><b>NegativeBlocker Dashboard</b></p>
+    <button id="frameBackHeaderButton1" class="frameBackHeaderButton">✖</button>
+    <button id="frameBackHeaderButton2" class="frameBackHeaderButton">
+      ✖✖✖
+    </button>
+  </div>
+  <div id="DashboardMain"></div>
+</div>
+
+`
+        divElement_RootShadow.shadowRoot.append(settingsbox_Element);
+        const RootShadow = divElement_RootShadow.shadowRoot;
+        DashboardMain_div = RootShadow.getElementById("DashboardMain");
+
+        const settingsbox_1_div = document.createElement("div");
+        settingsbox_1_div.innerHTML = `
+<style type="text/css">
+  div.ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+  }
+  div.ItemFrame_ElementBlock_ItemListFrame {
+    border: 1px solid black;
+  }
+</style>
+
+<div id="ItemFrame_SentenceBlock" class="ItemFrame_Border">
+  <h1 id="Text-ResultSentenceBlockTitle" class="ItemFrame_Title"></h1>
+  <div id="ItemFrame_SentenceBlock_Result">
+    <button id="ItemFrame_SentenceBlock_Result_TempDisableButton"></button>
+  </div>
+</div>
+<div id="ItemFrame_ElementBlock" class="ItemFrame_Border">
+  <h1 id="Text-ResultElementBlockTitle" class="ItemFrame_Title"></h1>
+</div>
+<div>
+  <button id="ItemFrame-SettingPageButton"></button>
+</div>
+`
+        settingsbox_2_ele_stack.push(settingsbox_1_div);
+
+        RootShadow.getElementById("ResultSentenceBlockTitle").textContent = "Webあぼーん 適用リスト";
+        RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = "要素ブロック 適用リスト";
+        RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = "設定画面";
+
+        {
+            const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
+            for (let i = 0; i < WebAbronExecuteResult.length; i++) {
+                const settingsbox_1_1_1_p = document.createElement("span");
+                settingsbox_1_1_1_p.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
+                SentenceBlock_div.append(settingsbox_1_1_1_p);
+
+                const settingsbox_1_1_1_input = document.createElement("input");
+                settingsbox_1_1_1_input.setAttribute("type", "checkbox");
+                settingsbox_1_1_1_input.setAttribute("name", WebAbronExecuteResult[i].name);
+                WebAbronTempDisableArrayElement.push(settingsbox_1_1_1_input);
+                SentenceBlock_div.append(settingsbox_1_1_1_p);
+
+                SentenceBlock_div.append(document.createElement("br"));
             }
-        }
-        settingsboxWidthLimit();
-        window.addEventListener("resize", settingsboxWidthLimit);
 
-
-        {
-            const settingsbox_0_div = document.createElement("div");
-            settingsbox_0_div.style.height = "40px";
-            settingsbox_0_div.style.display = "flex";
-            settingsbox_0_div.style.justifyContent = "center";
-            settingsbox_0_div.style.alignItems = "center";
-            {
-                const settingsbox_0_1_p = document.createElement("p")
-                settingsbox_0_1_p.style.margin = "0px";
-                settingsbox_0_1_p.style.fontSize = "medium";
-                settingsbox_0_1_p.innerHTML = "<b>All in One Blocker Setting</b>";
-                settingsbox_0_div.append(settingsbox_0_1_p);
-
-                const settingsbox_0_2_button = document.createElement("button");
-                settingsbox_0_2_button.textContent = "✖";
-                settingsbox_0_2_button.style.display = "block";
-                settingsbox_0_2_button.style.margin = "0 0 0 auto";
-                settingsbox_0_2_button.style.width = "60px";
-                settingsbox_0_2_button.style.height = "inherit";
-                settingsbox_0_2_button.addEventListener("click", () => {
-                    settingsbox_Element.remove();
-                    window.removeEventListener("resize", settingsboxWidthLimit);
-                })
-                settingsbox_0_div.append(settingsbox_0_2_button);
-
-                const settingsbox_0_3_button = document.createElement("button");
-                settingsbox_0_3_button.textContent = "✖✖✖"
-                settingsbox_0_3_button.style.display = "block";
-                settingsbox_0_3_button.style.margin = "0 0 0 auto";
-                settingsbox_0_3_button.style.width = "60px";
-                settingsbox_0_3_button.style.height = "inherit";
-                settingsbox_0_3_button.addEventListener("click", () => {
-                    settingsbox_Element.remove();
-                    settingbuttonEle.remove();
-                    window.removeEventListener("resize", settingsboxWidthLimit);
-                }, false)
-                settingsbox_0_div.append(settingsbox_0_3_button);
-            }
-            settingsbox_Element.append(settingsbox_0_div);
-        }
-
-        {
-            const settingsboxMain_div = document.createElement("div");
-            settingsboxMain_divElement = settingsboxMain_div;
-            settingsboxMain_div.style.overflow = "auto";
-            settingsboxMain_div.style.width = "97%";
-            settingsboxMain_div.style.height = "calc(100% - 60px)";
-            settingsboxMain_div.style.margin = "0em auto";
-            settingsboxMain_div.style.marginTop = "2px";
-            settingsboxMain_div.style.marginBottom = "0px";
-            settingsboxMain_div.style.wordWrap = "break-word";
-            settingsboxMain_div.style.padding = "5px";
-            settingsboxMain_div.style.borderWidth = "1px";
-            settingsboxMain_div.style.borderStyle = "solid";
-            settingsboxMain_div.style.borderColor = "black";
-            settingsboxMain_div.style.textAlign = "left";
-            settingsboxMain_div.style.fontSize = "medium";
-            settingsboxMain_div.style.backgroundColor = "#FFFFB2";
-            settingsbox_Element.append(settingsboxMain_div);
-        }
-
-
-
-        {
-            const settingsbox_1_div = document.createElement("div");
-            settingsbox_2_ele_stack.push(settingsbox_1_div);
-
-            const settingsbox_1_1_div = document.createElement("div");
-            settingsbox_1_1_div.style.position = "relative";
-            settingsbox_1_1_div.style.marginTop = "1em";
-            settingsbox_1_1_div.style.padding = "12px";
-            settingsbox_1_1_div.style.border = "1px solid black";
-            {
-                const settingsbox_1_1_h1 = document.createElement("h1");
-                settingsbox_1_1_h1.style.position = "absolute";
-                settingsbox_1_1_h1.style.top = 0;
-                settingsbox_1_1_h1.style.left = 0;
-                settingsbox_1_1_h1.style.fontSize = "1em";
-                settingsbox_1_1_h1.style.padding = "0 4px";
-                settingsbox_1_1_h1.style.margin = 0;
-                settingsbox_1_1_h1.style.transform = "translateY(-50%) translateX(6px)";
-                settingsbox_1_1_h1.style.backgroundColor = "#FFFFB2";
-                settingsbox_1_1_h1.textContent = "Webあぼーん 適用リスト";
-                settingsbox_1_1_div.append(settingsbox_1_1_h1);
-
-                const settingsbox_1_1_1_div = document.createElement("div");
-                {
-                    for (let i = 0; i < WebAbronExecuteResult.length; i++) {
-                        const settingsbox_1_1_1_p = document.createElement("span");
-                        settingsbox_1_1_1_p.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
-                        settingsbox_1_1_1_div.append(settingsbox_1_1_1_p);
-
-                        const settingsbox_1_1_1_input = document.createElement("input");
-                        settingsbox_1_1_1_input.setAttribute("type", "checkbox");
-                        settingsbox_1_1_1_input.setAttribute("name", WebAbronExecuteResult[i].name);
-                        WebAbronTempDisableArrayElement.push(settingsbox_1_1_1_input);
-                        settingsbox_1_1_1_div.append(settingsbox_1_1_1_input);
-
-                        settingsbox_1_1_1_div.append(document.createElement("br"));
+            const settingsbox_1_1_1_button = document.createElement("button");
+            settingsbox_1_1_1_button.textContent = "一時無効を適用してリロード";
+            settingsbox_1_1_1_button.addEventListener("click", async () => {
+                const tempdis = new Array();
+                WebAbronTempDisableArrayElement.forEach((ele) => {
+                    if (ele.checked) {
+                        tempdis.push(ele.name);
                     }
-
-                    const settingsbox_1_1_1_button = document.createElement("button");
-                    settingsbox_1_1_1_button.textContent = "一時無効を適用してリロード";
-                    settingsbox_1_1_1_button.addEventListener("click", async () => {
-                        const tempdis = new Array();
-                        WebAbronTempDisableArrayElement.forEach((ele) => {
-                            if (ele.checked) {
-                                tempdis.push(ele.name);
-                            }
-                        })
-                        await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempdis));
-                        location.reload();
-                    }, false)
-                    settingsbox_1_1_1_div.append(settingsbox_1_1_1_button);
-
-                }
-                settingsbox_1_1_div.append(settingsbox_1_1_1_div);
-            }
-            settingsbox_1_div.append(settingsbox_1_1_div);
-
-
-            const settingsbox_1_2_div = document.createElement("div");
-            settingsbox_1_2_div.style.position = "relative";
-            settingsbox_1_2_div.style.marginTop = "1em";
-            settingsbox_1_2_div.style.padding = "12px";
-            settingsbox_1_2_div.style.border = "1px solid black";
-            {
-                const settingsbox_1_2_h1 = document.createElement("h1");
-                settingsbox_1_2_h1.style.position = "absolute";
-                settingsbox_1_2_h1.style.top = 0;
-                settingsbox_1_2_h1.style.left = 0;
-                settingsbox_1_2_h1.style.fontSize = "1em";
-                settingsbox_1_2_h1.style.padding = "0 4px";
-                settingsbox_1_2_h1.style.margin = 0;
-                settingsbox_1_2_h1.style.transform = "translateY(-50%) translateX(6px)";
-                settingsbox_1_2_h1.style.backgroundColor = "#FFFFB2";
-                settingsbox_1_2_h1.textContent = "要素ブロック 適用リスト";
-                settingsbox_1_2_div.append(settingsbox_1_2_h1);
-
-
-
-
-                for (let keyname in ElementBlockerExecuteResult) {
-                    const settingsbox_1_2_1_p = document.createElement("span");
-                    settingsbox_1_2_1_p.textContent = keyname
-                    settingsbox_1_2_div.append(settingsbox_1_2_1_p);
-
-                    const settingsbox_1_2_1_1_div = document.createElement("div");
-                    settingsbox_1_2_1_1_div.style.border = "1px solid black"
-                    ElementBlockerExecuteResult[keyname].forEach((arr) => {
-                        if (arr.settingobj.elementSearch_property === "href") {
-                            const settingsbox_1_2_1_1_p = document.createElement("p")
-                            settingsbox_1_2_1_1_p.textContent = arr.searchProperty;
-                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_p);
-
-                            const settingsbox_1_2_1_1_button1 = document.createElement("button");
-                            settingsbox_1_2_1_1_button1.textContent = "再表示する"
-                            settingsbox_1_2_1_1_button1.addEventListener("click", () => {
-                                arr.element.style.display = "";
-                            })
-                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button1);
-
-                            const settingsbox_1_2_1_1_button2 = document.createElement("button");
-                            settingsbox_1_2_1_1_button2.textContent = "URLをコピー"
-                            settingsbox_1_2_1_1_button2.addEventListener("click", () => {
-                                copyTextToClipboard(arr.searchProperty);
-                            })
-                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button2);
-                        }
-                    })
-                    settingsbox_1_2_div.append(settingsbox_1_2_1_1_div);
-                }
-
-
-            }
-            settingsbox_1_div.append(settingsbox_1_2_div);
-
-
-
-            const settingsbox_1_3_div = document.createElement("div");
-            {
-                const settingsbox_1_3_button = document.createElement("button");
-                settingsbox_1_3_button.innerText = "設定画面";
-                settingsbox_1_3_button.addEventListener("click", settingsbox_2_1_PreferenceTop, false);
-                settingsbox_1_3_div.append(settingsbox_1_3_button);
-            }
-            settingsbox_1_div.append(settingsbox_1_3_div);
-
-
-
-            settingsboxMain_divElement.append(settingsbox_1_div);
+                })
+                await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempdis));
+                location.reload();
+            }, false)
+            SentenceBlock_div.append(settingsbox_1_1_1_button);
         }
+
+        const settingsbox_1_2_div = document.createElement("div");
+        settingsbox_1_2_div.style.position = "relative";
+        settingsbox_1_2_div.style.marginTop = "1em";
+        settingsbox_1_2_div.style.padding = "12px";
+        settingsbox_1_2_div.style.border = "1px solid black";
+        {
+            const settingsbox_1_2_h1 = document.createElement("h1");
+            settingsbox_1_2_h1.style.position = "absolute";
+            settingsbox_1_2_h1.style.top = 0;
+            settingsbox_1_2_h1.style.left = 0;
+            settingsbox_1_2_h1.style.fontSize = "1em";
+            settingsbox_1_2_h1.style.padding = "0 4px";
+            settingsbox_1_2_h1.style.margin = 0;
+            settingsbox_1_2_h1.style.transform = "translateY(-50%) translateX(6px)";
+            settingsbox_1_2_h1.style.backgroundColor = "#FFFFB2";
+            settingsbox_1_2_h1.textContent = "要素ブロック 適用リスト";
+            settingsbox_1_2_div.append(settingsbox_1_2_h1);
+
+
+
+
+            for (let keyname in ElementBlockerExecuteResult) {
+                const settingsbox_1_2_1_p = document.createElement("span");
+                settingsbox_1_2_1_p.textContent = keyname
+                settingsbox_1_2_div.append(settingsbox_1_2_1_p);
+
+                const settingsbox_1_2_1_1_div = document.createElement("div");
+                settingsbox_1_2_1_1_div.style.border = "1px solid black"
+                ElementBlockerExecuteResult[keyname].forEach((arr) => {
+                    if (arr.settingobj.elementSearch_property === "href") {
+                        const settingsbox_1_2_1_1_p = document.createElement("p")
+                        settingsbox_1_2_1_1_p.textContent = arr.searchProperty;
+                        settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_p);
+
+                        const settingsbox_1_2_1_1_button1 = document.createElement("button");
+                        settingsbox_1_2_1_1_button1.textContent = "再表示する"
+                        settingsbox_1_2_1_1_button1.addEventListener("click", () => {
+                            arr.element.style.display = "";
+                        })
+                        settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button1);
+
+                        const settingsbox_1_2_1_1_button2 = document.createElement("button");
+                        settingsbox_1_2_1_1_button2.textContent = "URLをコピー"
+                        settingsbox_1_2_1_1_button2.addEventListener("click", () => {
+                            copyTextToClipboard(arr.searchProperty);
+                        })
+                        settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button2);
+                    }
+                })
+                settingsbox_1_2_div.append(settingsbox_1_2_1_1_div);
+            }
+
+
+        }
+        settingsbox_1_div.append(settingsbox_1_2_div);
+
+
+
+        const settingsbox_1_3_div = document.createElement("div");
+        {
+            const settingsbox_1_3_button = document.createElement("button");
+            settingsbox_1_3_button.innerText = "設定画面";
+            settingsbox_1_3_button.addEventListener("click", settingsbox_2_1_PreferenceTop, false);
+            settingsbox_1_3_div.append(settingsbox_1_3_button);
+        }
+        settingsbox_1_div.append(settingsbox_1_3_div);
+
+
+
+        DashboardMain_div.append(settingsbox_1_div);
 
         async function settingsbox_2_1_PreferenceTop() {
             ArrayLast(settingsbox_2_ele_stack).style.display = "none";
@@ -1063,7 +1060,7 @@
                 }
                 settingsbox_2_1_div.append(settingsbox_2_1_4_div);
             }
-            settingsboxMain_divElement.append(settingsbox_2_1_div);
+            DashboardMain_div.append(settingsbox_2_1_div);
         }
 
 
@@ -1366,7 +1363,7 @@
                     }
                     settingsbox_2_2_div.append(settingsbox_2_2_3_div);
                 }
-                settingsboxMain_divElement.append(settingsbox_2_2_div);
+                DashboardMain_div.append(settingsbox_2_2_div);
 
             }
         }
@@ -1487,7 +1484,7 @@
                 }
                 settingsbox_2_2_4_div.append(settingsbox_2_2_4_3_div);
             }
-            settingsboxMain_divElement.append(settingsbox_2_2_4_div);
+            DashboardMain_div.append(settingsbox_2_2_4_div);
         }
 
         async function settingsbox_2_3_WebAbronSet() {
@@ -1821,7 +1818,7 @@
                 }
                 settingsbox_2_3_4_div.append(settingsbox_2_3_4_2_div);
             }
-            settingsboxMain_divElement.append(settingsbox_2_3_4_div);
+            DashboardMain_div.append(settingsbox_2_3_4_div);
 
         }
 
@@ -2367,13 +2364,13 @@
                 }
                 settingsbox_2_4_4_div.append(settingsbox_2_4_4_2_div);
             }
-            settingsboxMain_divElement.append(settingsbox_2_4_4_div);
+            DashboardMain_div.append(settingsbox_2_4_4_div);
         }
 
         async function settingsbox_2_5_PreferenceSet() {
             ArrayLast(settingsbox_2_ele_stack).style.display = "none";
             const settingsbox_2_5_div = document.createElement("div");
-            settingsboxMain_divElement.append(settingsbox_2_5_div);
+            DashboardMain_div.append(settingsbox_2_5_div);
             settingsbox_2_ele_stack.push(settingsbox_2_5_div);
             {
                 const settingsbox_2_5_2_div = document.createElement("div");
@@ -2496,7 +2493,7 @@
 
                 ArrayLast(settingsbox_2_ele_stack).style.display = "none";
                 const settingsbox_2_5_2_div = document.createElement("div");
-                settingsboxMain_divElement.append(settingsbox_2_5_2_div);
+                DashboardMain_div.append(settingsbox_2_5_2_div);
                 settingsbox_2_ele_stack.push(settingsbox_2_5_2_div);
 
 
@@ -2700,7 +2697,7 @@
 
         }
 
-        ElementRootShadow.shadowRoot.append(settingsbox_Element);
+
     }
 
 })();
