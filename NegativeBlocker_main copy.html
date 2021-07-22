@@ -1,41 +1,29 @@
 <style type="text/css">
-  div.SettingsObjectListPage {
+  div#EditConfigObjectPage {
+    height: 83%;
+  }
+  div#BlockListText_div {
     height: 100%;
   }
-  div.ObjectLists_Frame {
-    width: auto;
-    height: calc(100% - 130px);
-    overflow: auto;
-    border: 2px solid black;
+  textarea#BlockListText_textarea {
+    resize: none;
+    width: 98.5%;
+    height: 98.5%;
   }
-  ol.ObjectLists_ol {
-    background-color: #eee;
-    list-style-position: inside;
-    margin: 0 0 0 0;
-    padding: 0 0 0 0;
+  div#BlockListText_ReadFile {
+    border: 1px solid black;
   }
 </style>
 
-<div id="SettingsObjectListPage">
-  <div id="ObjectLists_Frame">
-    <ol id="ObjectLists_ol"></ol>
+<div id="EditConfigObjectPage">
+  <div id="BlockListText_div">
+    <textarea id="BlockListText_textarea" spellcheck="false"></textarea>
   </div>
-  <div id="SettingsObject_ConfigItems" style="display: none">
-    <div>
-      <span id="SettingsObject_ConfigItems_Name_Span"></span>
-      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
-    </div>
-    <div>
-      <span id="SettingsObject_ConfigItems_Sort_Span"></span>
-      <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
-    </div>
-    <div>
-      <span id="SettingsObject_ConfigItems_Enable_Span"></span>
-      <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
-    </div>
-    <div>
-      <span id="SettingsObject_ConfigItems_Name_Span"></span>
-      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
-    </div>
+  <div id="BlockListText_ReadFile">
+    <span id="BlockListText_ReadFile_Title"></span><br />
+    <input id="BlockListText_ReadFile_Input" type="file" />
+  </div>
+  <div>
+    <button id="EditConfigObjectPage_BackButton"></button>
   </div>
 </div>

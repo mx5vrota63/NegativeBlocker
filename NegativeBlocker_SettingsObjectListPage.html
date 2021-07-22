@@ -1,0 +1,47 @@
+<style type="text/css">
+  div#SettingsObjectListPage {
+    height: 100%;
+  }
+  div#ObjectLists_Frame {
+    width: auto;
+    height: calc(100% - 130px);
+    overflow: auto;
+    border: 2px solid black;
+  }
+  ol#ObjectLists_ol {
+    background-color: #eee;
+    list-style-position: inside;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+  }
+</style>
+
+<div id="SettingsObjectListPage">
+  <div id="ObjectLists_Frame">
+    <ol id="ObjectLists_ol"></ol>
+  </div>
+  <div id="SettingsObject_ConfigItems" style="display: none">
+    <div id="SettingsObject_ConfigItems_Name">
+      <span id="SettingsObject_ConfigItems_Name_Span"></span>
+      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
+    </div>
+    <div id="SettingsObject_ConfigItems_Sort">
+      <span id="SettingsObject_ConfigItems_Sort_Span"></span>
+      <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
+    </div>
+    <div id="SettingsObject_ConfigItems_Enable">
+      <span id="SettingsObject_ConfigItems_Enable_Span"></span>
+      <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
+    </div>
+    <div id="SettingsObject_ConfigItems_EditConfig">
+      <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
+      <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
+    </div>
+  </div>
+  <div id="SettingsObject_ActionButton">
+    <button id="SettingsObject_ActionButton_Back"></button>
+    <button id="SettingsObject_ActionButton_NewObject"></button>
+    <button id="SettingsObject_ActionButton_DeleteObject"></button>
+    <button id="SettingsObject_ActionButton_SaveObject"></button>
+  </div>
+</div>

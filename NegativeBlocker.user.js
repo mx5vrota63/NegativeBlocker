@@ -1053,6 +1053,15 @@
                 this.currentName = null;
                 this.currentIndex = null;
                 this.Editflag = false;
+
+                this.SaveButtonFunc = new Function();
+                this.DelButtonFunc = new Function();
+                this.NewObjectButtonFunc = new Function();
+
+                this.SettingsObjectListPage_Ele = null;
+                this.EditConfigObjectPage_Ele = null
+
+                this.ListEdit_HTML();
             }
 
             async ListStoSave(StoKey, StoObj) {
@@ -1076,7 +1085,8 @@
                     this.ListStorage.splice(fiindex, 1);
                 }
                 this.ListStorage.splice(this.index_Ele.value, 0, StoObj);
-                await StorageApiWrite(StoKey, JSON.stringify(this.ListStorage));
+                // eslint-disable-next-line no-undef
+                await GM.setValue(StoKey, JSON.stringify(this.ListStorage));
 
                 if (fiindex !== -1) {
                     this.currentEle_li.remove();
@@ -1101,7 +1111,8 @@
                     this.currentEle_li.remove();
                     this.SelectOption_Del()
                     this.ListStorage.splice(fiindex, 1);
-                    await StorageApiWrite(StoKey, JSON.stringify(this.ListStorage));
+                    // eslint-disable-next-line no-undef
+                    await GM.setValue(StoKey, JSON.stringify(this.ListStorage));
                     this.editarea_Ele.style.display = "none";
                     this.Editflag = false;
                     return true;
@@ -1175,7 +1186,7 @@
                 this.currentEle_li = Ele;
                 this.currentEle_li_BGColorTemp = Ele.style.backgroundColor;
                 Ele.style.backgroundColor = "lightskyblue";
-                this.editarea_Ele.style.display = "block"
+                this.editarea_Ele.style.display = "block";
             }
 
             async SelectOption_Add() {
@@ -1189,153 +1200,107 @@
                 this.index_Ele.lastChild.remove();
             }
 
-        }
-
-        class ListEdit_HTML {
-            constructor(ListEditFuncObj) {
-                this.ListEditFuncObj = ListEditFuncObj;
-                this.SaveButtonFunc = new Function();
-                this.DelButtonFunc = new Function();
-                this.NewEditButtonFunc = new Function();
-                this.liAddAppendFunc = new Function();
-                this.ListEditElePageEle = null;
-                this.DetailSettingPageEle = null;
-                this.EnableCheckboxDivEle = null;
-            }
-            async init() {
+            async ListEdit_HTML() {
                 ArrayLast(settingsbox_2_ele_stack).style.display = "none";
-                const settingsbox_2_2_div = document.createElement("div");
-                settingsbox_2_2_div.style.height = "100%"
-                settingsbox_2_ele_stack.push(settingsbox_2_2_div);
-                this.ListEditElePageEle = settingsbox_2_2_div;
-                {
-                    const settingsbox_2_2_1_div = document.createElement("div");
-                    settingsbox_2_2_1_div.style.width = "auto"
-                    settingsbox_2_2_1_div.style.height = "calc(100% - 130px)"
-                    settingsbox_2_2_1_div.style.overflow = "auto"
-                    settingsbox_2_2_1_div.style.borderStyle = "solid";
-                    settingsbox_2_2_1_div.style.borderWidth = "2px";
-                    settingsbox_2_2_1_div.style.borderColor = "black"
-                    {
-                        const settingsbox_2_2_1_ol = document.createElement("ol");
-                        this.ListEditFuncObj.ulol_Ele = settingsbox_2_2_1_ol;
-                        settingsbox_2_2_1_ol.style.backgroundColor = "#eee";
-                        settingsbox_2_2_1_ol.style.listStylePosition = "inside";
-                        settingsbox_2_2_1_ol.style.margin = "0 0 0 0";
-                        settingsbox_2_2_1_ol.style.padding = "0 0 0 0";
-                        for (let i = 0; i < this.ListEditFuncObj.ListStorage.length; i++) {
-                            const liEle = await this.ListEditFuncObj.li_Add(i);
-                            await this.liAddAppendFunc(liEle);
-                        }
-                        settingsbox_2_2_1_div.append(settingsbox_2_2_1_ol);
-                    }
-                    settingsbox_2_2_div.append(settingsbox_2_2_1_div);
+                this.SettingsObjectListPage_Ele = document.createElement("div");
+                this.SettingsObjectListPage_Ele.style.height = "100%";
+                settingsbox_2_ele_stack.push(this.SettingsObjectListPage_Ele);
+                this.SettingsObjectListPage_Ele.innerHTML = `
+<style type="text/css">
+  div#SettingsObjectListPage {
+    height: 100%;
+  }
+  div#ObjectLists_Frame {
+    width: auto;
+    height: calc(100% - 130px);
+    overflow: auto;
+    border: 2px solid black;
+  }
+  ol#ObjectLists_ol {
+    background-color: #eee;
+    list-style-position: inside;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+  }
+</style>
 
-                    const settingsbox_2_2_2_div = document.createElement("div");
-                    this.ListEditFuncObj.editarea_Ele = settingsbox_2_2_2_div;
-                    settingsbox_2_2_2_div.style.display = "none";
-                    {
-                        const settingsbox_2_2_2_1_div = document.createElement("div");
-                        {
-                            const settingsbox_2_2_2_1_span = document.createElement("span");
-                            settingsbox_2_2_2_1_span.textContent = "名前：";
-                            settingsbox_2_2_2_1_div.append(settingsbox_2_2_2_1_span);
+<div id="SettingsObjectListPage">
+  <div id="ObjectLists_Frame">
+    <ol id="ObjectLists_ol"></ol>
+  </div>
+  <div id="SettingsObject_ConfigItems" style="display: none">
+    <div id="SettingsObject_ConfigItems_Name">
+      <span id="SettingsObject_ConfigItems_Name_Span"></span>
+      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
+    </div>
+    <div id="SettingsObject_ConfigItems_Sort">
+      <span id="SettingsObject_ConfigItems_Sort_Span"></span>
+      <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
+    </div>
+    <div id="SettingsObject_ConfigItems_Enable">
+      <span id="SettingsObject_ConfigItems_Enable_Span"></span>
+      <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
+    </div>
+    <div id="SettingsObject_ConfigItems_EditConfig">
+      <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
+      <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
+    </div>
+  </div>
+  <div id="SettingsObject_ActionButton">
+    <button id="SettingsObject_ActionButton_Back"></button>
+    <button id="SettingsObject_ActionButton_NewObject"></button>
+    <button id="SettingsObject_ActionButton_DeleteObject"></button>
+    <button id="SettingsObject_ActionButton_SaveObject"></button>
+  </div>
+</div>
+                `
+                DashboardMain_div.append(this.SettingsObjectListPage_Ele);
 
-                            const settingsbox_2_2_2_1_select = document.createElement("input");
-                            settingsbox_2_2_2_1_select.setAttribute("type", "text");
-                            settingsbox_2_2_2_1_select.addEventListener("change", () => { this.ListEditFuncObj.Editflag = true });
-                            this.ListEditFuncObj.name_Ele = settingsbox_2_2_2_1_select;
-                            settingsbox_2_2_2_1_div.append(settingsbox_2_2_2_1_select);
-                        }
-                        settingsbox_2_2_2_div.append(settingsbox_2_2_2_1_div);
+                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = "名前：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = "並び替え：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Span").textContent = "有効：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Span").textContent = "設定編集：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").textContent = "設定編集";
+                RootShadow.getElementById("SettingsObject_ActionButton_Back").textContent = "←戻る";
+                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").textContent = "新規追加";
+                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").textContent = "削除";
+                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").textContent = "保存";
 
-                        const settingsbox_2_2_2_2_div = document.createElement("div");
-                        {
-                            const settingsbox_2_2_2_2_span = document.createElement("span");
-                            settingsbox_2_2_2_2_span.textContent = "並び替え：";
-                            settingsbox_2_2_2_2_div.append(settingsbox_2_2_2_2_span);
+                this.ulol_Ele = RootShadow.getElementById("ObjectLists_ol");
+                this.editarea_Ele = RootShadow.getElementById("SettingsObject_ConfigItems");
+                this.name_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Name_Form");
+                this.index_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Form");
+                this.enable_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Form");
 
-                            const settingsbox_2_2_2_2_select = document.createElement("select");
-                            this.ListEditFuncObj.index_Ele = settingsbox_2_2_2_2_select;
-                            settingsbox_2_2_2_2_select.setAttribute("size", "1");
-                            for (let i = 0; i < this.ListEditFuncObj.ListStorage.length + 1; i++) {
-                                this.ListEditFuncObj.SelectOption_Add();
-                            }
-                            settingsbox_2_2_2_2_select.addEventListener("change", () => { this.ListEditFuncObj.Editflag = true });
-                            settingsbox_2_2_2_2_div.append(settingsbox_2_2_2_2_select);
-                        }
-                        settingsbox_2_2_2_div.append(settingsbox_2_2_2_2_div);
-
-                        const settingsbox_2_2_2_3_div = document.createElement("div");
-                        this.EnableCheckboxDivEle = settingsbox_2_2_2_3_div;
-                        {
-                            const settingsbox_2_2_2_3_span = document.createElement("span");
-                            settingsbox_2_2_2_3_span.textContent = "有効：";
-                            settingsbox_2_2_2_3_div.append(settingsbox_2_2_2_3_span);
-
-                            const settingsbox_2_2_2_3_input = document.createElement("input");
-                            settingsbox_2_2_2_3_input.setAttribute("type", "checkbox");
-                            settingsbox_2_2_2_3_input.addEventListener("change", () => { this.ListEditFuncObj.Editflag = true });
-                            settingsbox_2_2_2_3_div.append(settingsbox_2_2_2_3_input);
-                        }
-                        settingsbox_2_2_2_div.append(settingsbox_2_2_2_3_div);
-
-                        const settingsbox_2_2_2_4_div = document.createElement("div");
-                        {
-                            const settingsbox_2_2_2_4_span = document.createElement("span");
-                            settingsbox_2_2_2_4_span.textContent = "リストを編集：";
-                            settingsbox_2_2_2_4_div.append(settingsbox_2_2_2_4_span);
-
-                            const settingsbox_2_2_2_4_select = document.createElement("button");
-                            settingsbox_2_2_2_4_select.textContent = "リストを編集";
-                            settingsbox_2_2_2_4_select.addEventListener("click", () => {
-                                this.ListEditFuncObj.Editflag = true;
-                                this.ListEditElePageEle.style.display = "none";
-                                this.DetailSettingPageEle.style.display = "block";
-                            }, false);
-                            settingsbox_2_2_2_4_div.append(settingsbox_2_2_2_4_select);
-                        }
-                        settingsbox_2_2_2_div.append(settingsbox_2_2_2_4_div);
-                    }
-                    settingsbox_2_2_div.append(settingsbox_2_2_2_div);
-
-                    const settingsbox_2_2_3_div = document.createElement("div");
-                    {
-                        const settingsbox_2_2_3_button1 = document.createElement("button");
-                        settingsbox_2_2_3_button1.textContent = "←戻る";
-                        settingsbox_2_2_3_button1.addEventListener("click", () => {
-                            if (this.ListEditFuncObj.Editflag) {
-                                const res = confirm("トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？");
-                                if (!res) {
-                                    return false;
-                                }
-                            }
-                            settingsbox_2_ele_stack.pop().remove();
-                            settingsbox_2_ele_stack.pop().remove();
-                            ArrayLast(settingsbox_2_ele_stack).style.display = "block";
-                        }, false);
-                        settingsbox_2_2_3_div.append(settingsbox_2_2_3_button1);
-
-                        const settingsbox_2_2_3_button3 = document.createElement("button");
-                        settingsbox_2_2_3_button3.textContent = "新規追加";
-                        settingsbox_2_2_3_button3.addEventListener("click", async (evt) => await this.NewEditButtonFunc(evt.target), false);
-                        settingsbox_2_2_3_div.append(settingsbox_2_2_3_button3);
-
-                        const settingsbox_2_2_3_button4 = document.createElement("button");
-                        settingsbox_2_2_3_button4.textContent = "削除";
-                        settingsbox_2_2_3_button4.addEventListener("click", async () => await this.DelButtonFunc(), false);
-                        settingsbox_2_2_3_div.append(settingsbox_2_2_3_button4);
-
-                        const settingsbox_2_2_3_button2 = document.createElement("button");
-                        settingsbox_2_2_3_button2.textContent = "保存";
-                        settingsbox_2_2_3_button2.addEventListener("click", async () => await this.SaveButtonFunc(), false);
-                        settingsbox_2_2_3_div.append(settingsbox_2_2_3_button2);
-                    }
-                    settingsbox_2_2_div.append(settingsbox_2_2_3_div);
+                for (let i = 0; i < this.ListStorage.length; i++) {
+                    await this.li_Add(i);
                 }
-                DashboardMain_div.append(settingsbox_2_2_div);
+                for (let i = 0; i < this.ListStorage.length + 1; i++) {
+                    this.SelectOption_Add();
+                }
 
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").addEventListener("click", () => {
+                    this.Editflag = true;
+                    this.SettingsObjectListPage_Ele.style.display = "none";
+                    this.EditConfigObjectPage_Ele.style.display = "block";
+                }, false);
+
+                RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", () => {
+                    if (this.Editflag) {
+                        const res = confirm("トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？");
+                        if (!res) {
+                            return false;
+                        }
+                    }
+                    settingsbox_2_ele_stack.pop().remove();
+                    settingsbox_2_ele_stack.pop().remove();
+                    ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+                }, false);
+                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
+                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").addEventListener("click", async () => await this.DelButtonFunc(), false);
+                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").addEventListener("click", async () => await this.SaveButtonFunc(), false);
             }
+
         }
 
         async function settingsbox_2_2_NGListSet() {
@@ -1354,6 +1319,9 @@
                         }
                     }
                     this.textarea_Ele = null;
+                    this.SaveButtonFunc = this.NGListStoSave.bind(this);
+                    this.DelButtonFunc = this.NGListStoDel.bind(this);
+                    this.NewObjectButtonFunc = this.NGListNewEditButton.bind(this);
                 }
                 async NGListStoSave() {
                     const StoObj = {
@@ -1387,44 +1355,50 @@
                     }
                 }
 
-            }(NGListStorage);
+                async htmlCreate() {
+                    this.EditConfigObjectPage_Ele = document.createElement("div");
+                    this.EditConfigObjectPage_Ele.style.display = "none";
+                    this.EditConfigObjectPage_Ele.style.height = "100%";
+                    this.EditConfigObjectPage_Ele.innerHTML = `
+<style type="text/css">
+  div#EditConfigObjectPage {
+    height: 83%;
+  }
+  div#BlockListText_div {
+    height: 100%;
+  }
+  textarea#BlockListText_textarea {
+    resize: none;
+    width: 98.5%;
+    height: 98.5%;
+  }
+  div#BlockListText_ReadFile {
+    border: 1px solid black;
+  }
+</style>
 
-            const NGList_HTML_Obj = new ListEdit_HTML(NGList_Obj);
-            await NGList_HTML_Obj.init();
-            NGList_HTML_Obj.SaveButtonFunc = NGList_Obj.NGListStoSave.bind(NGList_Obj);
-            NGList_HTML_Obj.DelButtonFunc = NGList_Obj.NGListStoDel.bind(NGList_Obj);
-            NGList_HTML_Obj.NewEditButtonFunc = NGList_Obj.NGListNewEditButton.bind(NGList_Obj);
-            NGList_HTML_Obj.EnableCheckboxDivEle.style.display = "none"
+<div id="EditConfigObjectPage">
+  <div id="BlockListText_div">
+    <textarea id="BlockListText_textarea" spellcheck="false"></textarea>
+  </div>
+  <div id="BlockListText_ReadFile">
+    <span id="BlockListText_ReadFile_Title"></span><br>
+    <input id="BlockListText_ReadFile_Input" type="file" />
+  </div>
+  <div>
+    <button id="EditConfigObjectPage_BackButton"></button>
+  </div>
+</div>
+            `
+                    DashboardMain_div.append(this.EditConfigObjectPage_Ele);
+                    settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
 
-            const settingsbox_2_2_4_div = document.createElement("div");
-            settingsbox_2_2_4_div.style.height = "83%";
-            NGList_HTML_Obj.DetailSettingPageEle = settingsbox_2_2_4_div;
-            settingsbox_2_ele_stack.push(settingsbox_2_2_4_div);
-            settingsbox_2_2_4_div.style.display = "none";
-            {
-                const settingsbox_2_2_4_1_div = document.createElement("div");
-                settingsbox_2_2_4_1_div.style.height = "100%"
-                {
-                    const settingsbox_2_2_4_1_textarea = document.createElement("textarea");
-                    NGList_Obj.textarea_Ele = settingsbox_2_2_4_1_textarea;
-                    settingsbox_2_2_4_1_textarea.setAttribute("spellcheck", "false");
-                    settingsbox_2_2_4_1_textarea.style.resize = "none";
-                    settingsbox_2_2_4_1_textarea.style.width = "98.5%";
-                    settingsbox_2_2_4_1_textarea.style.height = "98.5%";
-                    settingsbox_2_2_4_1_div.append(settingsbox_2_2_4_1_textarea);
-                }
-                settingsbox_2_2_4_div.append(settingsbox_2_2_4_1_div);
+                    RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = "ファイルからテキストを読み込む";
 
-                const settingsbox_2_2_4_2_div = document.createElement("div");
-                settingsbox_2_2_4_2_div.style.border = "1px solid black"
-                {
-                    const settingsbox_2_2_4_2_span = document.createElement("span");
-                    settingsbox_2_2_4_2_span.textContent = "ファイルからテキストを読み込む"
-                    settingsbox_2_2_4_2_div.append(settingsbox_2_2_4_2_span);
 
-                    const settingsbox_2_2_4_2_input = document.createElement("input");
-                    settingsbox_2_2_4_2_input.setAttribute("type", "file");
-                    settingsbox_2_2_4_2_input.addEventListener("change", (evt) => {
+                    this.textarea_Ele = RootShadow.getElementById("BlockListText_textarea");
+
+                    RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", (evt) => {
                         if (evt.target.files[0]) {
                             const res = confirm("現在入力されているテキストはファイルのテキストで上書きされます。よろしいですか？");
                             if (!res) {
@@ -1433,29 +1407,31 @@
                             const file = evt.target.files[0];
                             const reader = new FileReader();
                             reader.onload = (evt) => {
-                                NGList_Obj.textarea_Ele.value = evt.target.result;
+                                this.textarea_Ele.value = evt.target.result;
                             }
                             reader.readAsText(file);
                         }
                     })
-                    settingsbox_2_2_4_2_div.append(settingsbox_2_2_4_2_input);
-                }
-                settingsbox_2_2_4_div.append(settingsbox_2_2_4_2_div);
 
-                const settingsbox_2_2_4_3_div = document.createElement("div");
-                {
-                    const settingsbox_2_2_4_3_button = document.createElement("button");
-                    settingsbox_2_2_4_3_button.textContent = "←戻る";
-                    settingsbox_2_2_4_3_button.addEventListener("click", () => {
-                        NGList_HTML_Obj.ListEditElePageEle.style.display = "block";
-                        settingsbox_2_2_4_div.style.display = "none";
+                    RootShadow.getElementById("EditConfigObjectPage_BackButton").textContent = "←戻る"
+                    RootShadow.getElementById("EditConfigObjectPage_BackButton").addEventListener("click", () => {
+                        this.SettingsObjectListPage_Ele.style.display = "block";
+                        this.EditConfigObjectPage_Ele.style.display = "none";
                     }, false);
-                    settingsbox_2_2_4_3_div.append(settingsbox_2_2_4_3_button);
+
+                    RootShadow.getElementById("SettingsObject_ConfigItems_Enable").style.display = "none";
                 }
-                settingsbox_2_2_4_div.append(settingsbox_2_2_4_3_div);
-            }
-            DashboardMain_div.append(settingsbox_2_2_4_div);
+            }(NGListStorage);
+
+            NGList_Obj.htmlCreate();
         }
+
+
+
+
+
+
+
 
         async function settingsbox_2_3_WebAbronSet() {
             const WebAbron_Obj = new class extends ListEdit_Func {
