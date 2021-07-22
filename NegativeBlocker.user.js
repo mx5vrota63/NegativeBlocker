@@ -762,7 +762,7 @@
         settingsbox_Element = document.createElement("div");
         settingsbox_Element.innerHTML = `
 <style type="text/css">
-  div#frameBack {
+  div#FrameBack {
     all: initial;
     position: fixed;
     top: 0;
@@ -779,23 +779,23 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   }
-  div#frameBackHeader {
+  div#FrameBackHeader {
     height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
   }
-  p#frameBackHeaderTitle {
+  p#FrameBackHeaderTitle {
     margin: 0px;
     font-size: medium;
   }
-  button.frameBackHeaderButton {
+  button.FrameBackHeaderButton {
     display: block;
     margin: 0 0 0 auto;
     width: 60px;
     height: inherit;
   }
-  div#DashboadMain {
+  div#DashboardMain {
     overflow: auto;
     width: 97%;
     height: calc(100% - 60px);
@@ -813,20 +813,22 @@
   }
 </style>
 
-<div id="frameBack">
-  <div id="frameBackHeader">
-    <p id="frameBackHeaderTitle"><b>NegativeBlocker Dashboard</b></p>
-    <button id="frameBackHeaderButton1" class="frameBackHeaderButton">✖</button>
-    <button id="frameBackHeaderButton2" class="frameBackHeaderButton">
+<div id="FrameBack">
+  <div id="FrameBackHeader">
+    <p id="FrameBackHeaderTitle"><b>NegativeBlocker Dashboard</b></p>
+    <button id="FrameBackHeaderButton1" class="FrameBackHeaderButton">✖</button>
+    <button id="FrameBackHeaderButton2" class="FrameBackHeaderButton">
       ✖✖✖
     </button>
   </div>
   <div id="DashboardMain"></div>
 </div>
 
+
 `
-        divElement_RootShadow.shadowRoot.append(settingsbox_Element);
         const RootShadow = divElement_RootShadow.shadowRoot;
+
+        RootShadow.append(settingsbox_Element);
         DashboardMain_div = RootShadow.getElementById("DashboardMain");
 
         const settingsbox_1_div = document.createElement("div");
@@ -855,9 +857,8 @@
 
 <div id="ItemFrame_SentenceBlock" class="ItemFrame_Border">
   <h1 id="Text-ResultSentenceBlockTitle" class="ItemFrame_Title"></h1>
-  <div id="ItemFrame_SentenceBlock_Result">
-    <button id="ItemFrame_SentenceBlock_Result_TempDisableButton"></button>
-  </div>
+  <div id="ItemFrame_SentenceBlock_Result"></div>
+  <button id="ItemFrame_SentenceBlock_Result_TempDisableButton"></button>
 </div>
 <div id="ItemFrame_ElementBlock" class="ItemFrame_Border">
   <h1 id="Text-ResultElementBlockTitle" class="ItemFrame_Title"></h1>
@@ -865,15 +866,19 @@
 <div>
   <button id="ItemFrame-SettingPageButton"></button>
 </div>
+
 `
         settingsbox_2_ele_stack.push(settingsbox_1_div);
+        DashboardMain_div.append(settingsbox_1_div);
 
-        RootShadow.getElementById("ResultSentenceBlockTitle").textContent = "Webあぼーん 適用リスト";
+        RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = "Webあぼーん 適用リスト";
+        RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = "一時無効を適用してリロード";
         RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = "要素ブロック 適用リスト";
         RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = "設定画面";
 
         {
             const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
+
             for (let i = 0; i < WebAbronExecuteResult.length; i++) {
                 const settingsbox_1_1_1_p = document.createElement("span");
                 settingsbox_1_1_1_p.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
@@ -883,51 +888,30 @@
                 settingsbox_1_1_1_input.setAttribute("type", "checkbox");
                 settingsbox_1_1_1_input.setAttribute("name", WebAbronExecuteResult[i].name);
                 WebAbronTempDisableArrayElement.push(settingsbox_1_1_1_input);
-                SentenceBlock_div.append(settingsbox_1_1_1_p);
+                SentenceBlock_div.append(settingsbox_1_1_1_input);
 
                 SentenceBlock_div.append(document.createElement("br"));
             }
-
-            const settingsbox_1_1_1_button = document.createElement("button");
-            settingsbox_1_1_1_button.textContent = "一時無効を適用してリロード";
-            settingsbox_1_1_1_button.addEventListener("click", async () => {
-                const tempdis = new Array();
-                WebAbronTempDisableArrayElement.forEach((ele) => {
-                    if (ele.checked) {
-                        tempdis.push(ele.name);
-                    }
-                })
-                await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempdis));
-                location.reload();
-            }, false)
-            SentenceBlock_div.append(settingsbox_1_1_1_button);
         }
 
-        const settingsbox_1_2_div = document.createElement("div");
-        settingsbox_1_2_div.style.position = "relative";
-        settingsbox_1_2_div.style.marginTop = "1em";
-        settingsbox_1_2_div.style.padding = "12px";
-        settingsbox_1_2_div.style.border = "1px solid black";
+        RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").addEventListener("click", async () => {
+            const tempdis = new Array();
+            WebAbronTempDisableArrayElement.forEach((ele) => {
+                if (ele.checked) {
+                    tempdis.push(ele.name);
+                }
+            })
+            await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempdis));
+            location.reload();
+        }, false);
+
         {
-            const settingsbox_1_2_h1 = document.createElement("h1");
-            settingsbox_1_2_h1.style.position = "absolute";
-            settingsbox_1_2_h1.style.top = 0;
-            settingsbox_1_2_h1.style.left = 0;
-            settingsbox_1_2_h1.style.fontSize = "1em";
-            settingsbox_1_2_h1.style.padding = "0 4px";
-            settingsbox_1_2_h1.style.margin = 0;
-            settingsbox_1_2_h1.style.transform = "translateY(-50%) translateX(6px)";
-            settingsbox_1_2_h1.style.backgroundColor = "#FFFFB2";
-            settingsbox_1_2_h1.textContent = "要素ブロック 適用リスト";
-            settingsbox_1_2_div.append(settingsbox_1_2_h1);
-
-
-
+            const ElementBlock_div = RootShadow.getElementById("ItemFrame_ElementBlock");
 
             for (let keyname in ElementBlockerExecuteResult) {
                 const settingsbox_1_2_1_p = document.createElement("span");
                 settingsbox_1_2_1_p.textContent = keyname
-                settingsbox_1_2_div.append(settingsbox_1_2_1_p);
+                ElementBlock_div.append(settingsbox_1_2_1_p);
 
                 const settingsbox_1_2_1_1_div = document.createElement("div");
                 settingsbox_1_2_1_1_div.style.border = "1px solid black"
@@ -952,27 +936,11 @@
                         settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button2);
                     }
                 })
-                settingsbox_1_2_div.append(settingsbox_1_2_1_1_div);
+                ElementBlock_div.append(settingsbox_1_2_1_1_div);
             }
-
-
         }
-        settingsbox_1_div.append(settingsbox_1_2_div);
 
-
-
-        const settingsbox_1_3_div = document.createElement("div");
-        {
-            const settingsbox_1_3_button = document.createElement("button");
-            settingsbox_1_3_button.innerText = "設定画面";
-            settingsbox_1_3_button.addEventListener("click", settingsbox_2_1_PreferenceTop, false);
-            settingsbox_1_3_div.append(settingsbox_1_3_button);
-        }
-        settingsbox_1_div.append(settingsbox_1_3_div);
-
-
-
-        DashboardMain_div.append(settingsbox_1_div);
+        RootShadow.getElementById("ItemFrame-SettingPageButton").addEventListener("click", settingsbox_2_1_PreferenceTop, false);
 
         async function settingsbox_2_1_PreferenceTop() {
             ArrayLast(settingsbox_2_ele_stack).style.display = "none";
