@@ -759,6 +759,8 @@
 
 
     async function SettingWindow() {
+        const RootShadow = divElement_RootShadow.shadowRoot;
+
         settingsbox_Element = document.createElement("div");
         settingsbox_Element.innerHTML = `
 <style type="text/css">
@@ -826,13 +828,36 @@
 
 
 `
-        const RootShadow = divElement_RootShadow.shadowRoot;
-
         RootShadow.append(settingsbox_Element);
+        function DashboardFrameBackWidthLimit() {
+            const DashboardFrameBack = RootShadow.getElementById("FrameBack");
+            if (window.innerWidth <= 400) {
+                DashboardFrameBack.style.width = "calc(100vw - 7px)";
+            } else {
+                DashboardFrameBack.style.width = "400px";
+            }
+        }
+        DashboardFrameBackWidthLimit();
+        window.addEventListener("resize", DashboardFrameBackWidthLimit);
+
+        RootShadow.getElementById("FrameBackHeaderButton1").addEventListener("click", () => {
+            settingsbox_Element.remove();
+            window.removeEventListener("resize", DashboardFrameBackWidthLimit);
+        })
+
+        RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
+            settingsbox_Element.remove();
+            window.removeEventListener("resize", DashboardFrameBackWidthLimit);
+            settingbuttonEle.remove();
+        })
+
+
         DashboardMain_div = RootShadow.getElementById("DashboardMain");
 
-        const settingsbox_1_div = document.createElement("div");
-        settingsbox_1_div.innerHTML = `
+
+        {
+            const settingsbox_1_div = document.createElement("div");
+            settingsbox_1_div.innerHTML = `
 <style type="text/css">
   div.ItemFrame_Border {
     position: relative;
@@ -868,167 +893,144 @@
 </div>
 
 `
-        settingsbox_2_ele_stack.push(settingsbox_1_div);
-        DashboardMain_div.append(settingsbox_1_div);
+            settingsbox_2_ele_stack.push(settingsbox_1_div);
+            DashboardMain_div.append(settingsbox_1_div);
 
-        RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = "Webあぼーん 適用リスト";
-        RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = "一時無効を適用してリロード";
-        RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = "要素ブロック 適用リスト";
-        RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = "設定画面";
+            RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = "Webあぼーん 適用リスト";
+            RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = "一時無効を適用してリロード";
+            RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = "要素ブロック 適用リスト";
+            RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = "設定画面";
 
-        {
-            const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
+            {
+                const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
 
-            for (let i = 0; i < WebAbronExecuteResult.length; i++) {
-                const settingsbox_1_1_1_p = document.createElement("span");
-                settingsbox_1_1_1_p.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
-                SentenceBlock_div.append(settingsbox_1_1_1_p);
+                for (let i = 0; i < WebAbronExecuteResult.length; i++) {
+                    const settingsbox_1_1_1_p = document.createElement("span");
+                    settingsbox_1_1_1_p.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
+                    SentenceBlock_div.append(settingsbox_1_1_1_p);
 
-                const settingsbox_1_1_1_input = document.createElement("input");
-                settingsbox_1_1_1_input.setAttribute("type", "checkbox");
-                settingsbox_1_1_1_input.setAttribute("name", WebAbronExecuteResult[i].name);
-                WebAbronTempDisableArrayElement.push(settingsbox_1_1_1_input);
-                SentenceBlock_div.append(settingsbox_1_1_1_input);
+                    const settingsbox_1_1_1_input = document.createElement("input");
+                    settingsbox_1_1_1_input.setAttribute("type", "checkbox");
+                    settingsbox_1_1_1_input.setAttribute("name", WebAbronExecuteResult[i].name);
+                    WebAbronTempDisableArrayElement.push(settingsbox_1_1_1_input);
+                    SentenceBlock_div.append(settingsbox_1_1_1_input);
 
-                SentenceBlock_div.append(document.createElement("br"));
-            }
-        }
-
-        RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").addEventListener("click", async () => {
-            const tempdis = new Array();
-            WebAbronTempDisableArrayElement.forEach((ele) => {
-                if (ele.checked) {
-                    tempdis.push(ele.name);
+                    SentenceBlock_div.append(document.createElement("br"));
                 }
-            })
-            await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempdis));
-            location.reload();
-        }, false);
+            }
 
-        {
-            const ElementBlock_div = RootShadow.getElementById("ItemFrame_ElementBlock");
-
-            for (let keyname in ElementBlockerExecuteResult) {
-                const settingsbox_1_2_1_p = document.createElement("span");
-                settingsbox_1_2_1_p.textContent = keyname
-                ElementBlock_div.append(settingsbox_1_2_1_p);
-
-                const settingsbox_1_2_1_1_div = document.createElement("div");
-                settingsbox_1_2_1_1_div.style.border = "1px solid black"
-                ElementBlockerExecuteResult[keyname].forEach((arr) => {
-                    if (arr.settingobj.elementSearch_property === "href") {
-                        const settingsbox_1_2_1_1_p = document.createElement("p")
-                        settingsbox_1_2_1_1_p.textContent = arr.searchProperty;
-                        settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_p);
-
-                        const settingsbox_1_2_1_1_button1 = document.createElement("button");
-                        settingsbox_1_2_1_1_button1.textContent = "再表示する"
-                        settingsbox_1_2_1_1_button1.addEventListener("click", () => {
-                            arr.element.style.display = "";
-                        })
-                        settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button1);
-
-                        const settingsbox_1_2_1_1_button2 = document.createElement("button");
-                        settingsbox_1_2_1_1_button2.textContent = "URLをコピー"
-                        settingsbox_1_2_1_1_button2.addEventListener("click", () => {
-                            copyTextToClipboard(arr.searchProperty);
-                        })
-                        settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button2);
+            RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").addEventListener("click", async () => {
+                const tempdis = new Array();
+                WebAbronTempDisableArrayElement.forEach((ele) => {
+                    if (ele.checked) {
+                        tempdis.push(ele.name);
                     }
                 })
-                ElementBlock_div.append(settingsbox_1_2_1_1_div);
-            }
-        }
+                await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempdis));
+                location.reload();
+            }, false);
 
-        RootShadow.getElementById("ItemFrame-SettingPageButton").addEventListener("click", settingsbox_2_1_PreferenceTop, false);
+            {
+                const ElementBlock_div = RootShadow.getElementById("ItemFrame_ElementBlock");
+
+                for (let keyname in ElementBlockerExecuteResult) {
+                    const settingsbox_1_2_1_p = document.createElement("span");
+                    settingsbox_1_2_1_p.textContent = keyname
+                    ElementBlock_div.append(settingsbox_1_2_1_p);
+
+                    const settingsbox_1_2_1_1_div = document.createElement("div");
+                    settingsbox_1_2_1_1_div.style.border = "1px solid black"
+                    ElementBlockerExecuteResult[keyname].forEach((arr) => {
+                        if (arr.settingobj.elementSearch_property === "href") {
+                            const settingsbox_1_2_1_1_p = document.createElement("p")
+                            settingsbox_1_2_1_1_p.textContent = arr.searchProperty;
+                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_p);
+
+                            const settingsbox_1_2_1_1_button1 = document.createElement("button");
+                            settingsbox_1_2_1_1_button1.textContent = "再表示する"
+                            settingsbox_1_2_1_1_button1.addEventListener("click", () => {
+                                arr.element.style.display = "";
+                            })
+                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button1);
+
+                            const settingsbox_1_2_1_1_button2 = document.createElement("button");
+                            settingsbox_1_2_1_1_button2.textContent = "URLをコピー"
+                            settingsbox_1_2_1_1_button2.addEventListener("click", () => {
+                                copyTextToClipboard(arr.searchProperty);
+                            })
+                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button2);
+                        }
+                    })
+                    ElementBlock_div.append(settingsbox_1_2_1_1_div);
+                }
+            }
+
+            RootShadow.getElementById("ItemFrame-SettingPageButton").addEventListener("click", settingsbox_2_1_PreferenceTop, false);
+
+        }
 
         async function settingsbox_2_1_PreferenceTop() {
             ArrayLast(settingsbox_2_ele_stack).style.display = "none";
             const settingsbox_2_1_div = document.createElement("div");
             settingsbox_2_ele_stack.push(settingsbox_2_1_div);
+            settingsbox_2_1_div.innerHTML = `
+<style type="text/css">
+  div.SettingsItem {
+    display: block;
+    margin: 0 0 20px 0;
+  }
+  #SettingMainPage p {
+    margin: 0;
+  }
+</style>
 
-            {
-                const settingsbox_2_1_1_div = document.createElement("div");
-                settingsbox_2_1_1_div.style.display = "block";
-
-                {
-                    const settingsbox_2_1_1_1_p = document.createElement("p");
-                    settingsbox_2_1_1_1_p.innerHTML = "NGフィルタ設定<br>グループ単位でNGワードリストまたはNGURLリストを設定できます。"
-                    settingsbox_2_1_1_div.append(settingsbox_2_1_1_1_p);
-
-                    const settingsbox_2_1_1_2_button = document.createElement("button");
-                    settingsbox_2_1_1_2_button.textContent = "NGフィルタを設定する"
-                    settingsbox_2_1_1_2_button.addEventListener("click", settingsbox_2_2_NGListSet, false);
-                    settingsbox_2_1_1_div.append(settingsbox_2_1_1_2_button);
-                }
-                settingsbox_2_1_div.append(settingsbox_2_1_1_div);
-
-            }
-
-            {
-                const settingsbox_2_1_2_div = document.createElement("div");
-                settingsbox_2_1_2_div.style.display = "block";
-
-                {
-                    const settingsbox_2_1_2_1_p = document.createElement("p");
-                    settingsbox_2_1_2_1_p.innerHTML = "Webあぼーん機能<br>Webの文章内にNGフィルタのリストが含まれる場合、その一文章または単語を別の文字に置換します。"
-                    settingsbox_2_1_2_div.append(settingsbox_2_1_2_1_p);
-
-                    const settingsbox_2_1_2_2_button = document.createElement("button");
-                    settingsbox_2_1_2_2_button.textContent = "Webあぼーん機能を設定する"
-                    settingsbox_2_1_2_2_button.addEventListener("click", settingsbox_2_3_WebAbronSet, false);
-                    settingsbox_2_1_2_div.append(settingsbox_2_1_2_2_button);
-                }
-                settingsbox_2_1_div.append(settingsbox_2_1_2_div);
-
-            }
-
-            {
-                const settingsbox_2_1_3_div = document.createElement("div");
-                settingsbox_2_1_3_div.style.display = "block";
-                {
-                    const settingsbox_2_1_3_1_p = document.createElement("p");
-                    settingsbox_2_1_3_1_p.innerHTML = "要素ブロック機能<br>要素の文字またはプロパティにNGフィルタのリストが含まれる場合、要素ごとブロックします。"
-                    settingsbox_2_1_3_div.append(settingsbox_2_1_3_1_p);
-
-                    const settingsbox_2_1_3_2_button = document.createElement("button");
-                    settingsbox_2_1_3_2_button.textContent = "要素ブロック機能を設定する"
-                    settingsbox_2_1_3_2_button.addEventListener("click", settingsbox_2_4_ElementBlockerSet, false);
-                    settingsbox_2_1_3_div.append(settingsbox_2_1_3_2_button);
-                }
-                settingsbox_2_1_div.append(settingsbox_2_1_3_div);
-            }
-
-            {
-                const settingsbox_2_1_5_div = document.createElement("div");
-                settingsbox_2_1_5_div.style.display = "block";
-                {
-                    const settingsbox_2_1_5_1_p = document.createElement("p");
-                    settingsbox_2_1_5_1_p.innerHTML = "その他設定<br>拡張機能全体の設定をします。"
-                    settingsbox_2_1_5_div.append(settingsbox_2_1_5_1_p);
-
-                    const settingsbox_2_1_5_2_button = document.createElement("button");
-                    settingsbox_2_1_5_2_button.textContent = "その他設定"
-                    settingsbox_2_1_5_2_button.addEventListener("click", settingsbox_2_5_PreferenceSet, false);
-                    settingsbox_2_1_5_div.append(settingsbox_2_1_5_2_button);
-                }
-                settingsbox_2_1_div.append(settingsbox_2_1_5_div);
-            }
-
-            {
-                const settingsbox_2_1_4_div = document.createElement("div");
-                {
-                    const settingsbox_2_1_4_1_button = document.createElement("button");
-                    settingsbox_2_1_4_1_button.textContent = "←戻る";
-                    settingsbox_2_1_4_1_button.addEventListener("click", () => {
-                        settingsbox_2_ele_stack.pop().remove();
-                        ArrayLast(settingsbox_2_ele_stack).style.display = "block";
-                    }, false)
-                    settingsbox_2_1_4_div.append(settingsbox_2_1_4_1_button);
-                }
-                settingsbox_2_1_div.append(settingsbox_2_1_4_div);
-            }
+<div id="SettingMainPage">
+  <div id="BlockListText_Setting" class="SettingsItem">
+    <p id="BlockListText_Setting_Title"></p>
+    <button id="BlockListText_Setting_Button"></button>
+  </div>
+  <div id="SentenceBlock_Setting" class="SettingsItem">
+    <p id="SentenceBlock_Setting_Title"></p>
+    <button id="SentenceBlock_Setting_Button"></button>
+  </div>
+  <div id="ElementBlock_Setting" class="SettingsItem">
+    <p id="ElementBlock_Setting_Title"></p>
+    <button id="ElementBlock_Setting_Button"></button>
+  </div>
+  <div id="Other_Setting" class="SettingsItem">
+    <p id="Other_Setting_Title"></p>
+    <button id="Other_Setting_Button"></button>
+  </div>
+  <div id="SettingMainPageBack" class="SettingsItem">
+    <button id="SettingMainPageBack_Button"></button>
+  </div>
+</div>
+            `
             DashboardMain_div.append(settingsbox_2_1_div);
+
+
+            RootShadow.getElementById("BlockListText_Setting_Title").innerHTML = "NGフィルタ設定<br>グループ単位でNGワードリストまたはNGURLリストを設定できます。";
+            RootShadow.getElementById("BlockListText_Setting_Button").textContent = "NGフィルタを設定する";
+            RootShadow.getElementById("BlockListText_Setting_Button").addEventListener("click", settingsbox_2_2_NGListSet, false);
+
+            RootShadow.getElementById("SentenceBlock_Setting_Title").innerHTML = "Webあぼーん機能<br>Webの文章内にNGフィルタのリストが含まれる場合、その一文章または単語を別の文字に置換します。";
+            RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = "Webあぼーん機能を設定する";
+            RootShadow.getElementById("SentenceBlock_Setting_Button").addEventListener("click", settingsbox_2_3_WebAbronSet, false);
+
+            RootShadow.getElementById("ElementBlock_Setting_Title").innerHTML = "要素ブロック機能<br>要素の文字またはプロパティにNGフィルタのリストが含まれる場合、要素ごとブロックします。";
+            RootShadow.getElementById("ElementBlock_Setting_Button").textContent = "要素ブロック機能を設定する";
+            RootShadow.getElementById("ElementBlock_Setting_Button").addEventListener("click", settingsbox_2_4_ElementBlockerSet, false);
+
+            RootShadow.getElementById("Other_Setting_Title").innerHTML = "その他設定<br>拡張機能全体の設定をします。";
+            RootShadow.getElementById("Other_Setting_Button").textContent = "その他設定";
+            RootShadow.getElementById("Other_Setting_Button").addEventListener("click", settingsbox_2_5_PreferenceSet, false);
+
+
+            RootShadow.getElementById("SettingMainPageBack_Button").textContent = "←戻る";
+            RootShadow.getElementById("SettingMainPageBack_Button").addEventListener("click", () => {
+                settingsbox_2_ele_stack.pop().remove();
+                ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+            }, false)
         }
 
 
