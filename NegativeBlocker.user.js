@@ -171,7 +171,7 @@
         } else {
             WebAbronTempDisableArray = new Array();
         }
-        await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(NGListStorage));
+        await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(new Array()));
     }
     await StorageLoad();
 
@@ -1590,8 +1590,8 @@
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig3_Description"></p>
-    <input id="SentenceBlockConfig3_Description_InputText" />
-    <form id="SentenceBlockConfig3_Description_Form">
+    <input id="SentenceBlockConfig3_InputText" type="text" />
+    <form id="SentenceBlockConfig3_Form">
       <label>
         <input type="radio" name="webabron_mode" value="sentence" checked />
         <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
@@ -1635,8 +1635,8 @@
                     this.nglist_white_list_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Select");
                     this.nglist_white_regex_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input2");
                     this.nglist_white_lowuppDist_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input3");
-                    this.replace_string_Ele = RootShadow.getElementById("SentenceBlockConfig3_Description_InputText");
-                    this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Description_Form");
+                    this.replace_string_Ele = RootShadow.getElementById("SentenceBlockConfig3_InputText");
+                    this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Form");
 
                     for (let i = 0; i < NGListStorage.length; i++) {
                         const settingsbox_2_3_4_1_2_option = document.createElement("option");
@@ -1655,7 +1655,7 @@
         }
 
         async function settingsbox_2_4_ElementBlockerSet() {
-            const EleBlock_Obj = new class extends ListEdit_Func {
+            new class extends ListEdit_Func {
                 constructor(ElementBlockerStorage) {
                     super(ElementBlockerStorage);
                     this.url_Ele = null;
@@ -1686,8 +1686,8 @@
                         this.elementHide_method_Ele.pickerMethod.value = applylist.elementHide_method;
                         this.elementSearch_Ele.value = applylist.elementSearch;
                         this.elementSearch_method_Ele.pickerMethod.value = applylist.elementSearch_method;
-                        this.elementSearch_index_enable_Ele.checked = applylist.elementSearch_index_enable;
-                        this.elementSearch_index_Ele.value = applylist.elementSearch_index;
+                        // this.elementSearch_index_enable_Ele.checked = applylist.elementSearch_index_enable;
+                        // this.elementSearch_index_Ele.value = applylist.elementSearch_index;
                         this.elementSearch_property_Ele.propertyMode.value = applylist.elementSearch_property;
                         this.elementSearch_property_style_Ele.value = applylist.elementSearch_property_style;
                         this.nglist_list_Ele.value = applylist.nglist_list;
@@ -1700,6 +1700,12 @@
                         this.nglist_white_lowuppDist_enable_Ele.checked = applylist.nglist_white_lowuppDist_enable;
                         this.nglist_white_urlMethod_enable_Ele.checked = applylist.nglist_white_urlMethod_enable;
                     }
+
+                    this.SaveButtonFunc = this.ElementBlockerListStoSave.bind(this);
+                    this.DelButtonFunc = this.ElementBlockerListStoDel.bind(this);
+                    this.NewObjectButtonFunc = this.ElementBlockerListNewEditButton.bind(this);
+
+                    this.createHTML();
                 }
                 async ElementBlockerListStoSave() {
                     const StoObj = {
@@ -1711,8 +1717,8 @@
                         elementHide_method: this.elementHide_method_Ele.pickerMethod.value,
                         elementSearch: this.elementSearch_Ele.value,
                         elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
-                        elementSearch_index_enable: this.elementSearch_index_enable_Ele.checked,
-                        elementSearch_index: this.elementSearch_index_Ele.value,
+                        // elementSearch_index_enable: this.elementSearch_index_enable_Ele.checked,
+                        // elementSearch_index: this.elementSearch_index_Ele.value,
                         elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
                         elementSearch_property_style: this.elementSearch_property_style_Ele.value,
                         nglist_list: this.nglist_list_Ele.value,
@@ -1739,8 +1745,8 @@
                         this.elementHide_method_Ele.pickerMethod.value = "css";
                         this.elementSearch_Ele.value = "";
                         this.elementSearch_method_Ele.pickerMethod.value = "css";
-                        this.elementSearch_index_enable_Ele.checked = false;
-                        this.elementSearch_index_Ele.value = "";
+                        // this.elementSearch_index_enable_Ele.checked = false;
+                        // this.elementSearch_index_Ele.value = "";
                         this.elementSearch_property_Ele.propertyMode.value = "text";
                         this.elementSearch_property_style_Ele.value = "";
                         this.nglist_list_Ele.value = "";
@@ -1757,446 +1763,219 @@
                         return 0;
                     }
                 }
-            }(ElementBlockerStorage);
 
-            const EleBlock_HTML_Obj = new ListEdit_HTML(EleBlock_Obj);
-            await EleBlock_HTML_Obj.init();
-            EleBlock_HTML_Obj.SaveButtonFunc = EleBlock_Obj.ElementBlockerListStoSave.bind(EleBlock_Obj);
-            EleBlock_HTML_Obj.DelButtonFunc = EleBlock_Obj.ElementBlockerListStoDel.bind(EleBlock_Obj);
-            EleBlock_HTML_Obj.NewEditButtonFunc = EleBlock_Obj.ElementBlockerListNewEditButton.bind(EleBlock_Obj);
-            EleBlock_Obj.enable_Ele = EleBlock_HTML_Obj.EnableCheckboxDivEle.getElementsByTagName("input")[0];
+                async createHTML() {
+                    this.EditConfigObjectPage_Ele = document.createElement("div");
+                    this.EditConfigObjectPage_Ele.style.display = "none";
+                    this.EditConfigObjectPage_Ele.style.height = "calc(100% - 80px)";
+                    this.EditConfigObjectPage_Ele.innerHTML = `
+<style type="text/css">
+  div.EditConfigObjectPage {
+    height: 100%;
+  }
+  .ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+  }
+  select.ElementBlock_Select {
+    width: 100%;
+  }
+</style>
 
-            const settingsbox_2_4_4_div = document.createElement("div");
-            EleBlock_HTML_Obj.DetailSettingPageEle = settingsbox_2_4_4_div;
-            settingsbox_2_ele_stack.push(settingsbox_2_4_4_div);
-            settingsbox_2_4_4_div.style.display = "none";
-            {
+<div id="ElementBlockConfig" class="EditConfigObjectPage">
+  <div class="ItemFrame_Border">
+    <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlockConfig1_Description"></p>
+    <input id="ElementBlockConfig1_Input1" type="text" />
+    <br />
+    <label>
+      <input id="ElementBlockConfig1_Input2" type="checkbox" />
+      <span id="ElementBlockConfig1_Input2_SpanText"></span>
+    </label>
+  </div>
 
-                const settingsbox_2_4_4_1_div = document.createElement("div");
-                {
-                    const settingsbox_2_4_4_1_1_div = document.createElement("div");
-                    settingsbox_2_4_4_1_1_div.style.position = "relative";
-                    settingsbox_2_4_4_1_1_div.style.marginTop = "1em";
-                    settingsbox_2_4_4_1_1_div.style.padding = "12px";
-                    settingsbox_2_4_4_1_1_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_4_4_1_1_h1 = document.createElement("h1");
-                        settingsbox_2_4_4_1_1_h1.style.position = "absolute";
-                        settingsbox_2_4_4_1_1_h1.style.top = 0;
-                        settingsbox_2_4_4_1_1_h1.style.left = 0;
-                        settingsbox_2_4_4_1_1_h1.style.fontSize = "1em";
-                        settingsbox_2_4_4_1_1_h1.style.padding = "0 4px";
-                        settingsbox_2_4_4_1_1_h1.style.margin = 0;
-                        settingsbox_2_4_4_1_1_h1.style.transform = "translateY(-50%) translateX(6px)";
-                        settingsbox_2_4_4_1_1_h1.style.backgroundColor = "#FFFFB2";
-                        settingsbox_2_4_4_1_1_h1.textContent = "URL";
-                        settingsbox_2_4_4_1_1_div.append(settingsbox_2_4_4_1_1_h1);
+  <div class="ItemFrame_Border">
+    <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlockConfig2_Description"></p>
+    <input id="ElementBlockConfig2_InputText" type="text" />
+    <form id="ElementBlockConfig2_Form">
+      <label>
+        <input type="radio" name="pickerMethod" value="css" checked />
+        <span id="ElementBlockConfig2_Form_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input type="radio" name="pickerMethod" value="xpath" />
+        <span id="ElementBlockConfig2_Form_Input2_SpanText"></span>
+      </label>
+    </form>
+    <button id="ElementBlockConfig2_Button"></button>
+  </div>
 
-                        const settingsbox_2_4_4_1_1_p = document.createElement("p");
-                        settingsbox_2_4_4_1_1_p.style.margin = 0;
-                        settingsbox_2_4_4_1_1_p.innerHTML = "このルールを有効にするサイトを指定します。 <br>正規表現がOFFの時「*」でワイルドカードを使用できます。";
-                        settingsbox_2_4_4_1_1_div.append(settingsbox_2_4_4_1_1_p);
+  <div class="ItemFrame_Border">
+    <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlockConfig3_Description"></p>
+    <input id="ElementBlockConfig3_InputText" type="text" />
+    <form id="ElementBlockConfig3_Form">
+      <label>
+        <input type="radio" name="pickerMethod" value="css" checked />
+        <span id="ElementBlockConfig3_Form_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input type="radio" name="pickerMethod" value="xpath" />
+        <span id="ElementBlockConfig3_Form_Input2_SpanText"></span>
+      </label>
+    </form>
+    <button id="ElementBlockConfig3_Button"></button>
+    <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
+      <label>
+        <input type="radio" name="propertyMode" value="text" checked />
+        <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="propertyMode" value="href" />
+        <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="propertyMode" value="style" />
+        <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+        <input id="ElementBlockConfig3-2_Form_Input3_InputText" type="text" />
+      </label>
+    </form>
+  </div>
 
-                        const settingsbox_2_4_4_1_1_input = document.createElement("input");
-                        EleBlock_Obj.url_Ele = settingsbox_2_4_4_1_1_input;
-                        settingsbox_2_4_4_1_1_input.setAttribute("type", "text");
-                        settingsbox_2_4_4_1_1_div.append(settingsbox_2_4_4_1_1_input);
+  <div class="ItemFrame_Border">
+    <h1 id="ElementBlockConfig4_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlockConfig4_Description"></p>
+    <select
+      id="ElementBlockConfig4_Select"
+      class="ElementBlock_Select"
+      size="1"
+    >
+      <option value="">-----</option>
+    </select>
+    <div>
+      <label>
+        <input id="ElementBlockConfig4_Input1" type="checkbox" />
+        <span id="ElementBlockConfig4_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input id="ElementBlockConfig4_Input2" type="checkbox" />
+        <span id="ElementBlockConfig4_Input2_SpanText"></span>
+      </label>
+      <label>
+        <input id="ElementBlockConfig4_Input3" type="checkbox" />
+        <span id="ElementBlockConfig4_Input3_SpanText"></span>
+      </label>
+      <div class="ItemFrame_Border">
+        <label>
+          <input id="ElementBlockConfig4-2_Input1" type="checkbox" />
+          <span id="ElementBlockkConfig4-2_Input1_SpanText"></span>
+        </label>
+        <select
+          id="ElementBlockConfig4-2_Select"
+          class="ElementBlock_Select"
+          size="1"
+        >
+          <option value="">-----</option>
+        </select>
+        <div>
+          <label>
+            <input id="ElementBlockConfig4-2_Input2" type="checkbox" />
+            <span id="ElementBlockConfig4-2_Input2_SpanText"></span>
+          </label>
+          <label>
+            <input id="ElementBlockConfig4-2_Input3" type="checkbox" />
+            <span id="ElementBlockConfig4-2_Input3_SpanText"></span>
+          </label>
+          <label>
+            <input id="ElementBlockConfig4-2_Input4" type="checkbox" />
+            <span id="ElementBlockConfig4-2_Input4_SpanText"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <button id="ElementBlockConfig_BackButton"></button>
+  </div>
+</div>
+                    `
+                    DashboardMain_div.append(this.EditConfigObjectPage_Ele);
+                    settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
 
-                        settingsbox_2_4_4_1_1_div.append(document.createElement("br"));
+                    RootShadow.getElementById("ElementBlockConfig1_Title").textContent = "URL";
+                    RootShadow.getElementById("ElementBlockConfig1_Description").innerHTML = "このルールを有効にするサイトを指定します。 <br>正規表現がOFFの時「*」でワイルドカードを使用できます。";
+                    RootShadow.getElementById("ElementBlockConfig1_Input2_SpanText").textContent = "正規表現";
+                    RootShadow.getElementById("ElementBlockConfig2_Title").textContent = "非表示要素";
+                    RootShadow.getElementById("ElementBlockConfig2_Description").textContent = "非表示する要素をCSS方式「querySelectorAll」かXPath方式「document.evaluate」で指定します。";
+                    RootShadow.getElementById("ElementBlockConfig2_Form_Input1_SpanText").textContent = "CSS";
+                    RootShadow.getElementById("ElementBlockConfig2_Form_Input2_SpanText").textContent = "XPath";
+                    RootShadow.getElementById("ElementBlockConfig2_Button").textContent = "要素を選択する";
+                    RootShadow.getElementById("ElementBlockConfig3_Title").textContent = "検索要素";
+                    RootShadow.getElementById("ElementBlockConfig3_Description").textContent = "非表示するために検索する要素をCSS方式「querySelectorAll」かXPath方式「document.evaluate」で指定します。何も入力せず空欄にすると無条件で非表示要素を隠します。";
+                    RootShadow.getElementById("ElementBlockConfig3_Form_Input1_SpanText").textContent = "CSS";
+                    RootShadow.getElementById("ElementBlockConfig3_Form_Input2_SpanText").textContent = "XPath";
+                    RootShadow.getElementById("ElementBlockConfig3_Button").textContent = "要素を選択する";
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input1_SpanText").textContent = "要素のテキストを検索する";
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input2_SpanText").textContent = "要素のリンクを検索する（検索要素に「a」要素が含まれている場合のみ）";
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = "要素のスタイルシートを検索する（上級者向け）";
+                    RootShadow.getElementById("ElementBlockConfig4_Title").textContent = "NGフィルタ";
+                    RootShadow.getElementById("ElementBlockConfig4_Description").textContent = "要素検索に使用するNGフィルタを指定します。";
+                    RootShadow.getElementById("ElementBlockConfig4_Input1_SpanText").textContent = "正規表現";
+                    RootShadow.getElementById("ElementBlockConfig4_Input2_SpanText").textContent = "大文字小文字を区別";
+                    RootShadow.getElementById("ElementBlockConfig4_Input3_SpanText").textContent = "URL専用の軽量処理をする";
+                    RootShadow.getElementById("ElementBlockkConfig4-2_Input1_SpanText").textContent = "ホワイトリストも使用する";
+                    RootShadow.getElementById("ElementBlockConfig4-2_Input2_SpanText").textContent = "正規表現";
+                    RootShadow.getElementById("ElementBlockConfig4-2_Input3_SpanText").textContent = "大文字小文字を区別";
+                    RootShadow.getElementById("ElementBlockConfig4-2_Input4_SpanText").textContent = "URL専用の軽量処理をする";
+                    RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = "←戻る";
 
-                        const settingsbox_2_4_4_1_1_label = document.createElement("label");
-                        settingsbox_2_4_4_1_1_label.textContent = "正規表現"
-                        {
-                            const settingsbox_2_4_4_1_1_checkbox = document.createElement("input");
-                            EleBlock_Obj.url_regex_enable_Ele = settingsbox_2_4_4_1_1_checkbox;
-                            settingsbox_2_4_4_1_1_checkbox.setAttribute("type", "checkbox");
-                            settingsbox_2_4_4_1_1_label.prepend(settingsbox_2_4_4_1_1_checkbox);
-                        }
-                        settingsbox_2_4_4_1_1_div.append(settingsbox_2_4_4_1_1_label);
+                    this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
+                    this.url_regex_enable_Ele = RootShadow.getElementById("ElementBlockConfig1_Input2");
+                    this.elementHide_Ele = RootShadow.getElementById("ElementBlockConfig2_InputText");
+                    this.elementHide_method_Ele = RootShadow.getElementById("ElementBlockConfig2_Form");
+                    this.elementSearch_Ele = RootShadow.getElementById("ElementBlockConfig3_InputText");
+                    this.elementSearch_method_Ele = RootShadow.getElementById("ElementBlockConfig3_Form");
+                    this.elementSearch_property_Ele = RootShadow.getElementById("ElementBlockConfig3-2_From");
+                    this.elementSearch_property_style_Ele = RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_InputText");
+                    this.nglist_list_Ele = RootShadow.getElementById("ElementBlockConfig4_Select");
+                    this.nglist_regex_enable_Ele = RootShadow.getElementById("ElementBlockConfig4_Input1");
+                    this.nglist_lowuppDist_enable_Ele = RootShadow.getElementById("ElementBlockConfig4_Input2");
+                    this.nglist_urlMethod_enable_Ele = RootShadow.getElementById("ElementBlockConfig4_Input3");
+                    this.nglist_white_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input1");
+                    this.nglist_white_list_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Select");
+                    this.nglist_white_regex_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input2");
+                    this.nglist_white_lowuppDist_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input3");
+                    this.nglist_white_urlMethod_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input4");
+
+                    for (let i = 0; i < NGListStorage.length; i++) {
+                        const settingsbox_2_3_4_1_2_option = document.createElement("option");
+                        settingsbox_2_3_4_1_2_option.setAttribute("value", NGListStorage[i].name);
+                        settingsbox_2_3_4_1_2_option.textContent = NGListStorage[i].name;
+                        this.nglist_list_Ele.append(settingsbox_2_3_4_1_2_option);
+                        this.nglist_white_list_Ele.append(settingsbox_2_3_4_1_2_option.cloneNode(true));
                     }
-                    settingsbox_2_4_4_1_div.append(settingsbox_2_4_4_1_1_div);
 
-
-
-                    const settingsbox_2_4_4_1_2_div = document.createElement("div");
-                    settingsbox_2_4_4_1_2_div.style.position = "relative";
-                    settingsbox_2_4_4_1_2_div.style.marginTop = "1em";
-                    settingsbox_2_4_4_1_2_div.style.padding = "12px";
-                    settingsbox_2_4_4_1_2_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_4_4_1_2_h1 = document.createElement("h1");
-                        settingsbox_2_4_4_1_2_h1.style.position = "absolute";
-                        settingsbox_2_4_4_1_2_h1.style.top = 0;
-                        settingsbox_2_4_4_1_2_h1.style.left = 0;
-                        settingsbox_2_4_4_1_2_h1.style.fontSize = "1em";
-                        settingsbox_2_4_4_1_2_h1.style.padding = "0 4px";
-                        settingsbox_2_4_4_1_2_h1.style.margin = 0;
-                        settingsbox_2_4_4_1_2_h1.style.transform = "translateY(-50%) translateX(6px)";
-                        settingsbox_2_4_4_1_2_h1.style.backgroundColor = "#FFFFB2";
-                        settingsbox_2_4_4_1_2_h1.textContent = "非表示要素";
-                        settingsbox_2_4_4_1_2_div.append(settingsbox_2_4_4_1_2_h1);
-
-                        const settingsbox_2_4_4_1_2_p = document.createElement("p");
-                        settingsbox_2_4_4_1_2_p.style.margin = 0;
-                        settingsbox_2_4_4_1_2_p.textContent = "非表示する要素をCSS方式「querySelectorAll」かXPath方式「document.evaluate」で指定します。";
-                        settingsbox_2_4_4_1_2_div.append(settingsbox_2_4_4_1_2_p);
-
-                        const settingsbox_2_4_4_1_2_input = document.createElement("input");
-                        EleBlock_Obj.elementHide_Ele = settingsbox_2_4_4_1_2_input;
-                        settingsbox_2_4_4_1_2_input.setAttribute("type", "text");
-                        settingsbox_2_4_4_1_2_div.append(settingsbox_2_4_4_1_2_input);
-
-                        const settingsbox_2_4_4_1_2_1_form = document.createElement("form");
-                        EleBlock_Obj.elementHide_method_Ele = settingsbox_2_4_4_1_2_1_form;
-                        {
-                            const settingsbox_2_4_4_1_2_1_label1 = document.createElement("label");
-                            settingsbox_2_4_4_1_2_1_label1.textContent = "CSS"
-                            {
-                                const settingsbox_2_4_4_1_2_1_radio1 = document.createElement("input");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("type", "radio");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("name", "pickerMethod");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("value", "css");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("checked", "");
-                                settingsbox_2_4_4_1_2_1_label1.prepend(settingsbox_2_4_4_1_2_1_radio1);
-                            }
-                            settingsbox_2_4_4_1_2_1_form.append(settingsbox_2_4_4_1_2_1_label1);
-
-                            const settingsbox_2_4_4_1_2_1_label2 = document.createElement("label");
-                            settingsbox_2_4_4_1_2_1_label2.textContent = "XPath"
-                            {
-                                const settingsbox_2_4_4_1_2_1_radio2 = document.createElement("input");
-                                settingsbox_2_4_4_1_2_1_radio2.setAttribute("type", "radio");
-                                settingsbox_2_4_4_1_2_1_radio2.setAttribute("name", "pickerMethod");
-                                settingsbox_2_4_4_1_2_1_radio2.setAttribute("value", "xpath");
-                                settingsbox_2_4_4_1_2_1_form.append(settingsbox_2_4_4_1_2_1_radio2);
-                                settingsbox_2_4_4_1_2_1_label2.prepend(settingsbox_2_4_4_1_2_1_radio2);
-                            }
-                            settingsbox_2_4_4_1_2_1_form.append(settingsbox_2_4_4_1_2_1_label2);
-                        }
-                        settingsbox_2_4_4_1_2_div.append(settingsbox_2_4_4_1_2_1_form);
-
-                        const settingsbox_2_4_4_1_2_button = document.createElement("button");
-                        settingsbox_2_4_4_1_2_button.textContent = "要素を選択する";
-                        settingsbox_2_4_4_1_2_button.addEventListener("click", () => {
-
-                        }, false);
-                        settingsbox_2_4_4_1_2_div.append(settingsbox_2_4_4_1_2_button);
-
-                    }
-                    settingsbox_2_4_4_1_div.append(settingsbox_2_4_4_1_2_div);
-
-
-
-                    const settingsbox_2_4_4_1_3_div = document.createElement("div");
-                    settingsbox_2_4_4_1_3_div.style.position = "relative";
-                    settingsbox_2_4_4_1_3_div.style.marginTop = "1em";
-                    settingsbox_2_4_4_1_3_div.style.padding = "12px";
-                    settingsbox_2_4_4_1_3_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_4_4_1_3_h1 = document.createElement("h1");
-                        settingsbox_2_4_4_1_3_h1.style.position = "absolute";
-                        settingsbox_2_4_4_1_3_h1.style.top = 0;
-                        settingsbox_2_4_4_1_3_h1.style.left = 0;
-                        settingsbox_2_4_4_1_3_h1.style.fontSize = "1em";
-                        settingsbox_2_4_4_1_3_h1.style.padding = "0 4px";
-                        settingsbox_2_4_4_1_3_h1.style.margin = 0;
-                        settingsbox_2_4_4_1_3_h1.style.transform = "translateY(-50%) translateX(6px)";
-                        settingsbox_2_4_4_1_3_h1.style.backgroundColor = "#FFFFB2";
-                        settingsbox_2_4_4_1_3_h1.textContent = "検索要素";
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_3_h1);
-
-                        const settingsbox_2_4_4_1_3_p = document.createElement("p");
-                        settingsbox_2_4_4_1_3_p.style.margin = 0;
-                        settingsbox_2_4_4_1_3_p.textContent = "非表示するために検索する要素をCSS方式「querySelectorAll」かXPath方式「document.evaluate」で指定します。何も入力せず空欄にすると無条件で非表示要素を隠します。";
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_3_p);
-
-                        const settingsbox_2_4_4_1_3_input = document.createElement("input");
-                        EleBlock_Obj.elementSearch_Ele = settingsbox_2_4_4_1_3_input;
-                        settingsbox_2_4_4_1_3_input.setAttribute("type", "text");
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_3_input);
-
-                        const settingsbox_2_4_4_1_3_1_form = document.createElement("form");
-                        EleBlock_Obj.elementSearch_method_Ele = settingsbox_2_4_4_1_3_1_form;
-                        {
-                            const settingsbox_2_4_4_1_3_1_label1 = document.createElement("label");
-                            settingsbox_2_4_4_1_3_1_label1.textContent = "CSS"
-                            {
-                                const settingsbox_2_4_4_1_2_1_radio1 = document.createElement("input");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("type", "radio");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("name", "pickerMethod");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("value", "css");
-                                settingsbox_2_4_4_1_2_1_radio1.setAttribute("checked", "");
-                                settingsbox_2_4_4_1_3_1_label1.prepend(settingsbox_2_4_4_1_2_1_radio1);
-                            }
-                            settingsbox_2_4_4_1_3_1_form.append(settingsbox_2_4_4_1_3_1_label1);
-
-                            const settingsbox_2_4_4_1_3_1_label2 = document.createElement("label");
-                            settingsbox_2_4_4_1_3_1_label2.textContent = "XPath"
-                            {
-                                const settingsbox_2_4_4_1_3_1_radio2 = document.createElement("input");
-                                settingsbox_2_4_4_1_3_1_radio2.setAttribute("type", "radio");
-                                settingsbox_2_4_4_1_3_1_radio2.setAttribute("name", "pickerMethod");
-                                settingsbox_2_4_4_1_3_1_radio2.setAttribute("value", "xpath");
-                                settingsbox_2_4_4_1_3_1_label2.prepend(settingsbox_2_4_4_1_3_1_radio2);
-                            }
-                            settingsbox_2_4_4_1_3_1_form.append(settingsbox_2_4_4_1_3_1_label2);
-                        }
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_3_1_form);
-
-                        const settingsbox_2_4_4_1_3_button = document.createElement("button");
-                        settingsbox_2_4_4_1_3_button.textContent = "要素を選択する";
-                        settingsbox_2_4_4_1_3_button.addEventListener("click", () => {
-
-                        }, false);
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_3_button);
-
-                        settingsbox_2_4_4_1_3_div.append(document.createElement("br"));
-
-
-                        const settingsbox_2_4_4_1_3_2_label1 = document.createElement("label");
-                        settingsbox_2_4_4_1_3_2_label1.textContent = "要素のインデックス番号を指定する（上級者向け）"
-                        {
-                            const settingsbox_2_4_4_1_3_2_checkbox = document.createElement("input");
-                            EleBlock_Obj.elementSearch_index_enable_Ele = settingsbox_2_4_4_1_3_2_checkbox;
-                            settingsbox_2_4_4_1_3_2_checkbox.setAttribute("type", "checkbox");
-                            settingsbox_2_4_4_1_3_2_label1.prepend(settingsbox_2_4_4_1_3_2_checkbox);
-                        }
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_3_2_label1);
-
-                        const settingsbox_2_4_4_1_3_2_input = document.createElement("input");
-                        EleBlock_Obj.elementSearch_index_Ele = settingsbox_2_4_4_1_3_2_input;
-                        settingsbox_2_4_4_1_3_2_input.setAttribute("type", "text");
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_3_2_input);
-
-
-
-
-                        const settingsbox_2_4_4_1_4_1_form = document.createElement("form");
-                        EleBlock_Obj.elementSearch_property_Ele = settingsbox_2_4_4_1_4_1_form;
-                        settingsbox_2_4_4_1_4_1_form.style.border = "1px solid black";
-                        settingsbox_2_4_4_1_4_1_form.style.padding = "4px";
-                        {
-                            const settingsbox_2_4_4_1_4_1_label1 = document.createElement("label");
-                            settingsbox_2_4_4_1_4_1_label1.textContent = "要素のテキストを検索する";
-                            {
-                                const settingsbox_2_4_4_1_4_1_radio1 = document.createElement("input");
-                                settingsbox_2_4_4_1_4_1_radio1.setAttribute("type", "radio");
-                                settingsbox_2_4_4_1_4_1_radio1.setAttribute("name", "propertyMode");
-                                settingsbox_2_4_4_1_4_1_radio1.setAttribute("value", "text");
-                                settingsbox_2_4_4_1_4_1_radio1.setAttribute("checked", "");
-                                settingsbox_2_4_4_1_4_1_label1.prepend(settingsbox_2_4_4_1_4_1_radio1);
-                            }
-                            settingsbox_2_4_4_1_4_1_form.append(settingsbox_2_4_4_1_4_1_label1);
-
-                            settingsbox_2_4_4_1_4_1_form.append(document.createElement("br"));
-
-                            const settingsbox_2_4_4_1_4_1_label2 = document.createElement("label");
-                            settingsbox_2_4_4_1_4_1_label2.textContent = "要素のリンクを検索する（検索要素に「a」要素が含まれている場合のみ）";
-                            {
-                                const settingsbox_2_4_4_1_4_1_radio2 = document.createElement("input");
-                                settingsbox_2_4_4_1_4_1_radio2.setAttribute("type", "radio");
-                                settingsbox_2_4_4_1_4_1_radio2.setAttribute("name", "propertyMode");
-                                settingsbox_2_4_4_1_4_1_radio2.setAttribute("value", "href");
-                                settingsbox_2_4_4_1_4_1_label2.prepend(settingsbox_2_4_4_1_4_1_radio2);
-                            }
-                            settingsbox_2_4_4_1_4_1_form.append(settingsbox_2_4_4_1_4_1_label2);
-
-                            settingsbox_2_4_4_1_4_1_form.append(document.createElement("br"));
-
-                            const settingsbox_2_4_4_1_4_1_label3 = document.createElement("label");
-                            settingsbox_2_4_4_1_4_1_label3.textContent = "要素のスタイルシートを検索する（上級者向け）";
-                            {
-                                const settingsbox_2_4_4_1_4_1_radio3 = document.createElement("input");
-                                settingsbox_2_4_4_1_4_1_radio3.setAttribute("type", "radio");
-                                settingsbox_2_4_4_1_4_1_radio3.setAttribute("name", "propertyMode");
-                                settingsbox_2_4_4_1_4_1_radio3.setAttribute("value", "style");
-                                settingsbox_2_4_4_1_4_1_label3.prepend(settingsbox_2_4_4_1_4_1_radio3);
-
-                                const settingsbox_2_4_4_1_4_1_inputtext3 = document.createElement("input");
-                                EleBlock_Obj.elementSearch_property_style_Ele = settingsbox_2_4_4_1_4_1_inputtext3;
-                                settingsbox_2_4_4_1_4_1_inputtext3.setAttribute("type", "text");
-                                settingsbox_2_4_4_1_4_1_label3.append(settingsbox_2_4_4_1_4_1_inputtext3);
-                            }
-                            settingsbox_2_4_4_1_4_1_form.append(settingsbox_2_4_4_1_4_1_label3);
-
-
-                        }
-                        settingsbox_2_4_4_1_3_div.append(settingsbox_2_4_4_1_4_1_form);
-
-
-
-                    }
-                    settingsbox_2_4_4_1_div.append(settingsbox_2_4_4_1_3_div);
-
-
-
-
-                    const settingsbox_2_4_4_1_4_div = document.createElement("div");
-                    settingsbox_2_4_4_1_4_div.style.position = "relative";
-                    settingsbox_2_4_4_1_4_div.style.marginTop = "1em";
-                    settingsbox_2_4_4_1_4_div.style.padding = "12px";
-                    settingsbox_2_4_4_1_4_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_4_4_1_4_h1 = document.createElement("h1");
-                        settingsbox_2_4_4_1_4_h1.style.position = "absolute";
-                        settingsbox_2_4_4_1_4_h1.style.top = 0;
-                        settingsbox_2_4_4_1_4_h1.style.left = 0;
-                        settingsbox_2_4_4_1_4_h1.style.fontSize = "1em";
-                        settingsbox_2_4_4_1_4_h1.style.padding = "0 4px";
-                        settingsbox_2_4_4_1_4_h1.style.margin = 0;
-                        settingsbox_2_4_4_1_4_h1.style.transform = "translateY(-50%) translateX(6px)";
-                        settingsbox_2_4_4_1_4_h1.style.backgroundColor = "#FFFFB2";
-                        settingsbox_2_4_4_1_4_h1.textContent = "NGフィルタ";
-                        settingsbox_2_4_4_1_4_div.append(settingsbox_2_4_4_1_4_h1);
-
-                        const settingsbox_2_4_4_1_4_p = document.createElement("p");
-                        settingsbox_2_4_4_1_4_p.style.margin = 0;
-                        settingsbox_2_4_4_1_4_p.textContent = "要素検索に使用するNGフィルタを指定します。";
-                        settingsbox_2_4_4_1_4_div.append(settingsbox_2_4_4_1_4_p);
-
-                        const settingsbox_2_4_4_1_4_select = document.createElement("select");
-                        EleBlock_Obj.nglist_list_Ele = settingsbox_2_4_4_1_4_select;
-                        settingsbox_2_4_4_1_4_select.style.width = "100%"
-                        settingsbox_2_4_4_1_4_select.setAttribute("size", "1");
-                        {
-                            const settingsbox_2_4_4_1_4_option = document.createElement("option");
-                            settingsbox_2_4_4_1_4_option.textContent = "-----";
-                            settingsbox_2_4_4_1_4_option.setAttribute("value", "");
-                            settingsbox_2_4_4_1_4_select.append(settingsbox_2_4_4_1_4_option);
-                            for (let i = 0; i < NGListStorage.length; i++) {
-                                const settingsbox_2_4_4_1_4_option = document.createElement("option");
-                                settingsbox_2_4_4_1_4_option.setAttribute("value", NGListStorage[i].name);
-                                settingsbox_2_4_4_1_4_option.textContent = NGListStorage[i].name;
-                                settingsbox_2_4_4_1_4_select.append(settingsbox_2_4_4_1_4_option);
-                            }
-                        }
-                        settingsbox_2_4_4_1_4_div.append(settingsbox_2_4_4_1_4_select);
-
-                        const settingsbox_2_4_4_1_4_1_div = document.createElement("div");
-                        {
-
-                            const settingsbox_2_4_4_1_4_1_label1 = document.createElement("label");
-                            settingsbox_2_4_4_1_4_1_label1.textContent = "正規表現"
-                            {
-                                const settingsbox_2_4_4_1_4_1_checkbox1 = document.createElement("input");
-                                EleBlock_Obj.nglist_regex_enable_Ele = settingsbox_2_4_4_1_4_1_checkbox1;
-                                settingsbox_2_4_4_1_4_1_checkbox1.setAttribute("type", "checkbox");
-                                settingsbox_2_4_4_1_4_1_label1.prepend(settingsbox_2_4_4_1_4_1_checkbox1);
-                            }
-                            settingsbox_2_4_4_1_4_1_div.append(settingsbox_2_4_4_1_4_1_label1);
-
-                            const settingsbox_2_4_4_1_4_1_label2 = document.createElement("label");
-                            settingsbox_2_4_4_1_4_1_label2.textContent = "大文字小文字を区別"
-                            {
-                                const settingsbox_2_4_4_1_4_1_checkbox2 = document.createElement("input");
-                                EleBlock_Obj.nglist_lowuppDist_enable_Ele = settingsbox_2_4_4_1_4_1_checkbox2;
-                                settingsbox_2_4_4_1_4_1_checkbox2.setAttribute("type", "checkbox");
-                                settingsbox_2_4_4_1_4_1_label2.prepend(settingsbox_2_4_4_1_4_1_checkbox2);
-                            }
-                            settingsbox_2_4_4_1_4_1_div.append(settingsbox_2_4_4_1_4_1_label2);
-
-                            const settingsbox_2_4_4_1_4_1_label3 = document.createElement("label");
-                            settingsbox_2_4_4_1_4_1_label3.textContent = "URL専用の軽量処理をする"
-                            {
-                                const settingsbox_2_4_4_1_4_1_checkbox3 = document.createElement("input");
-                                EleBlock_Obj.nglist_urlMethod_enable_Ele = settingsbox_2_4_4_1_4_1_checkbox3;
-                                settingsbox_2_4_4_1_4_1_checkbox3.setAttribute("type", "checkbox");
-                                settingsbox_2_4_4_1_4_1_label3.prepend(settingsbox_2_4_4_1_4_1_checkbox3);
-                            }
-                            settingsbox_2_4_4_1_4_1_div.append(settingsbox_2_4_4_1_4_1_label3);
-
-
-                            const settingsbox_2_4_4_1_4_1_1_div = document.createElement("div");
-                            settingsbox_2_4_4_1_4_1_1_div.style.border = "1px solid black";
-                            settingsbox_2_4_4_1_4_1_1_div.style.padding = "4px";
-                            {
-                                const settingsbox_2_4_4_1_4_1_1_label1 = document.createElement("label");
-                                settingsbox_2_4_4_1_4_1_1_label1.style.padding = "0 4px 0 0";
-                                settingsbox_2_4_4_1_4_1_1_label1.textContent = "ホワイトリストも使用する";
-                                {
-                                    const settingsbox_2_4_4_1_4_1_1_checkbox1 = document.createElement("input");
-                                    EleBlock_Obj.nglist_white_enable_Ele = settingsbox_2_4_4_1_4_1_1_checkbox1;
-                                    settingsbox_2_4_4_1_4_1_1_checkbox1.setAttribute("type", "checkbox");
-                                    settingsbox_2_4_4_1_4_1_1_label1.prepend(settingsbox_2_4_4_1_4_1_1_checkbox1);
-                                }
-                                settingsbox_2_4_4_1_4_1_1_div.append(settingsbox_2_4_4_1_4_1_1_label1);
-
-                                const settingsbox_2_4_4_1_4_1_1_select = document.createElement("select");
-                                EleBlock_Obj.nglist_white_list_Ele = settingsbox_2_4_4_1_4_1_1_select;
-                                settingsbox_2_4_4_1_4_1_1_select.style.width = "100%";
-                                settingsbox_2_4_4_1_4_1_1_select.setAttribute("size", "1");
-                                {
-                                    const settingsbox_2_4_4_1_4_1_1_option = document.createElement("option");
-                                    settingsbox_2_4_4_1_4_1_1_option.setAttribute("value", "");
-                                    settingsbox_2_4_4_1_4_1_1_option.textContent = "-----";
-                                    settingsbox_2_4_4_1_4_1_1_select.append(settingsbox_2_4_4_1_4_1_1_option);
-                                    for (let i = 0; i < NGListStorage.length; i++) {
-                                        const settingsbox_2_4_4_1_4_1_1_option = document.createElement("option");
-                                        settingsbox_2_4_4_1_4_1_1_option.setAttribute("value", NGListStorage[i].name);
-                                        settingsbox_2_4_4_1_4_1_1_option.textContent = NGListStorage[i].name;
-                                        settingsbox_2_4_4_1_4_1_1_select.append(settingsbox_2_4_4_1_4_1_1_option);
-                                    }
-                                }
-                                settingsbox_2_4_4_1_4_1_1_div.append(settingsbox_2_4_4_1_4_1_1_select);
-
-                                settingsbox_2_4_4_1_4_1_1_div.append(document.createElement("br"));
-
-                                const settingsbox_2_4_4_1_4_1_1_label2 = document.createElement("label");
-                                settingsbox_2_4_4_1_4_1_1_label2.textContent = "正規表現"
-                                {
-                                    const settingsbox_2_4_4_1_4_1_1_checkbox2 = document.createElement("input");
-                                    EleBlock_Obj.nglist_white_regex_enable_Ele = settingsbox_2_4_4_1_4_1_1_checkbox2;
-                                    settingsbox_2_4_4_1_4_1_1_checkbox2.setAttribute("type", "checkbox");
-                                    settingsbox_2_4_4_1_4_1_1_label2.prepend(settingsbox_2_4_4_1_4_1_1_checkbox2);
-                                }
-                                settingsbox_2_4_4_1_4_1_1_div.append(settingsbox_2_4_4_1_4_1_1_label2);
-
-                                const settingsbox_2_4_4_1_4_1_1_label3 = document.createElement("label");
-                                settingsbox_2_4_4_1_4_1_1_label3.textContent = "大文字小文字を区別"
-                                {
-                                    const settingsbox_2_4_4_1_4_1_1_checkbox3 = document.createElement("input");
-                                    EleBlock_Obj.nglist_white_lowuppDist_enable_Ele = settingsbox_2_4_4_1_4_1_1_checkbox3;
-                                    settingsbox_2_4_4_1_4_1_1_checkbox3.setAttribute("type", "checkbox");
-                                    settingsbox_2_4_4_1_4_1_1_label3.prepend(settingsbox_2_4_4_1_4_1_1_checkbox3);
-                                }
-                                settingsbox_2_4_4_1_4_1_1_div.append(settingsbox_2_4_4_1_4_1_1_label3);
-
-                                const settingsbox_2_4_4_1_4_1_1_label4 = document.createElement("label");
-                                settingsbox_2_4_4_1_4_1_1_label4.textContent = "URL専用の軽量処理をする"
-                                {
-                                    const settingsbox_2_4_4_1_4_1_1_checkbox4 = document.createElement("input");
-                                    EleBlock_Obj.nglist_white_urlMethod_enable_Ele = settingsbox_2_4_4_1_4_1_1_checkbox4;
-                                    settingsbox_2_4_4_1_4_1_1_checkbox4.setAttribute("type", "checkbox");
-                                    settingsbox_2_4_4_1_4_1_1_label4.prepend(settingsbox_2_4_4_1_4_1_1_checkbox4);
-                                }
-                                settingsbox_2_4_4_1_4_1_1_div.append(settingsbox_2_4_4_1_4_1_1_label4);
-
-                            }
-                            settingsbox_2_4_4_1_4_1_div.append(settingsbox_2_4_4_1_4_1_1_div);
-
-
-                        }
-                        settingsbox_2_4_4_1_4_div.append(settingsbox_2_4_4_1_4_1_div);
-                    }
-                    settingsbox_2_4_4_1_div.append(settingsbox_2_4_4_1_4_div);
-
-                }
-                settingsbox_2_4_4_div.append(settingsbox_2_4_4_1_div);
-
-
-                const settingsbox_2_4_4_2_div = document.createElement("div");
-                {
-                    const settingsbox_2_4_4_2_button = document.createElement("button");
-                    settingsbox_2_4_4_2_button.textContent = "←戻る";
-                    settingsbox_2_4_4_2_button.addEventListener("click", () => {
-                        EleBlock_HTML_Obj.ListEditElePageEle.style.display = "block";
-                        settingsbox_2_4_4_div.style.display = "none";
+                    RootShadow.getElementById("ElementBlockConfig_BackButton").addEventListener("click", () => {
+                        this.SettingsObjectListPage_Ele.style.display = "block";
+                        this.EditConfigObjectPage_Ele.style.display = "none";
                     }, false);
-                    settingsbox_2_4_4_2_div.append(settingsbox_2_4_4_2_button);
                 }
-                settingsbox_2_4_4_div.append(settingsbox_2_4_4_2_div);
-            }
-            DashboardMain_div.append(settingsbox_2_4_4_div);
+            }(ElementBlockerStorage);
         }
 
         async function settingsbox_2_5_PreferenceSet() {
