@@ -1,0 +1,29 @@
+<style type="text/css">
+  div.EditConfigObjectPage {
+    height: 100%;
+  }
+  div#BlockListText_div {
+    height: calc(100% - 80px);
+  }
+  textarea#BlockListText_textarea {
+    resize: none;
+    width: 98.5%;
+    height: 98.5%;
+  }
+  div#BlockListText_ReadFile {
+    border: 1px solid black;
+  }
+</style>
+
+<div id="BlockListText" class="EditConfigObjectPage">
+  <div id="BlockListText_div">
+    <textarea id="BlockListText_textarea" spellcheck="false"></textarea>
+  </div>
+  <div id="BlockListText_ReadFile">
+    <span id="BlockListText_ReadFile_Title"></span><br />
+    <input id="BlockListText_ReadFile_Input" type="file" />
+  </div>
+  <div>
+    <button id="BlockListText_BackButton"></button>
+  </div>
+</div>

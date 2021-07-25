@@ -1,29 +1,99 @@
 <style type="text/css">
-  div#EditConfigObjectPage {
-    height: 83%;
-  }
-  div#BlockListText_div {
+  div.EditConfigObjectPage {
     height: 100%;
   }
-  textarea#BlockListText_textarea {
-    resize: none;
-    width: 98.5%;
-    height: 98.5%;
-  }
-  div#BlockListText_ReadFile {
+  div.ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
     border: 1px solid black;
+  }
+  h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+  }
+  select.SentenceBlock_Select {
+    width: 100%;
   }
 </style>
 
-<div id="EditConfigObjectPage">
-  <div id="BlockListText_div">
-    <textarea id="BlockListText_textarea" spellcheck="false"></textarea>
+<div id="SentenceBlockConfig" class="EditConfigObjectPage">
+  <div class="ItemFrame_Border">
+    <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlockConfig1_Description"></p>
+    <input id="SentenceBlockConfig1_Input1" type="text" />
+    <br />
+    <label>
+      <input id="SentenceBlockConfig1_Input2" type="checkbox" />
+      <span id="SentenceBlockConfig1_Input2_SpanText"></span>
+    </label>
   </div>
-  <div id="BlockListText_ReadFile">
-    <span id="BlockListText_ReadFile_Title"></span><br />
-    <input id="BlockListText_ReadFile_Input" type="file" />
+  <div class="ItemFrame_Border">
+    <h1 id="SentenceBlockConfig2_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlockConfig2_Description"></p>
+    <select
+      id="SentenceBlockConfig2_Select"
+      class="SentenceBlock_Select"
+      size="1"
+    >
+      <option value="">-----</option>
+    </select>
+    <div>
+      <label>
+        <input id="SentenceBlockConfig2_Input1" type="checkbox" />
+        <span id="SentenceBlockConfig2_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input id="SentenceBlockConfig2_Input2" type="checkbox" />
+        <span id="SentenceBlockConfig2_Input2_SpanText"></span>
+      </label>
+      <div class="ItemFrame_Border">
+        <label>
+          <input id="SentenceBlockConfig2-2_Input1" type="checkbox" />
+          <span id="SentenceBlockConfig2-2_Input1_SpanText"></span>
+        </label>
+        <select
+          id="SentenceBlockConfig2-2_Select"
+          class="SentenceBlock_Select"
+          size="1"
+        >
+          <option value="">-----</option>
+        </select>
+        <div>
+          <label>
+            <input id="SentenceBlockConfig2-2_Input2" type="checkbox" />
+            <span id="SentenceBlockConfig2-2_Input2_SpanText"></span>
+          </label>
+          <label>
+            <input id="SentenceBlockConfig2-2_Input3" type="checkbox" />
+            <span id="SentenceBlockConfig2-2_Input3_SpanText"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlockConfig3_Description"></p>
+    <input id="SentenceBlockConfig3_Description_InputText" />
+    <form id="SentenceBlockConfig3_Description_Form">
+      <label>
+        <input type="radio" name="webabron_mode" value="sentence" checked />
+        <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input type="radio" name="webabron_mode" value="word" />
+        <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
+      </label>
+    </form>
   </div>
   <div>
-    <button id="EditConfigObjectPage_BackButton"></button>
+    <button id="SentenceBlockConfig_BackButton"></button>
   </div>
 </div>

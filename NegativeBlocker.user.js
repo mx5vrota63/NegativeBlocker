@@ -1304,7 +1304,7 @@
         }
 
         async function settingsbox_2_2_NGListSet() {
-            const NGList_Obj = new class extends ListEdit_Func {
+            new class extends ListEdit_Func {
                 constructor(NGListStorage) {
                     super(NGListStorage);
                     this.li_cfuncinfunction = async function EditboxEleApply() {
@@ -1322,6 +1322,8 @@
                     this.SaveButtonFunc = this.NGListStoSave.bind(this);
                     this.DelButtonFunc = this.NGListStoDel.bind(this);
                     this.NewObjectButtonFunc = this.NGListNewEditButton.bind(this);
+
+                    this.htmlCreate();
                 }
                 async NGListStoSave() {
                     const StoObj = {
@@ -1361,11 +1363,11 @@
                     this.EditConfigObjectPage_Ele.style.height = "100%";
                     this.EditConfigObjectPage_Ele.innerHTML = `
 <style type="text/css">
-  div#EditConfigObjectPage {
-    height: 83%;
+  div.EditConfigObjectPage {
+    height: 100%;
   }
   div#BlockListText_div {
-    height: 100%;
+    height: calc(100% - 80px);
   }
   textarea#BlockListText_textarea {
     resize: none;
@@ -1377,16 +1379,16 @@
   }
 </style>
 
-<div id="EditConfigObjectPage">
+<div id="BlockListText" class="EditConfigObjectPage">
   <div id="BlockListText_div">
     <textarea id="BlockListText_textarea" spellcheck="false"></textarea>
   </div>
   <div id="BlockListText_ReadFile">
-    <span id="BlockListText_ReadFile_Title"></span><br>
+    <span id="BlockListText_ReadFile_Title"></span><br />
     <input id="BlockListText_ReadFile_Input" type="file" />
   </div>
   <div>
-    <button id="EditConfigObjectPage_BackButton"></button>
+    <button id="BlockListText_BackButton"></button>
   </div>
 </div>
             `
@@ -1394,7 +1396,6 @@
                     settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
 
                     RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = "ファイルからテキストを読み込む";
-
 
                     this.textarea_Ele = RootShadow.getElementById("BlockListText_textarea");
 
@@ -1413,8 +1414,8 @@
                         }
                     })
 
-                    RootShadow.getElementById("EditConfigObjectPage_BackButton").textContent = "←戻る"
-                    RootShadow.getElementById("EditConfigObjectPage_BackButton").addEventListener("click", () => {
+                    RootShadow.getElementById("BlockListText_BackButton").textContent = "←戻る"
+                    RootShadow.getElementById("BlockListText_BackButton").addEventListener("click", () => {
                         this.SettingsObjectListPage_Ele.style.display = "block";
                         this.EditConfigObjectPage_Ele.style.display = "none";
                     }, false);
@@ -1422,19 +1423,10 @@
                     RootShadow.getElementById("SettingsObject_ConfigItems_Enable").style.display = "none";
                 }
             }(NGListStorage);
-
-            NGList_Obj.htmlCreate();
         }
 
-
-
-
-
-
-
-
         async function settingsbox_2_3_WebAbronSet() {
-            const WebAbron_Obj = new class extends ListEdit_Func {
+            new class extends ListEdit_Func {
                 constructor(WebAbronStorage) {
                     super(WebAbronStorage);
                     this.url_Ele = null;
@@ -1463,6 +1455,12 @@
                         this.replace_string_Ele.value = applylist.replace_string;
                         this.replace_mode_Ele.webabron_mode.value = applylist.replace_mode;
                     }
+
+                    this.SaveButtonFunc = this.WebAbronListStoSave.bind(this);
+                    this.DelButtonFunc = this.WebAbronListStoDel.bind(this);
+                    this.NewObjectButtonFunc = this.WebAbronListNewEditButton.bind(this);
+
+                    this.htmlCreate();
                 }
                 async WebAbronListStoSave() {
                     const StoObj = {
@@ -1503,269 +1501,157 @@
                         return 0;
                     }
                 }
-            }(WebAbronStorage);
 
-            const WebAbronList_HTML_Obj = new ListEdit_HTML(WebAbron_Obj);
-            await WebAbronList_HTML_Obj.init();
-            WebAbronList_HTML_Obj.SaveButtonFunc = WebAbron_Obj.WebAbronListStoSave.bind(WebAbron_Obj);
-            WebAbronList_HTML_Obj.DelButtonFunc = WebAbron_Obj.WebAbronListStoDel.bind(WebAbron_Obj);
-            WebAbronList_HTML_Obj.NewEditButtonFunc = WebAbron_Obj.WebAbronListNewEditButton.bind(WebAbron_Obj);
-            WebAbron_Obj.enable_Ele = WebAbronList_HTML_Obj.EnableCheckboxDivEle.getElementsByTagName("input")[0];
+                async htmlCreate() {
+                    this.EditConfigObjectPage_Ele = document.createElement("div");
+                    this.EditConfigObjectPage_Ele.style.display = "none";
+                    this.EditConfigObjectPage_Ele.style.height = "calc(100% - 80px)";
+                    this.EditConfigObjectPage_Ele.innerHTML = `
+<style type="text/css">
+  div.EditConfigObjectPage {
+    height: 100%;
+  }
+  div.ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+  }
+  select.SentenceBlock_Select {
+    width: 100%;
+  }
+</style>
 
-            const settingsbox_2_3_4_div = document.createElement("div");
-            WebAbronList_HTML_Obj.DetailSettingPageEle = settingsbox_2_3_4_div;
-            settingsbox_2_ele_stack.push(settingsbox_2_3_4_div);
-            settingsbox_2_3_4_div.style.display = "none";
-            {
-                const settingsbox_2_3_4_1_div = document.createElement("div");
-                {
-                    const settingsbox_2_3_4_1_1_div = document.createElement("div");
-                    settingsbox_2_3_4_1_1_div.style.position = "relative";
-                    settingsbox_2_3_4_1_1_div.style.marginTop = "1em";
-                    settingsbox_2_3_4_1_1_div.style.padding = "12px";
-                    settingsbox_2_3_4_1_1_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_3_4_1_1_h1 = document.createElement("h1");
-                        settingsbox_2_3_4_1_1_h1.style.position = "absolute";
-                        settingsbox_2_3_4_1_1_h1.style.top = 0;
-                        settingsbox_2_3_4_1_1_h1.style.left = 0;
-                        settingsbox_2_3_4_1_1_h1.style.fontSize = "1em";
-                        settingsbox_2_3_4_1_1_h1.style.padding = "0 4px";
-                        settingsbox_2_3_4_1_1_h1.style.margin = 0;
-                        settingsbox_2_3_4_1_1_h1.style.transform = "translateY(-50%) translateX(6px)";
-                        settingsbox_2_3_4_1_1_h1.style.backgroundColor = "#FFFFB2";
-                        settingsbox_2_3_4_1_1_h1.textContent = "URL";
-                        settingsbox_2_3_4_1_1_div.append(settingsbox_2_3_4_1_1_h1);
+<div id="SentenceBlockConfig" class="EditConfigObjectPage">
+  <div class="ItemFrame_Border">
+    <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlockConfig1_Description"></p>
+    <input id="SentenceBlockConfig1_Input1" type="text" />
+    <br />
+    <label>
+      <input id="SentenceBlockConfig1_Input2" type="checkbox" />
+      <span id="SentenceBlockConfig1_Input2_SpanText"></span>
+    </label>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="SentenceBlockConfig2_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlockConfig2_Description"></p>
+    <select
+      id="SentenceBlockConfig2_Select"
+      class="SentenceBlock_Select"
+      size="1"
+    >
+      <option value="">-----</option>
+    </select>
+    <div>
+      <label>
+        <input id="SentenceBlockConfig2_Input1" type="checkbox" />
+        <span id="SentenceBlockConfig2_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input id="SentenceBlockConfig2_Input2" type="checkbox" />
+        <span id="SentenceBlockConfig2_Input2_SpanText"></span>
+      </label>
+      <div class="ItemFrame_Border">
+        <label>
+          <input id="SentenceBlockConfig2-2_Input1" type="checkbox" />
+          <span id="SentenceBlockConfig2-2_Input1_SpanText"></span>
+        </label>
+        <select
+          id="SentenceBlockConfig2-2_Select"
+          class="SentenceBlock_Select"
+          size="1"
+        >
+          <option value="">-----</option>
+        </select>
+        <div>
+          <label>
+            <input id="SentenceBlockConfig2-2_Input2" type="checkbox" />
+            <span id="SentenceBlockConfig2-2_Input2_SpanText"></span>
+          </label>
+          <label>
+            <input id="SentenceBlockConfig2-2_Input3" type="checkbox" />
+            <span id="SentenceBlockConfig2-2_Input3_SpanText"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlockConfig3_Description"></p>
+    <input id="SentenceBlockConfig3_Description_InputText" />
+    <form id="SentenceBlockConfig3_Description_Form">
+      <label>
+        <input type="radio" name="webabron_mode" value="sentence" checked />
+        <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input type="radio" name="webabron_mode" value="word" />
+        <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
+      </label>
+    </form>
+  </div>
+  <div>
+    <button id="SentenceBlockConfig_BackButton"></button>
+  </div>
+</div>
+                    `
+                    DashboardMain_div.append(this.EditConfigObjectPage_Ele);
+                    settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
 
-                        const settingsbox_2_3_4_1_1_p = document.createElement("p");
-                        settingsbox_2_3_4_1_1_p.style.margin = 0;
-                        settingsbox_2_3_4_1_1_p.innerHTML = "このルールを有効にするサイトを指定します。何も入力せず空欄にするとすべてのサイトが対象になります。 <br>正規表現がOFFの時「*」でワイルドカードを使用できます。";
-                        settingsbox_2_3_4_1_1_div.append(settingsbox_2_3_4_1_1_p);
+                    RootShadow.getElementById("SentenceBlockConfig1_Title").textContent = "URL";
+                    RootShadow.getElementById("SentenceBlockConfig1_Description").textContent = "このルールを有効にするサイトを指定します。何も入力せず空欄にするとすべてのサイトが対象になります。";
+                    RootShadow.getElementById("SentenceBlockConfig1_Input2_SpanText").textContent = "正規表現";
+                    RootShadow.getElementById("SentenceBlockConfig2_Title").textContent = "NGフィルタ";
+                    RootShadow.getElementById("SentenceBlockConfig2_Description").textContent = "使用するNGフィルタを指定します。";
+                    RootShadow.getElementById("SentenceBlockConfig2_Input1_SpanText").textContent = "正規表現";
+                    RootShadow.getElementById("SentenceBlockConfig2_Input2_SpanText").textContent = "大文字小文字を区別";
+                    RootShadow.getElementById("SentenceBlockConfig2-2_Input1_SpanText").textContent = "ホワイトリストも使用する";
+                    RootShadow.getElementById("SentenceBlockConfig2-2_Input2_SpanText").textContent = "正規表現";
+                    RootShadow.getElementById("SentenceBlockConfig2-2_Input3_SpanText").textContent = "大文字小文字を区別";
+                    RootShadow.getElementById("SentenceBlockConfig3_Title").textContent = "置換文字";
+                    RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = "置換する文字列を入力します。";
+                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = "一文章で置換える";
+                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input2_SpanText").textContent = "単語で置換える";
+                    RootShadow.getElementById("SentenceBlockConfig_BackButton").textContent = "←戻る";
 
-                        const settingsbox_2_3_4_1_1_input = document.createElement("input");
-                        WebAbron_Obj.url_Ele = settingsbox_2_3_4_1_1_input;
-                        settingsbox_2_3_4_1_1_input.setAttribute("type", "text");
-                        settingsbox_2_3_4_1_1_div.append(settingsbox_2_3_4_1_1_input);
+                    this.url_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input1");
+                    this.url_regex_enable_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input2");
+                    this.nglist_list_Ele = RootShadow.getElementById("SentenceBlockConfig2_Select");
+                    this.nglist_regex_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2_Input1");
+                    this.nglist_lowuppDist_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2_Input2");
+                    this.nglist_white_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input1");
+                    this.nglist_white_list_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Select");
+                    this.nglist_white_regex_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input2");
+                    this.nglist_white_lowuppDist_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input3");
+                    this.replace_string_Ele = RootShadow.getElementById("SentenceBlockConfig3_Description_InputText");
+                    this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Description_Form");
 
-                        settingsbox_2_3_4_1_1_div.append(document.createElement("br"));
-
-                        const settingsbox_2_3_4_1_1_label = document.createElement("label");
-                        settingsbox_2_3_4_1_1_label.textContent = "正規表現"
-                        {
-                            const settingsbox_2_3_4_1_1_checkbox = document.createElement("input");
-                            WebAbron_Obj.url_regex_enable_Ele = settingsbox_2_3_4_1_1_checkbox;
-                            settingsbox_2_3_4_1_1_checkbox.setAttribute("type", "checkbox");
-                            settingsbox_2_3_4_1_1_label.prepend(settingsbox_2_3_4_1_1_checkbox);
-                        }
-                        settingsbox_2_3_4_1_1_div.append(settingsbox_2_3_4_1_1_label);
+                    for (let i = 0; i < NGListStorage.length; i++) {
+                        const settingsbox_2_3_4_1_2_option = document.createElement("option");
+                        settingsbox_2_3_4_1_2_option.setAttribute("value", NGListStorage[i].name);
+                        settingsbox_2_3_4_1_2_option.textContent = NGListStorage[i].name;
+                        this.nglist_list_Ele.append(settingsbox_2_3_4_1_2_option);
+                        this.nglist_white_list_Ele.append(settingsbox_2_3_4_1_2_option.cloneNode(true));
                     }
-                    settingsbox_2_3_4_1_div.append(settingsbox_2_3_4_1_1_div);
 
-                    const settingsbox_2_3_4_1_2_div = document.createElement("div");
-                    settingsbox_2_3_4_1_2_div.style.position = "relative";
-                    settingsbox_2_3_4_1_2_div.style.marginTop = "1em";
-                    settingsbox_2_3_4_1_2_div.style.padding = "12px";
-                    settingsbox_2_3_4_1_2_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_3_4_1_2_h1 = document.createElement("h1");
-                        settingsbox_2_3_4_1_2_h1.style.position = "absolute";
-                        settingsbox_2_3_4_1_2_h1.style.top = 0;
-                        settingsbox_2_3_4_1_2_h1.style.left = 0;
-                        settingsbox_2_3_4_1_2_h1.style.fontSize = "1em";
-                        settingsbox_2_3_4_1_2_h1.style.padding = "0 4px";
-                        settingsbox_2_3_4_1_2_h1.style.margin = 0;
-                        settingsbox_2_3_4_1_2_h1.style.transform = "translateY(-50%) translateX(6px)";
-                        settingsbox_2_3_4_1_2_h1.style.backgroundColor = "#FFFFB2";
-                        settingsbox_2_3_4_1_2_h1.textContent = "NGフィルタ";
-                        settingsbox_2_3_4_1_2_div.append(settingsbox_2_3_4_1_2_h1);
-
-                        const settingsbox_2_3_4_1_2_p = document.createElement("p");
-                        settingsbox_2_3_4_1_2_p.style.margin = 0;
-                        settingsbox_2_3_4_1_2_p.textContent = "使用するNGフィルタを指定します。";
-                        settingsbox_2_3_4_1_2_div.append(settingsbox_2_3_4_1_2_p);
-
-                        const settingsbox_2_3_4_1_2_select = document.createElement("select");
-                        WebAbron_Obj.nglist_list_Ele = settingsbox_2_3_4_1_2_select;
-                        settingsbox_2_3_4_1_2_select.style.width = "100%"
-                        settingsbox_2_3_4_1_2_select.setAttribute("size", "1");
-                        {
-                            const settingsbox_2_3_4_1_2_option = document.createElement("option");
-                            settingsbox_2_3_4_1_2_option.textContent = "-----";
-                            settingsbox_2_3_4_1_2_option.setAttribute("value", "");
-                            settingsbox_2_3_4_1_2_select.append(settingsbox_2_3_4_1_2_option);
-                            for (let i = 0; i < NGListStorage.length; i++) {
-                                const settingsbox_2_3_4_1_2_option = document.createElement("option");
-                                settingsbox_2_3_4_1_2_option.setAttribute("value", NGListStorage[i].name);
-                                settingsbox_2_3_4_1_2_option.textContent = NGListStorage[i].name;
-                                settingsbox_2_3_4_1_2_select.append(settingsbox_2_3_4_1_2_option);
-                            }
-                        }
-                        settingsbox_2_3_4_1_2_div.append(settingsbox_2_3_4_1_2_select);
-
-                        const settingsbox_2_3_4_1_2_1_div = document.createElement("div");
-                        {
-
-                            const settingsbox_2_3_4_1_2_1_label1 = document.createElement("label");
-                            settingsbox_2_3_4_1_2_1_label1.textContent = "正規表現"
-                            {
-                                const settingsbox_2_3_4_1_2_1_checkbox2 = document.createElement("input");
-                                WebAbron_Obj.nglist_regex_enable_Ele = settingsbox_2_3_4_1_2_1_checkbox2;
-                                settingsbox_2_3_4_1_2_1_checkbox2.setAttribute("type", "checkbox");
-                                settingsbox_2_3_4_1_2_1_label1.prepend(settingsbox_2_3_4_1_2_1_checkbox2);
-                            }
-                            settingsbox_2_3_4_1_2_1_div.append(settingsbox_2_3_4_1_2_1_label1);
-
-                            const settingsbox_2_3_4_1_2_1_label3 = document.createElement("label");
-                            settingsbox_2_3_4_1_2_1_label3.textContent = "大文字小文字を区別"
-                            {
-                                const settingsbox_2_3_4_1_2_1_checkbox3 = document.createElement("input");
-                                WebAbron_Obj.nglist_lowuppDist_enable_Ele = settingsbox_2_3_4_1_2_1_checkbox3;
-                                settingsbox_2_3_4_1_2_1_checkbox3.setAttribute("type", "checkbox");
-                                settingsbox_2_3_4_1_2_1_label3.prepend(settingsbox_2_3_4_1_2_1_checkbox3);
-                            }
-                            settingsbox_2_3_4_1_2_1_div.append(settingsbox_2_3_4_1_2_1_label3);
-
-
-                            const settingsbox_2_3_4_1_2_1_1_div = document.createElement("div");
-                            settingsbox_2_3_4_1_2_1_1_div.style.border = "1px solid black";
-                            settingsbox_2_3_4_1_2_1_1_div.style.padding = "4px";
-                            {
-                                const settingsbox_2_3_4_1_2_1_1_label1 = document.createElement("label");
-                                settingsbox_2_3_4_1_2_1_1_label1.style.padding = "0 4px 0 0";
-                                settingsbox_2_3_4_1_2_1_1_label1.textContent = "ホワイトリストも使用する";
-                                {
-                                    const settingsbox_2_3_4_1_2_1_1_checkbox1 = document.createElement("input");
-                                    WebAbron_Obj.nglist_white_enable_Ele = settingsbox_2_3_4_1_2_1_1_checkbox1;
-                                    settingsbox_2_3_4_1_2_1_1_checkbox1.setAttribute("type", "checkbox");
-                                    settingsbox_2_3_4_1_2_1_1_label1.prepend(settingsbox_2_3_4_1_2_1_1_checkbox1);
-                                }
-                                settingsbox_2_3_4_1_2_1_1_div.append(settingsbox_2_3_4_1_2_1_1_label1);
-
-                                const settingsbox_2_3_4_1_2_1_1_select = document.createElement("select");
-                                WebAbron_Obj.nglist_white_list_Ele = settingsbox_2_3_4_1_2_1_1_select;
-                                settingsbox_2_3_4_1_2_1_1_select.style.width = "100%";
-                                settingsbox_2_3_4_1_2_1_1_select.setAttribute("size", "1");
-                                {
-                                    const settingsbox_2_3_4_1_2_1_1_option = document.createElement("option");
-                                    settingsbox_2_3_4_1_2_1_1_option.setAttribute("value", "");
-                                    settingsbox_2_3_4_1_2_1_1_option.textContent = "-----";
-                                    settingsbox_2_3_4_1_2_1_1_select.append(settingsbox_2_3_4_1_2_1_1_option);
-                                    for (let i = 0; i < NGListStorage.length; i++) {
-                                        const settingsbox_2_3_4_1_2_1_1_option = document.createElement("option");
-                                        settingsbox_2_3_4_1_2_1_1_option.setAttribute("value", NGListStorage[i].name);
-                                        settingsbox_2_3_4_1_2_1_1_option.textContent = NGListStorage[i].name;
-                                        settingsbox_2_3_4_1_2_1_1_select.append(settingsbox_2_3_4_1_2_1_1_option);
-                                    }
-                                }
-                                settingsbox_2_3_4_1_2_1_1_div.append(settingsbox_2_3_4_1_2_1_1_select);
-
-                                settingsbox_2_3_4_1_2_1_1_div.append(document.createElement("br"));
-
-                                const settingsbox_2_3_4_1_2_1_1_label2 = document.createElement("label");
-                                settingsbox_2_3_4_1_2_1_1_label2.textContent = "正規表現"
-                                {
-                                    const settingsbox_2_3_4_1_2_1_1_checkbox2 = document.createElement("input");
-                                    WebAbron_Obj.nglist_white_regex_enable_Ele = settingsbox_2_3_4_1_2_1_1_checkbox2;
-                                    settingsbox_2_3_4_1_2_1_1_checkbox2.setAttribute("type", "checkbox");
-                                    settingsbox_2_3_4_1_2_1_1_label2.prepend(settingsbox_2_3_4_1_2_1_1_checkbox2);
-                                }
-                                settingsbox_2_3_4_1_2_1_1_div.append(settingsbox_2_3_4_1_2_1_1_label2);
-
-                                const settingsbox_2_3_4_1_2_1_1_label3 = document.createElement("label");
-                                settingsbox_2_3_4_1_2_1_1_label3.textContent = "大文字小文字を区別"
-                                {
-                                    const settingsbox_2_3_4_1_2_1_1_checkbox3 = document.createElement("input");
-                                    WebAbron_Obj.nglist_white_lowuppDist_enable_Ele = settingsbox_2_3_4_1_2_1_1_checkbox3;
-                                    settingsbox_2_3_4_1_2_1_1_checkbox3.setAttribute("type", "checkbox");
-                                    settingsbox_2_3_4_1_2_1_1_label3.prepend(settingsbox_2_3_4_1_2_1_1_checkbox3);
-                                }
-                                settingsbox_2_3_4_1_2_1_1_div.append(settingsbox_2_3_4_1_2_1_1_label3);
-
-                            }
-                            settingsbox_2_3_4_1_2_1_div.append(settingsbox_2_3_4_1_2_1_1_div);
-
-
-                        }
-                        settingsbox_2_3_4_1_2_div.append(settingsbox_2_3_4_1_2_1_div);
-                    }
-                    settingsbox_2_3_4_1_div.append(settingsbox_2_3_4_1_2_div);
-
-
-                    const settingsbox_2_3_4_1_3_div = document.createElement("div");
-                    settingsbox_2_3_4_1_3_div.style.position = "relative";
-                    settingsbox_2_3_4_1_3_div.style.marginTop = "1em";
-                    settingsbox_2_3_4_1_3_div.style.padding = "12px";
-                    settingsbox_2_3_4_1_3_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_3_4_1_3_h1 = document.createElement("h1");
-                        settingsbox_2_3_4_1_3_h1.style.position = "absolute";
-                        settingsbox_2_3_4_1_3_h1.style.top = 0;
-                        settingsbox_2_3_4_1_3_h1.style.left = 0;
-                        settingsbox_2_3_4_1_3_h1.style.fontSize = "1em";
-                        settingsbox_2_3_4_1_3_h1.style.padding = "0 4px";
-                        settingsbox_2_3_4_1_3_h1.style.margin = 0;
-                        settingsbox_2_3_4_1_3_h1.style.transform = "translateY(-50%) translateX(6px)";
-                        settingsbox_2_3_4_1_3_h1.style.backgroundColor = "#FFFFB2";
-                        settingsbox_2_3_4_1_3_h1.textContent = "置換文字";
-                        settingsbox_2_3_4_1_3_div.append(settingsbox_2_3_4_1_3_h1);
-
-                        const settingsbox_2_3_4_1_3_p = document.createElement("p");
-                        settingsbox_2_3_4_1_3_p.style.margin = 0;
-                        settingsbox_2_3_4_1_3_p.textContent = "置換する文字列を入力します。";
-                        settingsbox_2_3_4_1_3_div.append(settingsbox_2_3_4_1_3_p);
-
-                        const settingsbox_2_3_4_1_3_input = document.createElement("input");
-                        WebAbron_Obj.replace_string_Ele = settingsbox_2_3_4_1_3_input;
-                        settingsbox_2_3_4_1_3_input.setAttribute("type", "text");
-                        settingsbox_2_3_4_1_3_div.append(settingsbox_2_3_4_1_3_input);
-
-                        const settingsbox_2_3_4_1_3_1_form = document.createElement("form");
-                        WebAbron_Obj.replace_mode_Ele = settingsbox_2_3_4_1_3_1_form;
-                        {
-                            const settingsbox_2_3_4_1_3_1_label1 = document.createElement("label");
-                            settingsbox_2_3_4_1_3_1_label1.textContent = "一文章で置換える"
-                            {
-                                const settingsbox_2_3_4_1_3_1_radio1 = document.createElement("input");
-                                settingsbox_2_3_4_1_3_1_radio1.setAttribute("type", "radio");
-                                settingsbox_2_3_4_1_3_1_radio1.setAttribute("name", "webabron_mode");
-                                settingsbox_2_3_4_1_3_1_radio1.setAttribute("value", "sentence");
-                                settingsbox_2_3_4_1_3_1_radio1.setAttribute("checked", "");
-                                settingsbox_2_3_4_1_3_1_label1.prepend(settingsbox_2_3_4_1_3_1_radio1);
-                            }
-                            settingsbox_2_3_4_1_3_1_form.append(settingsbox_2_3_4_1_3_1_label1);
-
-                            const settingsbox_2_3_4_1_3_1_label2 = document.createElement("label");
-                            settingsbox_2_3_4_1_3_1_label2.textContent = "単語で置換える"
-                            {
-                                const settingsbox_2_3_4_1_3_1_radio2 = document.createElement("input");
-                                settingsbox_2_3_4_1_3_1_radio2.setAttribute("type", "radio");
-                                settingsbox_2_3_4_1_3_1_radio2.setAttribute("name", "webabron_mode");
-                                settingsbox_2_3_4_1_3_1_radio2.setAttribute("value", "word");
-                                settingsbox_2_3_4_1_3_1_label2.prepend(settingsbox_2_3_4_1_3_1_radio2);
-                            }
-                            settingsbox_2_3_4_1_3_1_form.append(settingsbox_2_3_4_1_3_1_label2);
-                        }
-                        settingsbox_2_3_4_1_3_div.append(settingsbox_2_3_4_1_3_1_form);
-                    }
-                    settingsbox_2_3_4_1_div.append(settingsbox_2_3_4_1_3_div);
-
-                }
-                settingsbox_2_3_4_div.append(settingsbox_2_3_4_1_div);
-
-                const settingsbox_2_3_4_2_div = document.createElement("div");
-                {
-                    const settingsbox_2_3_4_2_button = document.createElement("button");
-                    settingsbox_2_3_4_2_button.textContent = "←戻る";
-                    settingsbox_2_3_4_2_button.addEventListener("click", () => {
-                        WebAbronList_HTML_Obj.ListEditElePageEle.style.display = "block";
-                        settingsbox_2_3_4_div.style.display = "none";
+                    RootShadow.getElementById("SentenceBlockConfig_BackButton").addEventListener("click", () => {
+                        this.SettingsObjectListPage_Ele.style.display = "block";
+                        this.EditConfigObjectPage_Ele.style.display = "none";
                     }, false);
-                    settingsbox_2_3_4_2_div.append(settingsbox_2_3_4_2_button);
                 }
-                settingsbox_2_3_4_div.append(settingsbox_2_3_4_2_div);
-            }
-            DashboardMain_div.append(settingsbox_2_3_4_div);
-
+            }(WebAbronStorage);
         }
 
         async function settingsbox_2_4_ElementBlockerSet() {
