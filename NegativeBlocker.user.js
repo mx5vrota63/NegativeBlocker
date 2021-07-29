@@ -1981,85 +1981,73 @@
         async function settingsbox_2_5_PreferenceSet() {
             ArrayLast(settingsbox_2_ele_stack).style.display = "none";
             const settingsbox_2_5_div = document.createElement("div");
+            settingsbox_2_5_div.innerHTML = `
+<style type="text/css">
+  div.PreferencesItem {
+    display: block;
+    margin: 0 0 20px 0;
+  }
+  #PreferencesPage p {
+    margin: 0;
+  }
+</style>
+
+<div id="PreferencesPage">
+  <div id="ImportAndExport_Setting" class="PreferencesItem">
+    <p id="ImportAndExport_Setting_Title"></p>
+    <button id="ImportAndExport_Setting_Button"></button>
+  </div>
+  <div id="ButtonHide_Setting" class="PreferencesItem">
+    <p id="ButtonHide_Setting_Title"></p>
+    <label>
+      <input id="ButtonHide_Setting_Input" type="checkbox" />
+      <span id="ButtonHide_Setting_Input_SpanText"></span>
+    </label>
+  </div>
+  <div id="SettingMainPageBack" class="PreferencesItem">
+    <button id="PreferencesPageBack_Button"></button>
+  </div>
+</div>
+            `
             DashboardMain_div.append(settingsbox_2_5_div);
             settingsbox_2_ele_stack.push(settingsbox_2_5_div);
-            {
-                const settingsbox_2_5_2_div = document.createElement("div");
-                settingsbox_2_5_2_div.style.display = "block";
-                {
-                    const settingsbox_2_5_2_p = document.createElement("p");
-                    settingsbox_2_5_2_p.innerHTML = "エクスポート&インポート<br>設定内容をエクスポートまたはインポートします。"
-                    settingsbox_2_5_2_div.append(settingsbox_2_5_2_p);
 
-                    const settingsbox__2_5_2_button = document.createElement("button");
-                    settingsbox__2_5_2_button.textContent = "エクスポート&インポート"
-                    settingsbox__2_5_2_button.addEventListener("click", settingsbox_2_5_2_ExportImport, false);
-                    settingsbox_2_5_2_div.append(settingsbox__2_5_2_button);
-                }
-                settingsbox_2_5_div.append(settingsbox_2_5_2_div);
+            RootShadow.getElementById("ImportAndExport_Setting_Title").innerHTML = "エクスポート&インポート<br>設定内容をエクスポートまたはインポートします。";
+            RootShadow.getElementById("ImportAndExport_Setting_Button").textContent = "エクスポート&インポート";
+            RootShadow.getElementById("ButtonHide_Setting_Title").innerHTML = "右上のボタンを常時非表示にする<br>右上のボタンを常時非表示にします。<br>（注意：UserScriptマネージャーのメニュー画面から設定ウィンドウを呼び出せない場合、このオプションを使用すると再インストールしない限り二度と設定画面を表示することはできなくなります。（再インストールした場合設定内容はすべて消去されます。）";
+            RootShadow.getElementById("ButtonHide_Setting_Input_SpanText").textContent = "ボタンを非表示にする";
+            RootShadow.getElementById("PreferencesPageBack_Button").textContent = "←戻る";
 
+            RootShadow.getElementById("ImportAndExport_Setting_Button").addEventListener("click", settingsbox_2_5_2_ExportImport, false);
 
-                const settingsbox_2_5_3_div = document.createElement("div");
-                settingsbox_2_5_3_div.style.display = "block";
-                {
-                    const settingsbox_2_5_3_p = document.createElement("p");
-                    settingsbox_2_5_3_p.style.margin = "16px 0 0 0"
-                    settingsbox_2_5_3_p.innerHTML = "右上のボタンを常時非表示にする<br>右上のボタンを常時非表示にします。<br>（注意：UserScriptマネージャーのメニュー画面から設定ウィンドウを呼び出せない場合、このオプションを使用すると再インストールしない限り二度と設定画面を表示することはできなくなります。（再インストールした場合設定内容はすべて消去されます。）"
-                    settingsbox_2_5_3_div.append(settingsbox_2_5_3_p);
-
-
-                    const settingsbox_2_5_3_1_label = document.createElement("label");
-                    settingsbox_2_5_3_1_label.textContent = "ボタンを非表示にする"
-                    {
-                        const settingsbox_2_5_3_1_checkbox = document.createElement("input");
-                        settingsbox_2_5_3_1_checkbox.setAttribute("type", "checkbox");
-                        if (PreferenceSetting["hideButton"]) {
-                            settingsbox_2_5_3_1_checkbox.checked = true;
-                        } else {
-                            settingsbox_2_5_3_1_checkbox.checked = false;
-                        }
-                        settingsbox_2_5_3_1_checkbox.addEventListener("change", async function () {
-                            if (this.checked) {
-                                this.checked = false;
-                                const res = confirm("UserScriptマネージャーのメニュー画面から設定ウィンドウを呼び出せない場合、再インストールしないと二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
-                                if (res) {
-                                    this.checked = true;
-                                    PreferenceSetting["hideButton"] = true;
-                                    await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
-                                }
-                            } else {
-                                PreferenceSetting["hideButton"] = false;
-                                await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
-                            }
-                        });
-                        settingsbox_2_5_3_1_label.prepend(settingsbox_2_5_3_1_checkbox);
-                    }
-                    settingsbox_2_5_3_div.append(settingsbox_2_5_3_1_label);
-
-
-                }
-                settingsbox_2_5_div.append(settingsbox_2_5_3_div);
-
-
-                const settingsbox_2_5_1_div = document.createElement("div");
-                {
-                    const settingsbox_2_5_1_button = document.createElement("button");
-                    settingsbox_2_5_1_button.textContent = "←戻る";
-                    settingsbox_2_5_1_button.addEventListener("click", () => {
-                        settingsbox_2_ele_stack.pop().remove();
-                        ArrayLast(settingsbox_2_ele_stack).style.display = "block";
-                    }, false);
-                    settingsbox_2_5_1_div.append(settingsbox_2_5_1_button);
-                }
-                settingsbox_2_5_div.append(settingsbox_2_5_1_div);
-
+            const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Setting_Input");
+            if (PreferenceSetting["hideButton"]) {
+                ButtonHide_Setting_Input.checked = true;
+            } else {
+                ButtonHide_Setting_Input.checked = false;
             }
+            ButtonHide_Setting_Input.addEventListener("change", async function () {
+                if (this.checked) {
+                    this.checked = false;
+                    const res = confirm("UserScriptマネージャーのメニュー画面から設定ウィンドウを呼び出せない場合、再インストールしないと二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
+                    if (res) {
+                        this.checked = true;
+                        PreferenceSetting["hideButton"] = true;
+                        await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
+                    }
+                } else {
+                    PreferenceSetting["hideButton"] = false;
+                    await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
+                }
+            });
+
+            RootShadow.getElementById("PreferencesPageBack_Button").addEventListener("click", () => {
+                settingsbox_2_ele_stack.pop().remove();
+                ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+            }, false);
 
 
             async function settingsbox_2_5_2_ExportImport() {
-                let textareaElement;
-                let exportResulttextElement;
-                let importResulttextElement;
                 async function settingsbox_2_5_2_JSONFormat(mode, importjson) {
                     if (mode === "export") {
                         try {
@@ -2084,7 +2072,7 @@
                             try {
                                 importset = JSON.parse(importjson);
                             } catch (e) {
-                                console.log(e);
+                                console.error(e);
                                 alert("エラー：設定を読み込めませんでした。JSONファイル（テキスト）が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。");
                                 return undefined;
                             }
@@ -2104,211 +2092,162 @@
 
                 ArrayLast(settingsbox_2_ele_stack).style.display = "none";
                 const settingsbox_2_5_2_div = document.createElement("div");
+                settingsbox_2_5_2_div.innerHTML = `
+<style type="text/css">
+  div.PreferencesItem {
+    display: block;
+    margin: 0 0 20px 0;
+  }
+  #ExportAndImportPage {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  #ExportAndImportPage p {
+    margin: 0;
+  }
+  div.ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+  }
+  textarea#ExportAndImportConfig3_Textarea {
+    resize: none;
+    width: 98.5%;
+    height: 300px;
+  }
+</style>
+
+<div id="ExportAndImportPage">
+  <div class="ItemFrame_Border">
+    <h1 id="ExportAndImportConfig1_Title" class="ItemFrame_Title"></h1>
+    <button id="ExportAndImportConfig1_Button1"></button>
+    <button id="ExportAndImportConfig1_Button2"></button>
+    <button id="ExportAndImportConfig1_Button3"></button>
+    <span id="ExportAndImportConfig1_SpanText" style="display: none"></span>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="ExportAndImportConfig2_Title" class="ItemFrame_Title"></h1>
+    <div class="ItemFrame_Border">
+      <span id="ExportAndImportConfig2-1_SpanText"></span>
+      <input id="ExportAndImportConfig2-1_Input" type="file" />
+    </div>
+    <div class="ItemFrame_Border">
+      <button id="ExportAndImportConfig2-2_Button"></button>
+    </div>
+    <span id="ExportAndImportConfig2_SpanText" style="display: none"></span>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="ExportAndImportConfig3_Title" class="ItemFrame_Title"></h1>
+    <textarea
+      id="ExportAndImportConfig3_Textarea"
+      spellcheck="false"
+    ></textarea>
+  </div>
+  <button id="ExportAndImportConfig_BackButton"></button>
+</div>
+                `
                 DashboardMain_div.append(settingsbox_2_5_2_div);
                 settingsbox_2_ele_stack.push(settingsbox_2_5_2_div);
 
-
-                const settingsbox_2_5_2_2_div = document.createElement("div");
-                settingsbox_2_5_2_2_div.style.position = "relative";
-                settingsbox_2_5_2_2_div.style.marginTop = "1em";
-                settingsbox_2_5_2_2_div.style.padding = "12px";
-                settingsbox_2_5_2_2_div.style.border = "1px solid black";
-                {
-                    const settingsbox_2_5_2_2_h1 = document.createElement("h1");
-                    settingsbox_2_5_2_2_h1.style.position = "absolute";
-                    settingsbox_2_5_2_2_h1.style.top = 0;
-                    settingsbox_2_5_2_2_h1.style.left = 0;
-                    settingsbox_2_5_2_2_h1.style.fontSize = "1em";
-                    settingsbox_2_5_2_2_h1.style.padding = "0 4px";
-                    settingsbox_2_5_2_2_h1.style.margin = 0;
-                    settingsbox_2_5_2_2_h1.style.transform = "translateY(-50%) translateX(6px)";
-                    settingsbox_2_5_2_2_h1.style.backgroundColor = "#FFFFB2";
-                    settingsbox_2_5_2_2_h1.textContent = "エクスポート";
-                    settingsbox_2_5_2_2_div.append(settingsbox_2_5_2_2_h1);
-
-                    const settingsbox_2_5_2_2_button1 = document.createElement("button");
-                    settingsbox_2_5_2_2_button1.textContent = "JSONファイルでエクスポート";
-                    settingsbox_2_5_2_2_button1.addEventListener("click", async () => {
-                        const setJSON = await settingsbox_2_5_2_JSONFormat("export");
-                        if (setJSON) {
-                            const d = new Date();
-                            const filename = new String().concat("AIOBBackup_", d.getFullYear(), "-", d.getMonth(), "-", d.getDate(), "_", d.getHours(), "-", d.getMinutes(), "-", d.getSeconds(), ".json");
-
-                            const blob = new Blob([setJSON], { type: 'text/plain' });
-                            const a = document.createElement("a");
-                            a.href = URL.createObjectURL(blob);
-                            a.download = filename;
-                            a.click();
-                            a.remove();
-                            exportResulttextElement.style.display = "block";
-                        }
-                    }, false);
-                    settingsbox_2_5_2_2_div.append(settingsbox_2_5_2_2_button1);
-
-                    const settingsbox_2_5_2_2_button2 = document.createElement("button");
-                    settingsbox_2_5_2_2_button2.textContent = "JSON形式でクリップボードにコピー";
-                    settingsbox_2_5_2_2_button2.addEventListener("click", async () => {
-                        const setJSON = await settingsbox_2_5_2_JSONFormat("export");
-                        if (setJSON) {
-                            copyTextToClipboard(setJSON);
-                            exportResulttextElement.style.display = "block";
-                        }
-                    }, false);
-                    settingsbox_2_5_2_2_div.append(settingsbox_2_5_2_2_button2);
-
-                    const settingsbox_2_5_2_2_button3 = document.createElement("button");
-                    settingsbox_2_5_2_2_button3.textContent = "テキストエリアにエクスポート（JSON形式）";
-                    settingsbox_2_5_2_2_button3.addEventListener("click", async () => {
-                        const setJSON = await settingsbox_2_5_2_JSONFormat("export");
-                        if (setJSON) {
-                            textareaElement.value = setJSON;
-                            exportResulttextElement.style.display = "block";
-                        }
-                        textareaElement.value = setJSON;
-                    }, false);
-                    settingsbox_2_5_2_2_div.append(settingsbox_2_5_2_2_button3);
-
-                    const settingsbox_2_5_2_2_span = document.createElement("span");
-                    exportResulttextElement = settingsbox_2_5_2_2_span;
-                    settingsbox_2_5_2_2_span.textContent = "エクスポートしました。"
-                    settingsbox_2_5_2_2_span.style.display = "none";
-                    settingsbox_2_5_2_2_div.append(settingsbox_2_5_2_2_span);
+                RootShadow.getElementById("ExportAndImportConfig1_Title").textContent = "エクスポート";
+                RootShadow.getElementById("ExportAndImportConfig1_Button1").textContent = "JSONファイルでエクスポート";
+                RootShadow.getElementById("ExportAndImportConfig1_Button2").textContent = "JSON形式でクリップボードにコピー";
+                RootShadow.getElementById("ExportAndImportConfig1_Button3").textContent = "テキストエリアにエクスポート（JSON形式）";
+                RootShadow.getElementById("ExportAndImportConfig1_SpanText").textContent = "エクスポートしました。";
+                RootShadow.getElementById("ExportAndImportConfig2_Title").textContent = "インポート";
+                RootShadow.getElementById("ExportAndImportConfig2-1_SpanText").textContent = "JSONファイルからインポート";
+                RootShadow.getElementById("ExportAndImportConfig2-2_Button").textContent = "テキストエリアからインポート（JSON形式）";
+                RootShadow.getElementById("ExportAndImportConfig2_SpanText").textContent = "インポートしました。";
+                RootShadow.getElementById("ExportAndImportConfig3_Title").textContent = "テキストエリア";
+                RootShadow.getElementById("ExportAndImportConfig_BackButton").textContent = "←戻る";
 
 
-                }
-                settingsbox_2_5_2_div.append(settingsbox_2_5_2_2_div);
+                const ExportSuccessTextEle = RootShadow.getElementById("ExportAndImportConfig1_SpanText");
+                const ImportSuccessTextEle = RootShadow.getElementById("ExportAndImportConfig2_SpanText");
+                const TextareaEle = RootShadow.getElementById("ExportAndImportConfig3_Textarea");
 
+                RootShadow.getElementById("ExportAndImportConfig1_Button1").addEventListener("click", async () => {
+                    const setJSON = await settingsbox_2_5_2_JSONFormat("export");
+                    if (setJSON) {
+                        const d = new Date();
+                        const filename = new String().concat("NagativeBlockerBackup_", d.getFullYear(), "-", d.getMonth(), "-", d.getDate(), "_", d.getHours(), "-", d.getMinutes(), "-", d.getSeconds(), ".json");
 
-
-
-                const settingsbox_2_5_2_3_div = document.createElement("div");
-                settingsbox_2_5_2_3_div.style.position = "relative";
-                settingsbox_2_5_2_3_div.style.marginTop = "1em";
-                settingsbox_2_5_2_3_div.style.padding = "12px";
-                settingsbox_2_5_2_3_div.style.border = "1px solid black";
-                {
-                    const settingsbox_2_5_2_3_h1 = document.createElement("h1");
-                    settingsbox_2_5_2_3_h1.style.position = "absolute";
-                    settingsbox_2_5_2_3_h1.style.top = 0;
-                    settingsbox_2_5_2_3_h1.style.left = 0;
-                    settingsbox_2_5_2_3_h1.style.fontSize = "1em";
-                    settingsbox_2_5_2_3_h1.style.padding = "0 4px";
-                    settingsbox_2_5_2_3_h1.style.margin = 0;
-                    settingsbox_2_5_2_3_h1.style.transform = "translateY(-50%) translateX(6px)";
-                    settingsbox_2_5_2_3_h1.style.backgroundColor = "#FFFFB2";
-                    settingsbox_2_5_2_3_h1.textContent = "インポート";
-                    settingsbox_2_5_2_3_div.append(settingsbox_2_5_2_3_h1);
-
-
-
-                    const settingsbox_2_5_2_3_1_div = document.createElement("div");
-                    settingsbox_2_5_2_3_1_div.style.border = "1px solid black";
-                    {
-                        const settingsbox_2_5_2_3_1_span = document.createElement("span");
-                        settingsbox_2_5_2_3_1_span.textContent = "JSONファイルからインポート";
-                        settingsbox_2_5_2_3_1_div.append(settingsbox_2_5_2_3_1_span);
-
-                        const settingsbox_2_5_2_3_1_input = document.createElement("input");
-                        settingsbox_2_5_2_3_1_input.setAttribute("type", "file");
-                        settingsbox_2_5_2_3_1_input.addEventListener("change", (evt) => {
-                            if (evt.target.files[0]) {
-                                const res = confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
-                                if (!res) {
-                                    return false;
-                                }
-                                const file = evt.target.files[0];
-                                const reader = new FileReader();
-                                reader.onload = (evt) => {
-                                    const result = settingsbox_2_5_2_JSONFormat("import", evt.target.result);
-                                    if (result) {
-                                        importResulttextElement.style.display = "block";
-                                    }
-                                }
-                                reader.readAsText(file);
-                            }
-                        })
-                        settingsbox_2_5_2_3_1_div.append(settingsbox_2_5_2_3_1_input);
+                        const blob = new Blob([setJSON], { type: 'text/plain' });
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = filename;
+                        a.click();
+                        a.remove();
+                        ExportSuccessTextEle.style.display = "block";
                     }
-                    settingsbox_2_5_2_3_div.append(settingsbox_2_5_2_3_1_div);
+                }, false);
 
-                    const settingsbox_2_5_2_3_2_div = document.createElement("div");
-                    settingsbox_2_5_2_3_2_div.style.border = "1px solid black";
-                    settingsbox_2_5_2_3_2_div.style.margin = "10px 0 0 0";
-                    {
-                        const settingsbox_2_5_2_3_2_button = document.createElement("button");
-                        settingsbox_2_5_2_3_2_button.textContent = "テキストエリアからインポート（JSON形式）";
-                        settingsbox_2_5_2_3_2_button.addEventListener("click", async () => {
-                            const res = confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
-                            if (!res) {
-                                return false;
-                            }
-                            const result = settingsbox_2_5_2_JSONFormat("import", textareaElement.value);
+                RootShadow.getElementById("ExportAndImportConfig1_Button2").addEventListener("click", async () => {
+                    const setJSON = await settingsbox_2_5_2_JSONFormat("export");
+                    if (setJSON) {
+                        copyTextToClipboard(setJSON);
+                        ExportSuccessTextEle.style.display = "block";
+                    }
+                }, false);
+
+                RootShadow.getElementById("ExportAndImportConfig1_Button3").addEventListener("click", async () => {
+                    const setJSON = await settingsbox_2_5_2_JSONFormat("export");
+                    if (setJSON) {
+                        TextareaEle.value = setJSON;
+                        ExportSuccessTextEle.style.display = "block";
+                    }
+                    TextareaEle.value = setJSON;
+                }, false);
+
+                RootShadow.getElementById("ExportAndImportConfig2-1_Input").addEventListener("change", async (evt) => {
+                    if (evt.target.files[0]) {
+                        const res = confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
+                        if (!res) {
+                            return false;
+                        }
+                        const file = evt.target.files[0];
+                        const reader = new FileReader();
+                        reader.onload = async (evt) => {
+                            const result = await settingsbox_2_5_2_JSONFormat("import", evt.target.result);
                             if (result) {
-                                importResulttextElement.style.display = "block";
+                                ImportSuccessTextEle.style.display = "block";
                             }
-                        }, false);
-                        settingsbox_2_5_2_3_2_div.append(settingsbox_2_5_2_3_2_button);
+                        }
+                        reader.readAsText(file);
                     }
-                    settingsbox_2_5_2_3_div.append(settingsbox_2_5_2_3_2_div);
+                });
 
-                    const settingsbox_2_5_2_3_span = document.createElement("span");
-                    importResulttextElement = settingsbox_2_5_2_3_span;
-                    settingsbox_2_5_2_3_span.textContent = "インポートしました。";
-                    settingsbox_2_5_2_3_span.style.display = "none";
-                    settingsbox_2_5_2_3_div.append(settingsbox_2_5_2_3_span);
+                RootShadow.getElementById("ExportAndImportConfig2-2_Button").addEventListener("click", async () => {
+                    const res = confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
+                    if (!res) {
+                        return false;
+                    }
+                    const result = await settingsbox_2_5_2_JSONFormat("import", TextareaEle.value);
+                    if (result) {
+                        ImportSuccessTextEle.style.display = "block";
+                    }
+                }, false);
 
-                }
-                settingsbox_2_5_2_div.append(settingsbox_2_5_2_3_div);
+                RootShadow.getElementById("ExportAndImportConfig_BackButton").addEventListener("click", () => {
+                    settingsbox_2_ele_stack.pop().remove();
+                    ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+                }, false);
 
-                const settingsbox_2_5_2_4_div = document.createElement("div");
-                settingsbox_2_5_2_4_div.style.height = "240px"
-                settingsbox_2_5_2_4_div.style.position = "relative";
-                settingsbox_2_5_2_4_div.style.marginTop = "1em";
-                settingsbox_2_5_2_4_div.style.padding = "12px";
-                settingsbox_2_5_2_4_div.style.border = "1px solid black";
-                {
-                    const settingsbox_2_5_2_4_h1 = document.createElement("h1");
-                    settingsbox_2_5_2_4_h1.style.position = "absolute";
-                    settingsbox_2_5_2_4_h1.style.top = 0;
-                    settingsbox_2_5_2_4_h1.style.left = 0;
-                    settingsbox_2_5_2_4_h1.style.fontSize = "1em";
-                    settingsbox_2_5_2_4_h1.style.padding = "0 4px";
-                    settingsbox_2_5_2_4_h1.style.margin = 0;
-                    settingsbox_2_5_2_4_h1.style.transform = "translateY(-50%) translateX(6px)";
-                    settingsbox_2_5_2_4_h1.style.backgroundColor = "#FFFFB2";
-                    settingsbox_2_5_2_4_h1.textContent = "テキストエリア";
-                    settingsbox_2_5_2_4_div.append(settingsbox_2_5_2_4_h1);
-
-
-                    const settingsbox_2_5_2_4_textarea = document.createElement("textarea");
-                    textareaElement = settingsbox_2_5_2_4_textarea;
-                    settingsbox_2_5_2_4_textarea.setAttribute("spellcheck", "false");
-                    settingsbox_2_5_2_4_textarea.style.resize = "none";
-                    settingsbox_2_5_2_4_textarea.style.width = "98.5%";
-                    settingsbox_2_5_2_4_textarea.style.height = "98.5%";
-                    settingsbox_2_5_2_4_div.append(settingsbox_2_5_2_4_textarea);
-
-
-                }
-                settingsbox_2_5_2_div.append(settingsbox_2_5_2_4_div);
-
-
-                const settingsbox_2_5_2_1_div = document.createElement("div");
-                {
-                    const settingsbox_2_5_2_1_button = document.createElement("button");
-                    settingsbox_2_5_2_1_button.textContent = "←戻る";
-                    settingsbox_2_5_2_1_button.addEventListener("click", () => {
-                        settingsbox_2_ele_stack.pop().remove();
-                        ArrayLast(settingsbox_2_ele_stack).style.display = "block";
-                    }, false);
-                    settingsbox_2_5_2_1_div.append(settingsbox_2_5_2_1_button);
-                }
-                settingsbox_2_5_2_div.append(settingsbox_2_5_2_1_div);
             }
-
         }
-
-
     }
 
 })();

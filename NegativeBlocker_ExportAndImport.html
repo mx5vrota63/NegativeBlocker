@@ -1,0 +1,65 @@
+<style type="text/css">
+  div.PreferencesItem {
+    display: block;
+    margin: 0 0 20px 0;
+  }
+  #ExportAndImportPage {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  #ExportAndImportPage p {
+    margin: 0;
+  }
+  div.ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+  }
+  textarea#ExportAndImportConfig3_Textarea {
+    resize: none;
+    width: 98.5%;
+    height: 300px;
+  }
+</style>
+
+<div id="ExportAndImportPage">
+  <div class="ItemFrame_Border">
+    <h1 id="ExportAndImportConfig1_Title" class="ItemFrame_Title"></h1>
+    <button id="ExportAndImportConfig1_Button1"></button>
+    <button id="ExportAndImportConfig1_Button2"></button>
+    <button id="ExportAndImportConfig1_Button3"></button>
+    <span id="ExportAndImportConfig1_SpanText" style="display: none"></span>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="ExportAndImportConfig2_Title" class="ItemFrame_Title"></h1>
+    <div class="ItemFrame_Border">
+      <span id="ExportAndImportConfig2-1_SpanText"></span>
+      <input id="ExportAndImportConfig2-1_Input" type="file" />
+    </div>
+    <div class="ItemFrame_Border">
+      <button id="ExportAndImportConfig2-2_Button"></button>
+    </div>
+    <span id="ExportAndImportConfig2_SpanText" style="display: none"></span>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="ExportAndImportConfig3_Title" class="ItemFrame_Title"></h1>
+    <textarea
+      id="ExportAndImportConfig3_Textarea"
+      spellcheck="false"
+    ></textarea>
+  </div>
+  <button id="ExportAndImportConfig_BackButton"></button>
+</div>
