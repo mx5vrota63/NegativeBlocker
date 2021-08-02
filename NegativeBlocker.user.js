@@ -1060,8 +1060,107 @@
 
                 this.SettingsObjectListPage_Ele = null;
                 this.EditConfigObjectPage_Ele = null
+            }
 
-                this.ListEdit_HTML();
+            async init() {
+                ArrayLast(settingsbox_2_ele_stack).style.display = "none";
+                this.SettingsObjectListPage_Ele = document.createElement("div");
+                this.SettingsObjectListPage_Ele.style.height = "100%";
+                settingsbox_2_ele_stack.push(this.SettingsObjectListPage_Ele);
+                this.SettingsObjectListPage_Ele.innerHTML = `
+<style type="text/css">
+  div#SettingsObjectListPage {
+    height: 100%;
+  }
+  div#ObjectLists_Frame {
+    width: auto;
+    height: calc(100% - 130px);
+    overflow: auto;
+    border: 2px solid black;
+  }
+  ol#ObjectLists_ol {
+    background-color: #eee;
+    list-style-position: inside;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+  }
+</style>
+
+<div id="SettingsObjectListPage">
+  <div id="ObjectLists_Frame">
+    <ol id="ObjectLists_ol"></ol>
+  </div>
+  <div id="SettingsObject_ConfigItems" style="display: none">
+    <div id="SettingsObject_ConfigItems_Name">
+      <span id="SettingsObject_ConfigItems_Name_Span"></span>
+      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
+    </div>
+    <div id="SettingsObject_ConfigItems_Sort">
+      <span id="SettingsObject_ConfigItems_Sort_Span"></span>
+      <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
+    </div>
+    <div id="SettingsObject_ConfigItems_Enable">
+      <span id="SettingsObject_ConfigItems_Enable_Span"></span>
+      <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
+    </div>
+    <div id="SettingsObject_ConfigItems_EditConfig">
+      <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
+      <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
+    </div>
+  </div>
+  <div id="SettingsObject_ActionButton">
+    <button id="SettingsObject_ActionButton_Back"></button>
+    <button id="SettingsObject_ActionButton_NewObject"></button>
+    <button id="SettingsObject_ActionButton_DeleteObject"></button>
+    <button id="SettingsObject_ActionButton_SaveObject"></button>
+  </div>
+</div>
+                `
+                DashboardMain_div.append(this.SettingsObjectListPage_Ele);
+
+                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = "名前：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = "並び替え：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Span").textContent = "有効：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Span").textContent = "設定編集：";
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").textContent = "設定編集";
+                RootShadow.getElementById("SettingsObject_ActionButton_Back").textContent = "←戻る";
+                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").textContent = "新規追加";
+                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").textContent = "削除";
+                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").textContent = "保存";
+
+                this.ulol_Ele = RootShadow.getElementById("ObjectLists_ol");
+                this.editarea_Ele = RootShadow.getElementById("SettingsObject_ConfigItems");
+                this.name_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Name_Form");
+                this.index_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Form");
+                this.enable_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Form");
+
+                for (let i = 0; i < this.ListStorage.length; i++) {
+                    await this.li_Add(i);
+                }
+                for (let i = 0; i < this.ListStorage.length + 1; i++) {
+                    this.SelectOption_Add();
+                }
+
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").addEventListener("click", () => {
+                    this.Editflag = true;
+                    this.SettingsObjectListPage_Ele.style.display = "none";
+                    this.EditConfigObjectPage_Ele.style.display = "block";
+                }, false);
+
+                RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", () => {
+                    if (this.Editflag) {
+                        const res = confirm("トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？");
+                        if (!res) {
+                            return false;
+                        }
+                    }
+                    settingsbox_2_ele_stack.pop().remove();
+                    settingsbox_2_ele_stack.pop().remove();
+                    ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+                }, false);
+                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
+                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").addEventListener("click", async () => await this.DelButtonFunc(), false);
+                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").addEventListener("click", async () => await this.SaveButtonFunc(), false);
             }
 
             async ListStoSave(StoKey, StoObj) {
@@ -1200,111 +1299,10 @@
                 this.index_Ele.lastChild.remove();
             }
 
-            async ListEdit_HTML() {
-                ArrayLast(settingsbox_2_ele_stack).style.display = "none";
-                this.SettingsObjectListPage_Ele = document.createElement("div");
-                this.SettingsObjectListPage_Ele.style.height = "100%";
-                settingsbox_2_ele_stack.push(this.SettingsObjectListPage_Ele);
-                this.SettingsObjectListPage_Ele.innerHTML = `
-<style type="text/css">
-  div#SettingsObjectListPage {
-    height: 100%;
-  }
-  div#ObjectLists_Frame {
-    width: auto;
-    height: calc(100% - 130px);
-    overflow: auto;
-    border: 2px solid black;
-  }
-  ol#ObjectLists_ol {
-    background-color: #eee;
-    list-style-position: inside;
-    margin: 0 0 0 0;
-    padding: 0 0 0 0;
-  }
-</style>
-
-<div id="SettingsObjectListPage">
-  <div id="ObjectLists_Frame">
-    <ol id="ObjectLists_ol"></ol>
-  </div>
-  <div id="SettingsObject_ConfigItems" style="display: none">
-    <div id="SettingsObject_ConfigItems_Name">
-      <span id="SettingsObject_ConfigItems_Name_Span"></span>
-      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
-    </div>
-    <div id="SettingsObject_ConfigItems_Sort">
-      <span id="SettingsObject_ConfigItems_Sort_Span"></span>
-      <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
-    </div>
-    <div id="SettingsObject_ConfigItems_Enable">
-      <span id="SettingsObject_ConfigItems_Enable_Span"></span>
-      <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
-    </div>
-    <div id="SettingsObject_ConfigItems_EditConfig">
-      <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
-      <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
-    </div>
-  </div>
-  <div id="SettingsObject_ActionButton">
-    <button id="SettingsObject_ActionButton_Back"></button>
-    <button id="SettingsObject_ActionButton_NewObject"></button>
-    <button id="SettingsObject_ActionButton_DeleteObject"></button>
-    <button id="SettingsObject_ActionButton_SaveObject"></button>
-  </div>
-</div>
-                `
-                DashboardMain_div.append(this.SettingsObjectListPage_Ele);
-
-                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = "名前：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = "並び替え：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Span").textContent = "有効：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Span").textContent = "設定編集：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").textContent = "設定編集";
-                RootShadow.getElementById("SettingsObject_ActionButton_Back").textContent = "←戻る";
-                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").textContent = "新規追加";
-                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").textContent = "削除";
-                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").textContent = "保存";
-
-                this.ulol_Ele = RootShadow.getElementById("ObjectLists_ol");
-                this.editarea_Ele = RootShadow.getElementById("SettingsObject_ConfigItems");
-                this.name_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Name_Form");
-                this.index_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Form");
-                this.enable_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Form");
-
-                for (let i = 0; i < this.ListStorage.length; i++) {
-                    await this.li_Add(i);
-                }
-                for (let i = 0; i < this.ListStorage.length + 1; i++) {
-                    this.SelectOption_Add();
-                }
-
-                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").addEventListener("click", () => {
-                    this.Editflag = true;
-                    this.SettingsObjectListPage_Ele.style.display = "none";
-                    this.EditConfigObjectPage_Ele.style.display = "block";
-                }, false);
-
-                RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", () => {
-                    if (this.Editflag) {
-                        const res = confirm("トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？");
-                        if (!res) {
-                            return false;
-                        }
-                    }
-                    settingsbox_2_ele_stack.pop().remove();
-                    settingsbox_2_ele_stack.pop().remove();
-                    ArrayLast(settingsbox_2_ele_stack).style.display = "block";
-                }, false);
-                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
-                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").addEventListener("click", async () => await this.DelButtonFunc(), false);
-                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").addEventListener("click", async () => await this.SaveButtonFunc(), false);
-            }
-
         }
 
         async function settingsbox_2_2_NGListSet() {
-            new class extends ListEdit_Func {
+            const BlockListTextObj = new class extends ListEdit_Func {
                 constructor(NGListStorage) {
                     super(NGListStorage);
                     this.li_cfuncinfunction = async function EditboxEleApply() {
@@ -1322,42 +1320,10 @@
                     this.SaveButtonFunc = this.NGListStoSave.bind(this);
                     this.DelButtonFunc = this.NGListStoDel.bind(this);
                     this.NewObjectButtonFunc = this.NGListNewEditButton.bind(this);
-
-                    this.htmlCreate();
-                }
-                async NGListStoSave() {
-                    const StoObj = {
-                        name: this.name_Ele.value,
-                    }
-                    const StoObj_Text = {
-                        text: this.textarea_Ele.value.trim()
-                    }
-                    if (await this.ListStoSave("NGList", StoObj)) {
-                        const NGListTextKeyOld = "NGList_" + this.currentName;
-                        if (this.currentName !== "") {
-                            await StorageApiDelete(NGListTextKeyOld);
-                        }
-                        const NGListTextKeyNew = "NGList_" + StoObj.name;
-                        await StorageApiWrite(NGListTextKeyNew, JSON.stringify(StoObj_Text));
-                        if (this.currentName !== "") {
-                            NGListStoUpdateOtherSetting(this.currentName, StoObj.name);
-                        }
-                    }
-                }
-                async NGListStoDel() {
-                    if (await this.ListStoDel("NGList")) {
-                        const NGListTextKey = "NGList_" + this.currentName;
-                        await StorageApiDelete(NGListTextKey);
-                        NGListStoUpdateOtherSetting(this.currentName, "");
-                    }
-                }
-                async NGListNewEditButton(NewbuttonEle) {
-                    if (await this.NewEditButton(NewbuttonEle)) {
-                        this.textarea_Ele.value = "";
-                    }
                 }
 
-                async htmlCreate() {
+                async init() {
+                    await super.init();
                     this.EditConfigObjectPage_Ele = document.createElement("div");
                     this.EditConfigObjectPage_Ele.style.display = "none";
                     this.EditConfigObjectPage_Ele.style.height = "100%";
@@ -1422,11 +1388,49 @@
 
                     RootShadow.getElementById("SettingsObject_ConfigItems_Enable").style.display = "none";
                 }
+
+                async NGListStoSave() {
+                    const StoObj = {
+                        name: this.name_Ele.value,
+                    }
+                    const StoObj_Text = {
+                        text: this.textarea_Ele.value.trim()
+                    }
+                    if (await this.ListStoSave("NGList", StoObj)) {
+                        const NGListTextKeyOld = "NGList_" + this.currentName;
+                        if (this.currentName !== "") {
+                            await StorageApiDelete(NGListTextKeyOld);
+                        }
+                        const NGListTextKeyNew = "NGList_" + StoObj.name;
+                        await StorageApiWrite(NGListTextKeyNew, JSON.stringify(StoObj_Text));
+                        if (this.currentName !== "") {
+                            NGListStoUpdateOtherSetting(this.currentName, StoObj.name);
+                        }
+                    }
+                }
+
+                async NGListStoDel() {
+                    if (await this.ListStoDel("NGList")) {
+                        const NGListTextKey = "NGList_" + this.currentName;
+                        await StorageApiDelete(NGListTextKey);
+                        NGListStoUpdateOtherSetting(this.currentName, "");
+                    }
+                }
+
+                async NGListNewEditButton(NewbuttonEle) {
+                    if (await this.NewEditButton(NewbuttonEle)) {
+                        this.textarea_Ele.value = "";
+                    }
+                }
+
             }(NGListStorage);
+
+            BlockListTextObj.init();
+
         }
 
         async function settingsbox_2_3_WebAbronSet() {
-            new class extends ListEdit_Func {
+            const SentenceBlockObj = new class extends ListEdit_Func {
                 constructor(WebAbronStorage) {
                     super(WebAbronStorage);
                     this.url_Ele = null;
@@ -1459,50 +1463,10 @@
                     this.SaveButtonFunc = this.WebAbronListStoSave.bind(this);
                     this.DelButtonFunc = this.WebAbronListStoDel.bind(this);
                     this.NewObjectButtonFunc = this.WebAbronListNewEditButton.bind(this);
-
-                    this.htmlCreate();
-                }
-                async WebAbronListStoSave() {
-                    const StoObj = {
-                        name: this.name_Ele.value,
-                        enable: this.enable_Ele.checked,
-                        url: this.url_Ele.value,
-                        url_regex_enable: this.url_regex_enable_Ele.checked,
-                        nglist_list: this.nglist_list_Ele.value,
-                        nglist_regex_enable: this.nglist_regex_enable_Ele.checked,
-                        nglist_lowuppDist_enable: this.nglist_lowuppDist_enable_Ele.checked,
-                        nglist_white_enable: this.nglist_white_enable_Ele.checked,
-                        nglist_white_list: this.nglist_white_list_Ele.value,
-                        nglist_white_regex_enable: this.nglist_white_regex_enable_Ele.checked,
-                        nglist_white_lowuppDist_enable: this.nglist_white_lowuppDist_enable_Ele.checked,
-                        replace_string: this.replace_string_Ele.value,
-                        replace_mode: this.replace_mode_Ele.webabron_mode.value,
-                    }
-                    await this.ListStoSave("WebAbron", StoObj);
-                }
-                async WebAbronListStoDel() {
-                    await this.ListStoDel("WebAbron");
-                }
-                async WebAbronListNewEditButton(NewbuttonEle) {
-                    if (await this.NewEditButton(NewbuttonEle)) {
-                        this.url_Ele.value = "";
-                        this.url_regex_enable_Ele.checked = false;
-                        this.nglist_list_Ele.value = "";
-                        this.nglist_regex_enable_Ele.checked = false;
-                        this.nglist_lowuppDist_enable_Ele.checked = false;
-                        this.nglist_white_enable_Ele.checked = false;
-                        this.nglist_white_list_Ele.value = "";
-                        this.nglist_white_regex_enable_Ele.checked = false;
-                        this.nglist_white_lowuppDist_enable_Ele.checked = false;
-                        this.replace_string_Ele.value = "";
-                        this.replace_mode_Ele.webabron_mode.value = "sentence";
-
-                        this.enable_Ele.checked = true;
-                        return 0;
-                    }
                 }
 
-                async htmlCreate() {
+                async init() {
+                    await super.init();
                     this.EditConfigObjectPage_Ele = document.createElement("div");
                     this.EditConfigObjectPage_Ele.style.display = "none";
                     this.EditConfigObjectPage_Ele.style.height = "calc(100% - 80px)";
@@ -1651,11 +1615,56 @@
                         this.EditConfigObjectPage_Ele.style.display = "none";
                     }, false);
                 }
+
+                async WebAbronListStoSave() {
+                    const StoObj = {
+                        name: this.name_Ele.value,
+                        enable: this.enable_Ele.checked,
+                        url: this.url_Ele.value,
+                        url_regex_enable: this.url_regex_enable_Ele.checked,
+                        nglist_list: this.nglist_list_Ele.value,
+                        nglist_regex_enable: this.nglist_regex_enable_Ele.checked,
+                        nglist_lowuppDist_enable: this.nglist_lowuppDist_enable_Ele.checked,
+                        nglist_white_enable: this.nglist_white_enable_Ele.checked,
+                        nglist_white_list: this.nglist_white_list_Ele.value,
+                        nglist_white_regex_enable: this.nglist_white_regex_enable_Ele.checked,
+                        nglist_white_lowuppDist_enable: this.nglist_white_lowuppDist_enable_Ele.checked,
+                        replace_string: this.replace_string_Ele.value,
+                        replace_mode: this.replace_mode_Ele.webabron_mode.value,
+                    }
+                    await this.ListStoSave("WebAbron", StoObj);
+                }
+
+                async WebAbronListStoDel() {
+                    await this.ListStoDel("WebAbron");
+                }
+
+                async WebAbronListNewEditButton(NewbuttonEle) {
+                    if (await this.NewEditButton(NewbuttonEle)) {
+                        this.url_Ele.value = "";
+                        this.url_regex_enable_Ele.checked = false;
+                        this.nglist_list_Ele.value = "";
+                        this.nglist_regex_enable_Ele.checked = false;
+                        this.nglist_lowuppDist_enable_Ele.checked = false;
+                        this.nglist_white_enable_Ele.checked = false;
+                        this.nglist_white_list_Ele.value = "";
+                        this.nglist_white_regex_enable_Ele.checked = false;
+                        this.nglist_white_lowuppDist_enable_Ele.checked = false;
+                        this.replace_string_Ele.value = "";
+                        this.replace_mode_Ele.webabron_mode.value = "sentence";
+
+                        this.enable_Ele.checked = true;
+                        return 0;
+                    }
+                }
+
             }(WebAbronStorage);
+
+            SentenceBlockObj.init();
         }
 
         async function settingsbox_2_4_ElementBlockerSet() {
-            new class extends ListEdit_Func {
+            const ElementBlockObj = new class extends ListEdit_Func {
                 constructor(ElementBlockerStorage) {
                     super(ElementBlockerStorage);
                     this.url_Ele = null;
@@ -1704,67 +1713,10 @@
                     this.SaveButtonFunc = this.ElementBlockerListStoSave.bind(this);
                     this.DelButtonFunc = this.ElementBlockerListStoDel.bind(this);
                     this.NewObjectButtonFunc = this.ElementBlockerListNewEditButton.bind(this);
-
-                    this.createHTML();
-                }
-                async ElementBlockerListStoSave() {
-                    const StoObj = {
-                        name: this.name_Ele.value,
-                        enable: this.enable_Ele.checked,
-                        url: this.url_Ele.value,
-                        url_regex_enable: this.url_regex_enable_Ele.checked,
-                        elementHide: this.elementHide_Ele.value,
-                        elementHide_method: this.elementHide_method_Ele.pickerMethod.value,
-                        elementSearch: this.elementSearch_Ele.value,
-                        elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
-                        // elementSearch_index_enable: this.elementSearch_index_enable_Ele.checked,
-                        // elementSearch_index: this.elementSearch_index_Ele.value,
-                        elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
-                        elementSearch_property_style: this.elementSearch_property_style_Ele.value,
-                        nglist_list: this.nglist_list_Ele.value,
-                        nglist_regex_enable: this.nglist_regex_enable_Ele.checked,
-                        nglist_lowuppDist_enable: this.nglist_lowuppDist_enable_Ele.checked,
-                        nglist_urlMethod_enable: this.nglist_urlMethod_enable_Ele.checked,
-                        nglist_white_enable: this.nglist_white_enable_Ele.checked,
-                        nglist_white_list: this.nglist_white_list_Ele.value,
-                        nglist_white_regex_enable: this.nglist_white_regex_enable_Ele.checked,
-                        nglist_white_lowuppDist_enable: this.nglist_white_lowuppDist_enable_Ele.checked,
-                        nglist_white_urlMethod_enable: this.nglist_white_urlMethod_enable_Ele.checked
-                    }
-                    await this.ListStoSave("ElementBlocker", StoObj);
-                }
-                async ElementBlockerListStoDel() {
-                    await this.ListStoDel("ElementBlocker");
-                }
-                async ElementBlockerListNewEditButton(NewbuttonEle) {
-                    if (await this.NewEditButton(NewbuttonEle)) {
-                        this.enable_Ele.checked = false;
-                        this.url_Ele.value = "";
-                        this.url_regex_enable_Ele.checked = false;
-                        this.elementHide_Ele.value = "";
-                        this.elementHide_method_Ele.pickerMethod.value = "css";
-                        this.elementSearch_Ele.value = "";
-                        this.elementSearch_method_Ele.pickerMethod.value = "css";
-                        // this.elementSearch_index_enable_Ele.checked = false;
-                        // this.elementSearch_index_Ele.value = "";
-                        this.elementSearch_property_Ele.propertyMode.value = "text";
-                        this.elementSearch_property_style_Ele.value = "";
-                        this.nglist_list_Ele.value = "";
-                        this.nglist_regex_enable_Ele.checked = false;
-                        this.nglist_lowuppDist_enable_Ele.checked = false;
-                        this.nglist_urlMethod_enable_Ele.checked = false;
-                        this.nglist_white_enable_Ele.checked = false;
-                        this.nglist_white_list_Ele.value = "";
-                        this.nglist_white_regex_enable_Ele.checked = false;
-                        this.nglist_white_lowuppDist_enable_Ele.checked = false;
-                        this.nglist_white_urlMethod_enable_Ele.checked = false;
-
-                        this.enable_Ele.checked = true;
-                        return 0;
-                    }
                 }
 
-                async createHTML() {
+                async init() {
+                    await super.init();
                     this.EditConfigObjectPage_Ele = document.createElement("div");
                     this.EditConfigObjectPage_Ele.style.display = "none";
                     this.EditConfigObjectPage_Ele.style.height = "calc(100% - 80px)";
@@ -1975,7 +1927,69 @@
                         this.EditConfigObjectPage_Ele.style.display = "none";
                     }, false);
                 }
+
+                async ElementBlockerListStoSave() {
+                    const StoObj = {
+                        name: this.name_Ele.value,
+                        enable: this.enable_Ele.checked,
+                        url: this.url_Ele.value,
+                        url_regex_enable: this.url_regex_enable_Ele.checked,
+                        elementHide: this.elementHide_Ele.value,
+                        elementHide_method: this.elementHide_method_Ele.pickerMethod.value,
+                        elementSearch: this.elementSearch_Ele.value,
+                        elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
+                        // elementSearch_index_enable: this.elementSearch_index_enable_Ele.checked,
+                        // elementSearch_index: this.elementSearch_index_Ele.value,
+                        elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
+                        elementSearch_property_style: this.elementSearch_property_style_Ele.value,
+                        nglist_list: this.nglist_list_Ele.value,
+                        nglist_regex_enable: this.nglist_regex_enable_Ele.checked,
+                        nglist_lowuppDist_enable: this.nglist_lowuppDist_enable_Ele.checked,
+                        nglist_urlMethod_enable: this.nglist_urlMethod_enable_Ele.checked,
+                        nglist_white_enable: this.nglist_white_enable_Ele.checked,
+                        nglist_white_list: this.nglist_white_list_Ele.value,
+                        nglist_white_regex_enable: this.nglist_white_regex_enable_Ele.checked,
+                        nglist_white_lowuppDist_enable: this.nglist_white_lowuppDist_enable_Ele.checked,
+                        nglist_white_urlMethod_enable: this.nglist_white_urlMethod_enable_Ele.checked
+                    }
+                    await this.ListStoSave("ElementBlocker", StoObj);
+                }
+
+                async ElementBlockerListStoDel() {
+                    await this.ListStoDel("ElementBlocker");
+                }
+
+                async ElementBlockerListNewEditButton(NewbuttonEle) {
+                    if (await this.NewEditButton(NewbuttonEle)) {
+                        this.enable_Ele.checked = false;
+                        this.url_Ele.value = "";
+                        this.url_regex_enable_Ele.checked = false;
+                        this.elementHide_Ele.value = "";
+                        this.elementHide_method_Ele.pickerMethod.value = "css";
+                        this.elementSearch_Ele.value = "";
+                        this.elementSearch_method_Ele.pickerMethod.value = "css";
+                        // this.elementSearch_index_enable_Ele.checked = false;
+                        // this.elementSearch_index_Ele.value = "";
+                        this.elementSearch_property_Ele.propertyMode.value = "text";
+                        this.elementSearch_property_style_Ele.value = "";
+                        this.nglist_list_Ele.value = "";
+                        this.nglist_regex_enable_Ele.checked = false;
+                        this.nglist_lowuppDist_enable_Ele.checked = false;
+                        this.nglist_urlMethod_enable_Ele.checked = false;
+                        this.nglist_white_enable_Ele.checked = false;
+                        this.nglist_white_list_Ele.value = "";
+                        this.nglist_white_regex_enable_Ele.checked = false;
+                        this.nglist_white_lowuppDist_enable_Ele.checked = false;
+                        this.nglist_white_urlMethod_enable_Ele.checked = false;
+
+                        this.enable_Ele.checked = true;
+                        return 0;
+                    }
+                }
+
             }(ElementBlockerStorage);
+
+            ElementBlockObj.init();
         }
 
         async function settingsbox_2_5_PreferenceSet() {
