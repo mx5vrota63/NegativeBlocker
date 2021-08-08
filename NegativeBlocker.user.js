@@ -246,7 +246,7 @@
     // BackGround Fuction Start
     class BackGround_Func {
         constructor() {
-
+            this.testObj = new Object();
         }
         escapeRegExp(string) {
             return string.replace(/[/.*+?^${}()|[\]\\]/g, '\\$&');
@@ -262,9 +262,9 @@
             let UrlHit = false;
 
             try {
-                SourceUrl = SourceUrl.match(/^.*:\/{2,}(.*)/)[1].split("\/");
+                SourceUrl = SourceUrl.match(/^.*:\/{2,}(.*)/)[1].split("/");
                 if (!SourceUrl.length) return false;
-                DomainSplit = SourceUrl[0].split("\.");
+                DomainSplit = SourceUrl[0].split(".");
                 DomainSplit.reverse();
             } catch (e) {
                 return false;
@@ -273,7 +273,7 @@
             let DomainLinking = "";
             for (let i = 0; i < DomainSplit.length; i++) {
                 DomainLinking = DomainSplit[i] + DomainLinking;
-                const DomainLinkingRegexp = DomainLinking.replace(/(.*)/, "\^$1\(\?\:\/\|\$\)+\.\*\$");
+                const DomainLinkingRegexp = DomainLinking.replace(/(.*)/, "^$1(?:/|$)+.*$");
                 BlockUrlDomainFilter = blockurlarray.filter(RegExp.prototype.test, new RegExp(DomainLinkingRegexp));
                 if (BlockUrlDomainFilter.length) {
                     DomainHit = true;
@@ -283,7 +283,7 @@
             }
 
             if (DomainHit) {
-                const DomainLinkingRegexp = DomainLinking.replace(/(.*)/, "$1\/\?\(\?\!\.\+\)");
+                const DomainLinkingRegexp = DomainLinking.replace(/(.*)/, "$1/?(?!.+)");
                 BlockUrlFilter = BlockUrlDomainFilter.filter(RegExp.prototype.test, new RegExp(DomainLinkingRegexp));
                 if (BlockUrlFilter.length) {
                     UrlHit = true;
@@ -291,7 +291,7 @@
                     let SourceUrlLinking = DomainLinking + '/';
                     for (let i = 1; i < SourceUrl.length; i++) {
                         SourceUrlLinking = SourceUrlLinking + SourceUrl[i];
-                        const SourceUrlLinkingRegexp = SourceUrlLinking.replace(/(.*)/, "\^$1\/\?\$");
+                        const SourceUrlLinkingRegexp = SourceUrlLinking.replace(/(.*)/, "^$1/?$");
                         BlockUrlFilter = BlockUrlDomainFilter.filter(RegExp.prototype.test, new RegExp(SourceUrlLinkingRegexp));
                         if (!BlockUrlFilter.length) {
                             SourceUrlLinking = SourceUrlLinking + '/';
@@ -306,6 +306,7 @@
         }
         async NGListStoLoadfunc(SettingArray, listflag) {
             return await Promise.all(SettingArray.map(async (SetObj) => {
+                if (this.testObj[SetObj.nglist_list]) return new Array();
                 let regexpEnable = false, insensitiveEnable = false, keyNgname;
                 if (listflag === "ngblock") {
                     if (SetObj.nglist_lowuppDist_enable === false) {
@@ -337,7 +338,7 @@
                     if (NGListTextObj) {
                         const ngarr = NGListTextObj.text.split("\n");
                         if (SetObj.nglist_urlMethod_enable === true) return ngarr;
-                        return await Promise.all(ngarr.map(async (ngobj) => {
+                        const test1 = await Promise.all(ngarr.map(async (ngobj) => {
                             if (regexpEnable === true) {
                                 try {
                                     return new RegExp(ngobj, regexflag);
@@ -354,6 +355,26 @@
                                 }
                             }
                         }));
+                        const test2 = NGListTextObj.text.split("\n").filter(str => str !== "");
+                        NGListTextObj.text = await Promise.all(test2.map(async (ngobj) => {
+                            if (regexpEnable === true) {
+                                try {
+                                    return new RegExp(ngobj, regexflag);
+                                } catch (e) {
+                                    console.error(e);
+                                    return new RegExp("(?!)", regexflag);
+                                }
+                            } else {
+                                try {
+                                    return new RegExp(this.escapeRegExp(ngobj), regexflag);
+                                } catch (e) {
+                                    console.error(e);
+                                    return new RegExp("(?!)", regexflag);
+                                }
+                            }
+                        }));
+                        this.testObj[SetObj.nglist_list] = NGListTextObj;
+                        return test1;
                     } else {
                         return new Array();
                     }
@@ -427,12 +448,12 @@
             }
         }
         async Start(node) {
-            this.WebAbronBackgroundExecute(node, this.WebAbronfilter1, this.NGListRegexp1, this.NGListWhiteRegexp1);
-            this.WebAbronBackgroundExecute(node, this.WebAbronfilter2, this.NGListRegexp2, this.NGListWhiteRegexp2);
+            this.WebAbronBackgroundExecute(node, this.WebAbronfilter1);
+            this.WebAbronBackgroundExecute(node, this.WebAbronfilter2);
         }
         // PriveteFunction
-        async WebAbronBackgroundExecute(node, WebAbron_SettingArray, WebAbron_nglistArray, WebAbron_whitelistArray) {
-            async function textReplaceExecute(EleObj, PropertyName) {
+        async WebAbronBackgroundExecute(node, WebAbron_SettingArray) {
+            const textReplaceExecute = async (EleObj, PropertyName) => {
                 let sentenceReplaceFlag = false;
 
                 const WADupCheck = WebAbronDuplicateString.some((str) => {
@@ -440,26 +461,33 @@
                 })
                 if (WADupCheck) return;
 
-                Promise.all(WebAbron_SettingArray.map(async (webabronSet, index) => {
+                Promise.all(WebAbron_SettingArray.map(async (webabronSet) => {
                     if (WebAbronTempDisableArray.some((name) => name === webabronSet.name)) {
                         return;
                     }
 
                     if (sentenceReplaceFlag) return;
-                    const testResult = WebAbron_nglistArray[index].some((ngRegexp) => {
-                        return ngRegexp.test(EleObj[PropertyName]);
-                    });
-                    if (testResult) {
-                        const whitetestResult = WebAbron_whitelistArray[index].some((ngRegexp) => {
+                    let test4;
+                    if (this.testObj[webabronSet.nglist_list]) {
+                        test4 = this.testObj[webabronSet.nglist_list].text.some((ngRegexp) => {
                             return ngRegexp.test(EleObj[PropertyName]);
                         });
-                        if (!whitetestResult) {
+                    } else return;
+
+                    if (test4) {
+                        let test5;
+                        if (this.testObj[webabronSet.nglist_white_list]) {
+                            test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
+                                return ngRegexp.test(EleObj[PropertyName]);
+                            });
+                        }
+                        if (!test5) {
                             if (webabronSet.replace_mode === "sentence") {
                                 EleObj[PropertyName] = webabronSet.replace_string;
                                 WebAbronDuplicateString.push(EleObj[PropertyName]);
                                 sentenceReplaceFlag = true;
                             } else if (webabronSet.replace_mode === "word") {
-                                WebAbron_nglistArray[index].forEach((ngRegexp) => {
+                                this.testObj[webabronSet.nglist_list].text.forEach((ngRegexp) => {
                                     EleObj[PropertyName] = EleObj[PropertyName].replace(ngRegexp, webabronSet.replace_string);
                                 });
                                 WebAbronDuplicateString.push(EleObj[PropertyName]);
@@ -478,7 +506,7 @@
                         }
                     }
                 }));
-            }
+            };
 
             if (!node) return;
 
@@ -1302,7 +1330,7 @@
         }
 
         async function settingsbox_2_2_NGListSet() {
-            const BlockListTextObj = new class extends ListEdit_Func {
+            new class extends ListEdit_Func {
                 constructor(NGListStorage) {
                     super(NGListStorage);
                     this.li_cfuncinfunction = async function EditboxEleApply() {
@@ -1423,14 +1451,11 @@
                     }
                 }
 
-            }(NGListStorage);
-
-            BlockListTextObj.init();
-
+            }(NGListStorage).init();
         }
 
         async function settingsbox_2_3_WebAbronSet() {
-            const SentenceBlockObj = new class extends ListEdit_Func {
+            new class extends ListEdit_Func {
                 constructor(WebAbronStorage) {
                     super(WebAbronStorage);
                     this.url_Ele = null;
@@ -1658,13 +1683,11 @@
                     }
                 }
 
-            }(WebAbronStorage);
-
-            SentenceBlockObj.init();
+            }(WebAbronStorage).init();
         }
 
         async function settingsbox_2_4_ElementBlockerSet() {
-            const ElementBlockObj = new class extends ListEdit_Func {
+            new class extends ListEdit_Func {
                 constructor(ElementBlockerStorage) {
                     super(ElementBlockerStorage);
                     this.url_Ele = null;
@@ -1987,9 +2010,7 @@
                     }
                 }
 
-            }(ElementBlockerStorage);
-
-            ElementBlockObj.init();
+            }(ElementBlockerStorage).init();
         }
 
         async function settingsbox_2_5_PreferenceSet() {
