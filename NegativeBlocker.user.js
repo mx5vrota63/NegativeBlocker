@@ -24,9 +24,9 @@
     'use strict';
 
     let divElement_RootShadow;
-    let settingsbox_Element;
+    let Dashboard_Element;
     let DashboardMain_div;
-    let settingsbox_2_ele_stack = new Array();
+    let Dashboard_Window_Ele_stack = new Array();
     let settingbuttonEle;
     let BlockCounter = 0;
     let readyStateCheckInterval;
@@ -780,7 +780,7 @@
                     settingbuttonEle.style.width = "60px";
                     settingbuttonEle.style.height = "40px";
                     settingbuttonEle.style.backgroundColor = "#AFFFAF";
-                    settingbuttonEle.addEventListener("click", SettingWindow, false);
+                    settingbuttonEle.addEventListener("click", DashboardWindow, false);
                     divElement_RootShadow.shadowRoot.append(settingbuttonEle);
                     BlockCounterUpdate();
                 }
@@ -788,7 +788,7 @@
 
             try {
                 // eslint-disable-next-line no-undef
-                GM.registerMenuCommand("Dashboard", SettingWindow, "D");
+                GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
                 return;
             } catch (e) {
                 console.error(e);
@@ -818,11 +818,11 @@
 
 
 
-    async function SettingWindow() {
+    async function DashboardWindow() {
         const RootShadow = divElement_RootShadow.shadowRoot;
 
-        settingsbox_Element = document.createElement("div");
-        settingsbox_Element.innerHTML = `
+        Dashboard_Element = document.createElement("div");
+        Dashboard_Element.innerHTML = `
 <style type="text/css">
   div#FrameBack {
     all: initial;
@@ -888,7 +888,7 @@
 
 
 `
-        RootShadow.append(settingsbox_Element);
+        RootShadow.append(Dashboard_Element);
         function DashboardFrameBackWidthLimit() {
             const DashboardFrameBack = RootShadow.getElementById("FrameBack");
             if (window.innerWidth <= 400) {
@@ -901,12 +901,12 @@
         window.addEventListener("resize", DashboardFrameBackWidthLimit);
 
         RootShadow.getElementById("FrameBackHeaderButton1").addEventListener("click", () => {
-            settingsbox_Element.remove();
+            Dashboard_Element.remove();
             window.removeEventListener("resize", DashboardFrameBackWidthLimit);
         })
 
         RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
-            settingsbox_Element.remove();
+            Dashboard_Element.remove();
             window.removeEventListener("resize", DashboardFrameBackWidthLimit);
             settingbuttonEle.remove();
         })
@@ -916,8 +916,8 @@
 
 
         {
-            const settingsbox_1_div = document.createElement("div");
-            settingsbox_1_div.innerHTML = `
+            const DB_blockResult_div = document.createElement("div");
+            DB_blockResult_div.innerHTML = `
 <style type="text/css">
   div.ItemFrame_Border {
     position: relative;
@@ -953,8 +953,8 @@
 </div>
 
 `
-            settingsbox_2_ele_stack.push(settingsbox_1_div);
-            DashboardMain_div.append(settingsbox_1_div);
+            Dashboard_Window_Ele_stack.push(DB_blockResult_div);
+            DashboardMain_div.append(DB_blockResult_div);
 
             RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = "Webあぼーん 適用リスト";
             RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = "一時無効を適用してリロード";
@@ -965,15 +965,15 @@
                 const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
 
                 for (let i = 0; i < WebAbronExecuteResult.length; i++) {
-                    const settingsbox_1_1_1_p = document.createElement("span");
-                    settingsbox_1_1_1_p.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
-                    SentenceBlock_div.append(settingsbox_1_1_1_p);
+                    const span = document.createElement("span");
+                    span.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
+                    SentenceBlock_div.append(span);
 
-                    const settingsbox_1_1_1_input = document.createElement("input");
-                    settingsbox_1_1_1_input.setAttribute("type", "checkbox");
-                    settingsbox_1_1_1_input.setAttribute("name", WebAbronExecuteResult[i].name);
-                    WebAbronTempDisableArrayElement.push(settingsbox_1_1_1_input);
-                    SentenceBlock_div.append(settingsbox_1_1_1_input);
+                    const input = document.createElement("input");
+                    input.setAttribute("type", "checkbox");
+                    input.setAttribute("name", WebAbronExecuteResult[i].name);
+                    WebAbronTempDisableArrayElement.push(input);
+                    SentenceBlock_div.append(input);
 
                     SentenceBlock_div.append(document.createElement("br"));
                 }
@@ -994,46 +994,46 @@
                 const ElementBlock_div = RootShadow.getElementById("ItemFrame_ElementBlock");
 
                 for (let keyname in ElementBlockerExecuteResult) {
-                    const settingsbox_1_2_1_p = document.createElement("span");
-                    settingsbox_1_2_1_p.textContent = keyname
-                    ElementBlock_div.append(settingsbox_1_2_1_p);
+                    const span = document.createElement("span");
+                    span.textContent = keyname
+                    ElementBlock_div.append(span);
 
-                    const settingsbox_1_2_1_1_div = document.createElement("div");
-                    settingsbox_1_2_1_1_div.style.border = "1px solid black"
+                    const div = document.createElement("div");
+                    div.style.border = "1px solid black"
                     ElementBlockerExecuteResult[keyname].forEach((arr) => {
                         if (arr.settingobj.elementSearch_property === "href") {
-                            const settingsbox_1_2_1_1_p = document.createElement("p")
-                            settingsbox_1_2_1_1_p.textContent = arr.searchProperty;
-                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_p);
+                            const div_p = document.createElement("p")
+                            div_p.textContent = arr.searchProperty;
+                            div.append(div_p);
 
-                            const settingsbox_1_2_1_1_button1 = document.createElement("button");
-                            settingsbox_1_2_1_1_button1.textContent = "再表示する"
-                            settingsbox_1_2_1_1_button1.addEventListener("click", () => {
+                            const div_button1 = document.createElement("button");
+                            div_button1.textContent = "再表示する"
+                            div_button1.addEventListener("click", () => {
                                 arr.element.style.display = "";
                             })
-                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button1);
+                            div.append(div_button1);
 
-                            const settingsbox_1_2_1_1_button2 = document.createElement("button");
-                            settingsbox_1_2_1_1_button2.textContent = "URLをコピー"
-                            settingsbox_1_2_1_1_button2.addEventListener("click", () => {
+                            const div_button2 = document.createElement("button");
+                            div_button2.textContent = "URLをコピー"
+                            div_button2.addEventListener("click", () => {
                                 copyTextToClipboard(arr.searchProperty);
                             })
-                            settingsbox_1_2_1_1_div.append(settingsbox_1_2_1_1_button2);
+                            div.append(div_button2);
                         }
                     })
-                    ElementBlock_div.append(settingsbox_1_2_1_1_div);
+                    ElementBlock_div.append(div);
                 }
             }
 
-            RootShadow.getElementById("ItemFrame-SettingPageButton").addEventListener("click", settingsbox_2_1_PreferenceTop, false);
+            RootShadow.getElementById("ItemFrame-SettingPageButton").addEventListener("click", Dashboard_SettingsTop, false);
 
         }
 
-        async function settingsbox_2_1_PreferenceTop() {
-            ArrayLast(settingsbox_2_ele_stack).style.display = "none";
-            const settingsbox_2_1_div = document.createElement("div");
-            settingsbox_2_ele_stack.push(settingsbox_2_1_div);
-            settingsbox_2_1_div.innerHTML = `
+        async function Dashboard_SettingsTop() {
+            ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+            const DB_settingTop_div = document.createElement("div");
+            Dashboard_Window_Ele_stack.push(DB_settingTop_div);
+            DB_settingTop_div.innerHTML = `
 <style type="text/css">
   div.SettingsItem {
     display: block;
@@ -1066,7 +1066,7 @@
   </div>
 </div>
             `
-            DashboardMain_div.append(settingsbox_2_1_div);
+            DashboardMain_div.append(DB_settingTop_div);
 
 
             RootShadow.getElementById("BlockListText_Setting_Title").innerHTML = "NGフィルタ設定<br>グループ単位でNGワードリストまたはNGURLリストを設定できます。";
@@ -1083,13 +1083,13 @@
 
             RootShadow.getElementById("Other_Setting_Title").innerHTML = "その他設定<br>拡張機能全体の設定をします。";
             RootShadow.getElementById("Other_Setting_Button").textContent = "その他設定";
-            RootShadow.getElementById("Other_Setting_Button").addEventListener("click", settingsbox_2_5_PreferenceSet, false);
+            RootShadow.getElementById("Other_Setting_Button").addEventListener("click", Dashboard_PreferencePage, false);
 
 
             RootShadow.getElementById("SettingMainPageBack_Button").textContent = "←戻る";
             RootShadow.getElementById("SettingMainPageBack_Button").addEventListener("click", () => {
-                settingsbox_2_ele_stack.pop().remove();
-                ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+                Dashboard_Window_Ele_stack.pop().remove();
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
             }, false)
         }
 
@@ -1105,11 +1105,11 @@
                 this.index_Ele = null;
                 this.enable_Ele = null;
                 this.li_cfuncArgTemp = new Array();
-                this.li_cfunchandlers = new Array(); //privete
+                this.li_cfunchandlers = new Array();
                 this.li_cfuncinfunction = new Function();
                 this.li_cfuncinfunction_arg = new Array();
-                this.currentEle_li = null; //privete
-                this.currentEle_li_BGColorTemp = null; //privete
+                this.currentEle_li = null;
+                this.currentEle_li_BGColorTemp = null;
                 this.currentName = null;
                 this.currentIndex = null;
                 this.Editflag = false;
@@ -1118,16 +1118,16 @@
                 this.DelButtonFunc = new Function();
                 this.NewObjectButtonFunc = new Function();
 
-                this.SettingsObjectListPage_Ele = null;
-                this.EditConfigObjectPage_Ele = null
+                this.ListEditPage_Ele = null;
+                this.EditConfigPage_Ele = null
             }
 
             async init() {
-                ArrayLast(settingsbox_2_ele_stack).style.display = "none";
-                this.SettingsObjectListPage_Ele = document.createElement("div");
-                this.SettingsObjectListPage_Ele.style.height = "100%";
-                settingsbox_2_ele_stack.push(this.SettingsObjectListPage_Ele);
-                this.SettingsObjectListPage_Ele.innerHTML = `
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+                this.ListEditPage_Ele = document.createElement("div");
+                this.ListEditPage_Ele.style.height = "100%";
+                Dashboard_Window_Ele_stack.push(this.ListEditPage_Ele);
+                this.ListEditPage_Ele.innerHTML = `
 <style type="text/css">
   div#SettingsObjectListPage {
     height: 100%;
@@ -1176,7 +1176,7 @@
   </div>
 </div>
                 `
-                DashboardMain_div.append(this.SettingsObjectListPage_Ele);
+                DashboardMain_div.append(this.ListEditPage_Ele);
 
                 RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = "名前：";
                 RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = "並び替え：";
@@ -1203,8 +1203,8 @@
 
                 RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").addEventListener("click", () => {
                     this.Editflag = true;
-                    this.SettingsObjectListPage_Ele.style.display = "none";
-                    this.EditConfigObjectPage_Ele.style.display = "block";
+                    this.ListEditPage_Ele.style.display = "none";
+                    this.EditConfigPage_Ele.style.display = "block";
                 }, false);
 
                 RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", () => {
@@ -1214,9 +1214,9 @@
                             return false;
                         }
                     }
-                    settingsbox_2_ele_stack.pop().remove();
-                    settingsbox_2_ele_stack.pop().remove();
-                    ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+                    Dashboard_Window_Ele_stack.pop().remove();
+                    Dashboard_Window_Ele_stack.pop().remove();
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
                 }, false);
                 RootShadow.getElementById("SettingsObject_ActionButton_NewObject").addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
                 RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").addEventListener("click", async () => await this.DelButtonFunc(), false);
@@ -1244,8 +1244,7 @@
                     this.ListStorage.splice(fiindex, 1);
                 }
                 this.ListStorage.splice(this.index_Ele.value, 0, StoObj);
-                // eslint-disable-next-line no-undef
-                await GM.setValue(StoKey, JSON.stringify(this.ListStorage));
+                await StorageApiWrite(StoKey, JSON.stringify(this.ListStorage));
 
                 if (fiindex !== -1) {
                     this.currentEle_li.remove();
@@ -1270,8 +1269,7 @@
                     this.currentEle_li.remove();
                     this.SelectOption_Del()
                     this.ListStorage.splice(fiindex, 1);
-                    // eslint-disable-next-line no-undef
-                    await GM.setValue(StoKey, JSON.stringify(this.ListStorage));
+                    await StorageApiWrite(StoKey, JSON.stringify(this.ListStorage));
                     this.editarea_Ele.style.display = "none";
                     this.Editflag = false;
                     return true;
@@ -1319,23 +1317,23 @@
             }
 
             async li_Add(index) {
-                const settingsbox_2_2_1_li = document.createElement("li");
-                settingsbox_2_2_1_li.style.borderStyle = "solid";
-                settingsbox_2_2_1_li.style.borderWidth = "1px";
-                settingsbox_2_2_1_li.style.borderTopWidth = 0;
-                settingsbox_2_2_1_li.style.borderColor = "silver";
-                settingsbox_2_2_1_li.style.padding = "0 0 0 5px";
-                settingsbox_2_2_1_li.style.cursor = "pointer";
-                settingsbox_2_2_1_li.textContent = this.ListStorage[index].name;
-                this.li_cfuncinfunction_arg.unshift(settingsbox_2_2_1_li);
-                settingsbox_2_2_1_li.addEventListener("click", await this.li_cfunc(this.li_cfunchandlers.length, Array.from(this.li_cfuncinfunction_arg)), false);
+                const li = document.createElement("li");
+                li.style.borderStyle = "solid";
+                li.style.borderWidth = "1px";
+                li.style.borderTopWidth = 0;
+                li.style.borderColor = "silver";
+                li.style.padding = "0 0 0 5px";
+                li.style.cursor = "pointer";
+                li.textContent = this.ListStorage[index].name;
+                this.li_cfuncinfunction_arg.unshift(li);
+                li.addEventListener("click", await this.li_cfunc(this.li_cfunchandlers.length, Array.from(this.li_cfuncinfunction_arg)), false);
                 // NGList_Obj.currentEle_li.removeEventListener("click", await NGList_Obj.li_cfunc(NGList_Obj.li_cfuncArgTemp[0], NGList_Obj.li_cfuncArgTemp[1]), false);
                 if (index < this.ulol_Ele.childNodes.length) {
-                    this.ulol_Ele.childNodes[index].before(settingsbox_2_2_1_li);
+                    this.ulol_Ele.childNodes[index].before(li);
                 } else {
-                    this.ulol_Ele.append(settingsbox_2_2_1_li);
+                    this.ulol_Ele.append(li);
                 }
-                return settingsbox_2_2_1_li;
+                return li;
             }
 
             async li_EleSelect(Ele) {
@@ -1349,10 +1347,10 @@
             }
 
             async SelectOption_Add() {
-                const settingsbox_2_2_2_2_option = document.createElement("option");
-                settingsbox_2_2_2_2_option.value = this.index_Ele.length;
-                settingsbox_2_2_2_2_option.textContent = this.index_Ele.length + 1;
-                this.index_Ele.append(settingsbox_2_2_2_2_option);
+                const option = document.createElement("option");
+                option.value = this.index_Ele.length;
+                option.textContent = this.index_Ele.length + 1;
+                this.index_Ele.append(option);
             }
 
             async SelectOption_Del() {
@@ -1399,10 +1397,10 @@
 
                 async init() {
                     await super.init();
-                    this.EditConfigObjectPage_Ele = document.createElement("div");
-                    this.EditConfigObjectPage_Ele.style.display = "none";
-                    this.EditConfigObjectPage_Ele.style.height = "100%";
-                    this.EditConfigObjectPage_Ele.innerHTML = `
+                    this.EditConfigPage_Ele = document.createElement("div");
+                    this.EditConfigPage_Ele.style.display = "none";
+                    this.EditConfigPage_Ele.style.height = "100%";
+                    this.EditConfigPage_Ele.innerHTML = `
 <style type="text/css">
   div.EditConfigObjectPage {
     height: 100%;
@@ -1475,8 +1473,8 @@
   </div>
 </div>
             `
-                    DashboardMain_div.append(this.EditConfigObjectPage_Ele);
-                    settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
+                    DashboardMain_div.append(this.EditConfigPage_Ele);
+                    Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
                     RootShadow.getElementById("BlockListText_Textarea_Title").textContent = "ブロックリストテキスト"
                     RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = "テキストファイルを読み込む";
@@ -1511,8 +1509,8 @@
 
                     RootShadow.getElementById("BlockListText_BackButton").textContent = "←戻る"
                     RootShadow.getElementById("BlockListText_BackButton").addEventListener("click", () => {
-                        this.SettingsObjectListPage_Ele.style.display = "block";
-                        this.EditConfigObjectPage_Ele.style.display = "none";
+                        this.ListEditPage_Ele.style.display = "block";
+                        this.EditConfigPage_Ele.style.display = "none";
                     }, false);
 
                     RootShadow.getElementById("SettingsObject_ConfigItems_Enable").style.display = "none";
@@ -1603,10 +1601,10 @@
 
                 async init() {
                     await super.init();
-                    this.EditConfigObjectPage_Ele = document.createElement("div");
-                    this.EditConfigObjectPage_Ele.style.display = "none";
-                    this.EditConfigObjectPage_Ele.style.height = "calc(100% - 80px)";
-                    this.EditConfigObjectPage_Ele.innerHTML = `
+                    this.EditConfigPage_Ele = document.createElement("div");
+                    this.EditConfigPage_Ele.style.display = "none";
+                    this.EditConfigPage_Ele.style.height = "calc(100% - 80px)";
+                    this.EditConfigPage_Ele.innerHTML = `
 <style type="text/css">
   div.EditConfigObjectPage {
     height: 100%;
@@ -1708,8 +1706,8 @@
   </div>
 </div>
                     `
-                    DashboardMain_div.append(this.EditConfigObjectPage_Ele);
-                    settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
+                    DashboardMain_div.append(this.EditConfigPage_Ele);
+                    Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
                     RootShadow.getElementById("SentenceBlockConfig1_Title").textContent = "URL";
                     RootShadow.getElementById("SentenceBlockConfig1_Description").textContent = "このルールを有効にするサイトを指定します。何も入力せず空欄にするとすべてのサイトが対象になります。";
@@ -1740,16 +1738,16 @@
                     this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Form");
 
                     for (let i = 0; i < NGListStorage.length; i++) {
-                        const settingsbox_2_3_4_1_2_option = document.createElement("option");
-                        settingsbox_2_3_4_1_2_option.setAttribute("value", NGListStorage[i].name);
-                        settingsbox_2_3_4_1_2_option.textContent = NGListStorage[i].name;
-                        this.nglist_list_Ele.append(settingsbox_2_3_4_1_2_option);
-                        this.nglist_white_list_Ele.append(settingsbox_2_3_4_1_2_option.cloneNode(true));
+                        const option = document.createElement("option");
+                        option.setAttribute("value", NGListStorage[i].name);
+                        option.textContent = NGListStorage[i].name;
+                        this.nglist_list_Ele.append(option);
+                        this.nglist_white_list_Ele.append(option.cloneNode(true));
                     }
 
                     RootShadow.getElementById("SentenceBlockConfig_BackButton").addEventListener("click", () => {
-                        this.SettingsObjectListPage_Ele.style.display = "block";
-                        this.EditConfigObjectPage_Ele.style.display = "none";
+                        this.ListEditPage_Ele.style.display = "block";
+                        this.EditConfigPage_Ele.style.display = "none";
                     }, false);
                 }
 
@@ -1852,10 +1850,10 @@
 
                 async init() {
                     await super.init();
-                    this.EditConfigObjectPage_Ele = document.createElement("div");
-                    this.EditConfigObjectPage_Ele.style.display = "none";
-                    this.EditConfigObjectPage_Ele.style.height = "calc(100% - 80px)";
-                    this.EditConfigObjectPage_Ele.innerHTML = `
+                    this.EditConfigPage_Ele = document.createElement("div");
+                    this.EditConfigPage_Ele.style.display = "none";
+                    this.EditConfigPage_Ele.style.height = "calc(100% - 80px)";
+                    this.EditConfigPage_Ele.innerHTML = `
 <style type="text/css">
   div.EditConfigObjectPage {
     height: 100%;
@@ -2002,8 +2000,8 @@
   </div>
 </div>
                     `
-                    DashboardMain_div.append(this.EditConfigObjectPage_Ele);
-                    settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
+                    DashboardMain_div.append(this.EditConfigPage_Ele);
+                    Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
                     RootShadow.getElementById("ElementBlockConfig1_Title").textContent = "URL";
                     RootShadow.getElementById("ElementBlockConfig1_Description").innerHTML = "このルールを有効にするサイトを指定します。 <br>正規表現がOFFの時「*」でワイルドカードを使用できます。";
@@ -2051,16 +2049,16 @@
                     this.nglist_white_urlMethod_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input4");
 
                     for (let i = 0; i < NGListStorage.length; i++) {
-                        const settingsbox_2_3_4_1_2_option = document.createElement("option");
-                        settingsbox_2_3_4_1_2_option.setAttribute("value", NGListStorage[i].name);
-                        settingsbox_2_3_4_1_2_option.textContent = NGListStorage[i].name;
-                        this.nglist_list_Ele.append(settingsbox_2_3_4_1_2_option);
-                        this.nglist_white_list_Ele.append(settingsbox_2_3_4_1_2_option.cloneNode(true));
+                        const option = document.createElement("option");
+                        option.setAttribute("value", NGListStorage[i].name);
+                        option.textContent = NGListStorage[i].name;
+                        this.nglist_list_Ele.append(option);
+                        this.nglist_white_list_Ele.append(option.cloneNode(true));
                     }
 
                     RootShadow.getElementById("ElementBlockConfig_BackButton").addEventListener("click", () => {
-                        this.SettingsObjectListPage_Ele.style.display = "block";
-                        this.EditConfigObjectPage_Ele.style.display = "none";
+                        this.ListEditPage_Ele.style.display = "block";
+                        this.EditConfigPage_Ele.style.display = "none";
                     }, false);
                 }
 
@@ -2126,10 +2124,10 @@
             }(ElementBlockerStorage).init();
         }
 
-        async function settingsbox_2_5_PreferenceSet() {
-            ArrayLast(settingsbox_2_ele_stack).style.display = "none";
-            const settingsbox_2_5_div = document.createElement("div");
-            settingsbox_2_5_div.innerHTML = `
+        async function Dashboard_PreferencePage() {
+            ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+            const DB_preference_div = document.createElement("div");
+            DB_preference_div.innerHTML = `
 <style type="text/css">
   div.PreferencesItem {
     display: block;
@@ -2157,8 +2155,8 @@
   </div>
 </div>
             `
-            DashboardMain_div.append(settingsbox_2_5_div);
-            settingsbox_2_ele_stack.push(settingsbox_2_5_div);
+            DashboardMain_div.append(DB_preference_div);
+            Dashboard_Window_Ele_stack.push(DB_preference_div);
 
             RootShadow.getElementById("ImportAndExport_Setting_Title").innerHTML = "エクスポート&インポート<br>設定内容をエクスポートまたはインポートします。";
             RootShadow.getElementById("ImportAndExport_Setting_Button").textContent = "エクスポート&インポート";
@@ -2190,8 +2188,8 @@
             });
 
             RootShadow.getElementById("PreferencesPageBack_Button").addEventListener("click", () => {
-                settingsbox_2_ele_stack.pop().remove();
-                ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+                Dashboard_Window_Ele_stack.pop().remove();
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
             }, false);
 
 
@@ -2238,9 +2236,9 @@
                     }
                 }
 
-                ArrayLast(settingsbox_2_ele_stack).style.display = "none";
-                const settingsbox_2_5_2_div = document.createElement("div");
-                settingsbox_2_5_2_div.innerHTML = `
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+                const DB_exportAndImport_div = document.createElement("div");
+                DB_exportAndImport_div.innerHTML = `
 <style type="text/css">
   div.PreferencesItem {
     display: block;
@@ -2308,8 +2306,8 @@
   <button id="ExportAndImportConfig_BackButton"></button>
 </div>
                 `
-                DashboardMain_div.append(settingsbox_2_5_2_div);
-                settingsbox_2_ele_stack.push(settingsbox_2_5_2_div);
+                DashboardMain_div.append(DB_exportAndImport_div);
+                Dashboard_Window_Ele_stack.push(DB_exportAndImport_div);
 
                 RootShadow.getElementById("ExportAndImportConfig1_Title").textContent = "エクスポート";
                 RootShadow.getElementById("ExportAndImportConfig1_Button1").textContent = "JSONファイルでエクスポート";
@@ -2391,8 +2389,8 @@
                 }, false);
 
                 RootShadow.getElementById("ExportAndImportConfig_BackButton").addEventListener("click", () => {
-                    settingsbox_2_ele_stack.pop().remove();
-                    ArrayLast(settingsbox_2_ele_stack).style.display = "block";
+                    Dashboard_Window_Ele_stack.pop().remove();
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
                 }, false);
 
             }
