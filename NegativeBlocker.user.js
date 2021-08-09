@@ -36,7 +36,7 @@
     let WebAbronDuplicateString = new Array();
     let ElementBlockerExecuteResult = new Object();
 
-    let NGListStorage;
+    let BlockListTextStorage;
     let WebAbronStorage;
     let ElementBlockerStorage;
     let WebAbronTempDisableArray;
@@ -129,54 +129,8 @@
         }
     }
 
-
-
-
-    async function StorageLoad() {
-        NGListStorage = await StorageApiRead("NGList");
-        if (NGListStorage) {
-            NGListStorage = JSON.parse(NGListStorage);
-        } else {
-            NGListStorage = new Array();
-            await StorageApiWrite("NGList", JSON.stringify(NGListStorage));
-        }
-
-        WebAbronStorage = await StorageApiRead("WebAbron");
-        if (WebAbronStorage) {
-            WebAbronStorage = JSON.parse(WebAbronStorage);
-        } else {
-            WebAbronStorage = new Array();
-            await StorageApiWrite("WebAbron", JSON.stringify(WebAbronStorage));
-        }
-
-        ElementBlockerStorage = await StorageApiRead("ElementBlocker");
-        if (ElementBlockerStorage) {
-            ElementBlockerStorage = JSON.parse(ElementBlockerStorage);
-        } else {
-            ElementBlockerStorage = new Array();
-            await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockerStorage));
-        }
-
-        PreferenceSetting = await StorageApiRead("PreferenceSetting");
-        if (PreferenceSetting) {
-            PreferenceSetting = JSON.parse(PreferenceSetting);
-        } else {
-            PreferenceSetting = new Object();
-            await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
-        }
-
-        WebAbronTempDisableArray = await StorageApiRead("WebAbron_TempDisable");
-        if (WebAbronTempDisableArray) {
-            WebAbronTempDisableArray = JSON.parse(WebAbronTempDisableArray);
-        } else {
-            WebAbronTempDisableArray = new Array();
-        }
-        await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(new Array()));
-    }
-    await StorageLoad();
-
-
     const ArrayLast = array => array[array.length - 1];
+
     function XPathSelectorAll(expression, parentElement) {
         var XPathNode = new Array();
         var evaluateobj = document.evaluate(expression, parentElement || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -184,27 +138,6 @@
             XPathNode.push(evaluateobj.snapshotItem(i));
         }
         return XPathNode;
-    }
-
-    async function NGListStoUpdateOtherSetting(oldName, newName) {
-        WebAbronStorage.forEach((WebAbronObj) => {
-            if (WebAbronObj.nglist_list === oldName) {
-                WebAbronObj.nglist_list = newName;
-            }
-            if (WebAbronObj.nglist_white_list === oldName) {
-                WebAbronObj.nglist_white_list = newName;
-            }
-        });
-        await StorageApiWrite("WebAbron", JSON.stringify(WebAbronStorage));
-        ElementBlockerStorage.forEach((ElemnetBlockerObj) => {
-            if (ElemnetBlockerObj.nglist_list === oldName) {
-                ElemnetBlockerObj.nglist_list = newName;
-            }
-            if (ElemnetBlockerObj.nglist_white_list === oldName) {
-                ElemnetBlockerObj.nglist_white_list = newName;
-            }
-        });
-        await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockerStorage));
     }
 
     async function copyTextToClipboard(text) {
@@ -243,10 +176,55 @@
     }
 
 
+
+    async function StorageLoad() {
+        BlockListTextStorage = await StorageApiRead("NGList");
+        if (BlockListTextStorage) {
+            BlockListTextStorage = JSON.parse(BlockListTextStorage);
+        } else {
+            BlockListTextStorage = new Array();
+            await StorageApiWrite("NGList", JSON.stringify(BlockListTextStorage));
+        }
+
+        WebAbronStorage = await StorageApiRead("WebAbron");
+        if (WebAbronStorage) {
+            WebAbronStorage = JSON.parse(WebAbronStorage);
+        } else {
+            WebAbronStorage = new Array();
+            await StorageApiWrite("WebAbron", JSON.stringify(WebAbronStorage));
+        }
+
+        ElementBlockerStorage = await StorageApiRead("ElementBlocker");
+        if (ElementBlockerStorage) {
+            ElementBlockerStorage = JSON.parse(ElementBlockerStorage);
+        } else {
+            ElementBlockerStorage = new Array();
+            await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockerStorage));
+        }
+
+        PreferenceSetting = await StorageApiRead("PreferenceSetting");
+        if (PreferenceSetting) {
+            PreferenceSetting = JSON.parse(PreferenceSetting);
+        } else {
+            PreferenceSetting = new Object();
+            await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
+        }
+
+        WebAbronTempDisableArray = await StorageApiRead("WebAbron_TempDisable");
+        if (WebAbronTempDisableArray) {
+            WebAbronTempDisableArray = JSON.parse(WebAbronTempDisableArray);
+        } else {
+            WebAbronTempDisableArray = new Array();
+        }
+        await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(new Array()));
+    }
+    await StorageLoad();
+
+
     // BackGround Fuction Start
     class BackGround_Func {
         constructor() {
-            this.testObj = new Object();
+            this.BlockListText_loadObj = new Object();
         }
         escapeRegExp(string) {
             return string.replace(/[/.*+?^${}()|[\]\\]/g, '\\$&');
@@ -304,84 +282,46 @@
             }
             return UrlHit;
         }
-        async NGListStoLoadfunc(SettingArray, listflag) {
-            return await Promise.all(SettingArray.map(async (SetObj) => {
-                if (this.testObj[SetObj.nglist_list]) return new Array();
-                let regexpEnable = false, insensitiveEnable = false, keyNgname;
-                if (listflag === "ngblock") {
-                    if (SetObj.nglist_lowuppDist_enable === false) {
-                        insensitiveEnable = true;
-                    }
-                    if (SetObj.nglist_regex_enable === true) {
-                        regexpEnable = true;
-                    }
-                    keyNgname = SetObj.nglist_list;
-                } else if (listflag === "ngwhite" && SetObj.nglist_white_enable) {
-                    if (SetObj.nglist_white_lowuppDist_enable === false) {
-                        insensitiveEnable = true;
-                    }
-                    if (SetObj.nglist_white_regex_enable === true) {
-                        regexpEnable = true;
-                    }
-                    keyNgname = SetObj.nglist_white_list;
-                } else return new Array();
 
-
-                let regexflag = 'g';
-                if (insensitiveEnable === true) {
-                    regexflag = regexflag.concat('i');
-                }
-                if (keyNgname !== "") {
-                    const NGListTextKey = "NGList_" + keyNgname;
-                    let NGListTextObj = await StorageApiRead(NGListTextKey);
-                    NGListTextObj = JSON.parse(NGListTextObj);
-                    if (NGListTextObj) {
-                        const ngarr = NGListTextObj.text.split("\n");
-                        if (SetObj.nglist_urlMethod_enable === true) return ngarr;
-                        const test1 = await Promise.all(ngarr.map(async (ngobj) => {
-                            if (regexpEnable === true) {
-                                try {
-                                    return new RegExp(ngobj, regexflag);
-                                } catch (e) {
-                                    console.error(e);
-                                    return new RegExp("(?!)", regexflag);
-                                }
-                            } else {
-                                try {
-                                    return new RegExp(this.escapeRegExp(ngobj), regexflag);
-                                } catch (e) {
-                                    console.error(e);
-                                    return new RegExp("(?!)", regexflag);
-                                }
+        async BlockListText_StorageLoad(SettingArray) {
+            await Promise.all(SettingArray.map(async (SetObj) => {
+                const BLT_loadFunction = async (keyname) => {
+                    if (this.BlockListText_loadObj[keyname]) return true;
+                    const BlockListText_Keyname = "NGList_" + keyname;
+                    let BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
+                    try {
+                        BlockListText_Obj = JSON.parse(BlockListText_Obj);
+                    } catch (e) {
+                        console.error(e);
+                        return false;
+                    }
+                    if (BlockListText_Obj) {
+                        BlockListText_Obj.text = BlockListText_Obj.text.split("\n").filter(str => str !== "");
+                        if (BlockListText_Obj.regexp) {
+                            let regexpFlag = 'g';
+                            if (!BlockListText_Obj.caseSensitive) {
+                                regexpFlag = regexpFlag.concat('i');
                             }
-                        }));
-                        NGListTextObj.text = NGListTextObj.text.split("\n").filter(str => str !== "");
-                        if (NGListTextObj.regexp) {
-                            let regexflag2 = 'g';
-                            if (!NGListTextObj.caseSensitive) {
-                                regexflag2 = regexflag2.concat('i');
-                            }
-                            NGListTextObj.text = await Promise.all(NGListTextObj.text.map(async (ngobj) => {
+                            BlockListText_Obj.text = await Promise.all(BlockListText_Obj.text.map(async (str) => {
                                 try {
-                                    return new RegExp(ngobj, regexflag2);
+                                    return new RegExp(str, regexpFlag);
                                 } catch (e) {
                                     console.error(e);
-                                    return new RegExp("(?!)", regexflag2);
+                                    return new RegExp("(?!)", regexpFlag);
                                 }
                             }));
-                        } else if (!NGListTextObj.caseSensitive) {
-                            NGListTextObj.text = await Promise.all(NGListTextObj.text.map(async (ngobj) => {
-                                return ngobj.toLowerCase();
+                        } else if (!BlockListText_Obj.caseSensitive) {
+                            BlockListText_Obj.text = await Promise.all(BlockListText_Obj.text.map(async (str) => {
+                                return str.toLowerCase();
                             }));
                         }
-                        this.testObj[SetObj.nglist_list] = NGListTextObj;
-                        return test1;
-                    } else {
-                        return new Array();
+                        this.BlockListText_loadObj[keyname] = BlockListText_Obj;
+                        return true;
                     }
-                } else {
-                    return new Array();
+                    return false;
                 }
+                if (SetObj.nglist_list !== "") await BLT_loadFunction(SetObj.nglist_list);
+                if (SetObj.nglist_white_list !== "") await BLT_loadFunction(SetObj.nglist_white_list);
             }));
         }
     }
@@ -403,8 +343,7 @@
                 }
                 return false;
             });
-            this.NGListRegexp1 = await this.NGListStoLoadfunc(this.WebAbronfilter1, "ngblock");
-            this.NGListWhiteRegexp1 = await this.NGListStoLoadfunc(this.WebAbronfilter1, "ngwhite");
+            await this.BlockListText_StorageLoad(this.WebAbronfilter1);
             const CurrentURL = location.href;
             this.WebAbronfilter2 = WebAbronStorage.filter((arr) => {
                 if (arr.url !== "") {
@@ -430,8 +369,7 @@
                 }
                 return false;
             });
-            this.NGListRegexp2 = await this.NGListStoLoadfunc(this.WebAbronfilter2, "ngblock");
-            this.NGListWhiteRegexp2 = await this.NGListStoLoadfunc(this.WebAbronfilter2, "ngwhite");
+            await this.BlockListText_StorageLoad(this.WebAbronfilter2);
         }
         async initReadyElement() {
             const nodeText = document.evaluate('//text()', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -452,73 +390,71 @@
             this.WebAbronBackgroundExecute(node, this.WebAbronfilter1);
             this.WebAbronBackgroundExecute(node, this.WebAbronfilter2);
         }
-        // PriveteFunction
         async WebAbronBackgroundExecute(node, WebAbron_SettingArray) {
             const textReplaceExecute = async (EleObj, PropertyName) => {
                 let sentenceReplaceFlag = false;
 
-                const WADupCheck = WebAbronDuplicateString.some((str) => {
-                    return str === EleObj[PropertyName];
-                })
+                const WADupCheck = WebAbronDuplicateString.some(str => str === EleObj[PropertyName]);
                 if (WADupCheck) return;
 
                 Promise.all(WebAbron_SettingArray.map(async (webabronSet) => {
-                    if (WebAbronTempDisableArray.some((name) => name === webabronSet.name)) {
+                    if (WebAbronTempDisableArray.some(name => name === webabronSet.name)) {
                         return;
                     }
 
                     if (sentenceReplaceFlag) return;
-                    let test4;
-                    if (this.testObj[webabronSet.nglist_list]) {
-                        if (this.testObj[webabronSet.nglist_list].regexp) {
-                            test4 = this.testObj[webabronSet.nglist_list].text.filter((ngRegexp) => {
-                                return ngRegexp.test(EleObj[PropertyName]);
+
+                    let searchResult = new Array();
+                    if (this.BlockListText_loadObj[webabronSet.nglist_list]) {
+                        if (this.BlockListText_loadObj[webabronSet.nglist_list].regexp) {
+                            searchResult = this.BlockListText_loadObj[webabronSet.nglist_list].text.filter((searchText) => {
+                                return searchText.test(EleObj[PropertyName]);
                             });
-                        } else if (this.testObj[webabronSet.nglist_list].caseSensitive) {
-                            test4 = this.testObj[webabronSet.nglist_list].text.filter((ngRegexp) => {
-                                return EleObj[PropertyName].includes(ngRegexp);
+                        } else if (this.BlockListText_loadObj[webabronSet.nglist_list].caseSensitive) {
+                            searchResult = this.BlockListText_loadObj[webabronSet.nglist_list].text.filter((searchText) => {
+                                return EleObj[PropertyName].includes(searchText);
                             });
                         } else {
-                            test4 = this.testObj[webabronSet.nglist_list].text.filter((ngRegexp) => {
-                                return EleObj[PropertyName].toLowerCase().includes(ngRegexp);
+                            searchResult = this.BlockListText_loadObj[webabronSet.nglist_list].text.filter((searchText) => {
+                                return EleObj[PropertyName].toLowerCase().includes(searchText);
                             });
                         }
-                    } else return;
+                    }
 
-                    if (test4.length) {
-                        let test5;
-                        if (this.testObj[webabronSet.nglist_white_list]) {
-                            if (this.testObj[webabronSet.nglist_white_list].regexp) {
-                                test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
-                                    return ngRegexp.test(EleObj[PropertyName]);
+                    if (searchResult.length) {
+                        let searchExcludeResult = false;
+                        if (this.BlockListText_loadObj[webabronSet.nglist_white_list]) {
+                            if (this.BlockListText_loadObj[webabronSet.nglist_white_list].regexp) {
+                                searchExcludeResult = this.BlockListText_loadObj[webabronSet.nglist_white_list].text.some((searchText) => {
+                                    return searchText.test(EleObj[PropertyName]);
                                 });
-                            } else if (this.testObj[webabronSet.nglist_white_list].caseSensitive) {
-                                test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
-                                    return EleObj[PropertyName].includes(ngRegexp);
+                            } else if (this.BlockListText_loadObj[webabronSet.nglist_white_list].caseSensitive) {
+                                searchExcludeResult = this.BlockListText_loadObj[webabronSet.nglist_white_list].text.some((searchText) => {
+                                    return EleObj[PropertyName].includes(searchText);
                                 });
                             } else {
-                                test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
-                                    return EleObj[PropertyName].toLowerCase().includes(ngRegexp);
+                                searchExcludeResult = this.BlockListText_loadObj[webabronSet.nglist_white_list].text.some((searchText) => {
+                                    return EleObj[PropertyName].toLowerCase().includes(searchText);
                                 });
                             }
                         }
 
-                        if (!test5) {
+                        if (!searchExcludeResult) {
                             if (webabronSet.replace_mode === "sentence") {
                                 EleObj[PropertyName] = webabronSet.replace_string;
                                 WebAbronDuplicateString.push(EleObj[PropertyName]);
                                 sentenceReplaceFlag = true;
                             } else if (webabronSet.replace_mode === "word") {
-                                if (this.testObj[webabronSet.nglist_list].regexp) {
-                                    test4.forEach((ngRegexp) => {
+                                if (this.BlockListText_loadObj[webabronSet.nglist_list].regexp) {
+                                    searchResult.forEach((ngRegexp) => {
                                         EleObj[PropertyName] = EleObj[PropertyName].replace(ngRegexp, webabronSet.replace_string);
                                     });
                                 } else {
                                     let regexflag2 = 'g';
-                                    if (!this.testObj[webabronSet.nglist_list].caseSensitive) {
+                                    if (!this.BlockListText_loadObj[webabronSet.nglist_list].caseSensitive) {
                                         regexflag2 = regexflag2.concat('i');
                                     }
-                                    test4.forEach((ngRegexp) => {
+                                    searchResult.forEach((ngRegexp) => {
                                         EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(ngRegexp, regexflag2), webabronSet.replace_string);
                                     });
                                 }
@@ -585,15 +521,13 @@
                 }
                 return false;
             });
-            this.NGListRegexp = await this.NGListStoLoadfunc(this.ElementBlockerfilter, "ngblock");
-            this.NGListWhiteRegexp = await this.NGListStoLoadfunc(this.ElementBlockerfilter, "ngwhite");
+            await this.BlockListText_StorageLoad(this.ElementBlockerfilter);
         }
         async Start(node) {
-            await this.ElementBlockerExecute(node, this.ElementBlockerfilter, this.NGListRegexp, this.NGListWhiteRegexp);
+            await this.ElementBlockerExecute(node, this.ElementBlockerfilter);
         }
-        //Private Function
-        async ElementBlockerExecute(node, EleBlock_SettingArray, EleBlock_nglistArray, EleBlock_whitelistArray) {
-            EleBlock_SettingArray.forEach((EleBlockSet, index) => {
+        async ElementBlockerExecute(node, EleBlock_SettingArray) {
+            EleBlock_SettingArray.forEach((EleBlockSet) => {
                 let ElementNode;
                 if (!node) return;
                 if (EleBlockSet.elementHide_method === "css") {
@@ -626,17 +560,7 @@
                         SearchEleNode = XPathSelectorAll(EleBlockSet.elementSearch, ElementObj);
                     }
 
-                    if (EleBlockSet.elementSearch_index_enable && EleBlockSet.elementSearch_index !== "") {
-                        const EleSearchIndex = Number(EleBlockSet.elementSearch_index)
-                        if (Number.isInteger(EleSearchIndex) && EleSearchIndex >= 0) {
-                            if (SearchEleNode[EleSearchIndex]) {
-                                SearchEleNode = new Array(SearchEleNode[EleSearchIndex]);
-                            }
-                        }
-                    }
-
                     SearchEleNode.forEach((SearchEleObj) => {
-                        let testResult;
                         let searchProperty;
                         switch (EleBlockSet.elementSearch_property) {
                             case "text":
@@ -653,23 +577,45 @@
                             return;
                         }
 
-                        if (EleBlockSet.nglist_urlMethod_enable) {
-                            testResult = this.UrlArrayReverseSearch(EleBlock_nglistArray[index], searchProperty);
-                        } else {
-                            testResult = EleBlock_nglistArray[index].some((ngRegexp) => {
-                                return ngRegexp.test(searchProperty);
-                            });
-                        }
-                        if (testResult) {
-                            let whitetestResult;
-                            if (EleBlockSet.nglist_white_urlMethod_enable) {
-                                whitetestResult = this.UrlArrayReverseSearch(EleBlock_whitelistArray[index], searchProperty);
+                        let searchResult = false;
+                        if (this.BlockListText_loadObj[EleBlockSet.nglist_list]) {
+                            if (this.BlockListText_loadObj[EleBlockSet.nglist_list].uBlacklist) {
+                                searchResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[EleBlockSet.nglist_list].text, searchProperty);
+                            } else if (this.BlockListText_loadObj[EleBlockSet.nglist_list].regexp) {
+                                searchResult = this.BlockListText_loadObj[EleBlockSet.nglist_list].text.some((searchText) => {
+                                    return searchText.test(searchProperty);
+                                });
+                            } else if (this.BlockListText_loadObj[EleBlockSet.nglist_list].caseSensitive) {
+                                searchResult = this.BlockListText_loadObj[EleBlockSet.nglist_list].text.some((searchText) => {
+                                    return searchProperty.includes(searchText);
+                                });
                             } else {
-                                whitetestResult = EleBlock_whitelistArray[index].some((ngRegexp) => {
-                                    return ngRegexp.test(searchProperty);
+                                searchResult = this.BlockListText_loadObj[EleBlockSet.nglist_list].text.some((searchText) => {
+                                    return searchProperty.toLowerCase().includes(searchText);
                                 });
                             }
-                            if (!whitetestResult) {
+                        }
+
+                        if (searchResult) {
+                            let searchExcludeResult = false;
+                            if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list]) {
+                                if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list].uBlacklist) {
+                                    searchExcludeResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text, searchProperty);
+                                } else if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list].regexp) {
+                                    searchExcludeResult = this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text.some((searchText) => {
+                                        return searchText.test(searchProperty);
+                                    });
+                                } else if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list].caseSensitive) {
+                                    searchExcludeResult = this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text.some((searchText) => {
+                                        return searchProperty.includes(searchText);
+                                    });
+                                } else {
+                                    searchExcludeResult = this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text.some((searchText) => {
+                                        return searchProperty.toLowerCase().includes(searchText);
+                                    });
+                                }
+                            }
+                            if (!searchExcludeResult) {
                                 if (ElementObj.style.display !== "none") {
                                     ElementObj.style.display = "none";
 
@@ -1071,7 +1017,7 @@
 
             RootShadow.getElementById("BlockListText_Setting_Title").innerHTML = "NGフィルタ設定<br>グループ単位でNGワードリストまたはNGURLリストを設定できます。";
             RootShadow.getElementById("BlockListText_Setting_Button").textContent = "NGフィルタを設定する";
-            RootShadow.getElementById("BlockListText_Setting_Button").addEventListener("click", settingsbox_2_2_NGListSet, false);
+            RootShadow.getElementById("BlockListText_Setting_Button").addEventListener("click", Dashboard_BlockListText, false);
 
             RootShadow.getElementById("SentenceBlock_Setting_Title").innerHTML = "Webあぼーん機能<br>Webの文章内にNGフィルタのリストが含まれる場合、その一文章または単語を別の文字に置換します。";
             RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = "Webあぼーん機能を設定する";
@@ -1327,7 +1273,7 @@
                 li.textContent = this.ListStorage[index].name;
                 this.li_cfuncinfunction_arg.unshift(li);
                 li.addEventListener("click", await this.li_cfunc(this.li_cfunchandlers.length, Array.from(this.li_cfuncinfunction_arg)), false);
-                // NGList_Obj.currentEle_li.removeEventListener("click", await NGList_Obj.li_cfunc(NGList_Obj.li_cfuncArgTemp[0], NGList_Obj.li_cfuncArgTemp[1]), false);
+                // li.removeEventListener("click", await this.li_cfunc(this.li_cfuncArgTemp[0], this.li_cfuncArgTemp[1]), false);
                 if (index < this.ulol_Ele.childNodes.length) {
                     this.ulol_Ele.childNodes[index].before(li);
                 } else {
@@ -1359,10 +1305,10 @@
 
         }
 
-        async function settingsbox_2_2_NGListSet() {
+        async function Dashboard_BlockListText() {
             await new class extends ListEdit_Func {
-                constructor(NGListStorage) {
-                    super(NGListStorage);
+                constructor(BLT_Storage) {
+                    super(BLT_Storage);
                     this.textarea_Ele = null;
                     this.fetch_enable_Ele = null;
                     this.fetch_url_Ele = null;
@@ -1370,17 +1316,22 @@
                     this.caseSensitive_Ele = null;
                     this.uBlacklist_Ele = null;
                     this.li_cfuncinfunction = async () => {
-                        const NGListTextKey = "NGList_" + this.ListStorage[this.currentIndex].name;
-                        let NGListText;
-                        NGListText = await StorageApiRead(NGListTextKey);
-                        if (NGListText) {
-                            NGListText = JSON.parse(NGListText);
-                            this.textarea_Ele.value = NGListText.text;
-                            this.fetch_enable_Ele.checked = NGListText.fetch_enable;
-                            this.fetch_url_Ele.value = NGListText.fetch_url;
-                            this.regexp_Ele.checked = NGListText.regexp;
-                            this.caseSensitive_Ele.checked = NGListText.caseSensitive;
-                            this.uBlacklist_Ele.checked = NGListText.uBlacklist;
+                        const BlockListText_Keyname = "NGList_" + this.ListStorage[this.currentIndex].name;
+                        let BlockListText_Obj;
+                        BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
+                        try {
+                            BlockListText_Obj = JSON.parse(BlockListText_Obj);
+                        } catch (e) {
+                            console.error(e);
+                            BlockListText_Obj = undefined;
+                        }
+                        if (BlockListText_Obj) {
+                            this.textarea_Ele.value = BlockListText_Obj.text;
+                            this.fetch_enable_Ele.checked = BlockListText_Obj.fetch_enable;
+                            this.fetch_url_Ele.value = BlockListText_Obj.fetch_url;
+                            this.regexp_Ele.checked = BlockListText_Obj.regexp;
+                            this.caseSensitive_Ele.checked = BlockListText_Obj.caseSensitive;
+                            this.uBlacklist_Ele.checked = BlockListText_Obj.uBlacklist;
                         } else {
                             this.textarea_Ele.value = "";
                             this.fetch_enable_Ele.checked = false;
@@ -1390,9 +1341,9 @@
                             this.uBlacklist_Ele.checked = false;
                         }
                     }
-                    this.SaveButtonFunc = this.NGListStoSave.bind(this);
-                    this.DelButtonFunc = this.NGListStoDel.bind(this);
-                    this.NewObjectButtonFunc = this.NGListNewEditButton.bind(this);
+                    this.SaveButtonFunc = this.BlockListText_storageSave.bind(this);
+                    this.DelButtonFunc = this.BlockListText_storageDelete.bind(this);
+                    this.NewObjectButtonFunc = this.BlockListText_newEditButton.bind(this);
                 }
 
                 async init() {
@@ -1516,7 +1467,28 @@
                     RootShadow.getElementById("SettingsObject_ConfigItems_Enable").style.display = "none";
                 }
 
-                async NGListStoSave() {
+                async BlockListText_storageUpdateOtherSetting(oldName, newName) {
+                    WebAbronStorage.forEach((WebAbronObj) => {
+                        if (WebAbronObj.nglist_list === oldName) {
+                            WebAbronObj.nglist_list = newName;
+                        }
+                        if (WebAbronObj.nglist_white_list === oldName) {
+                            WebAbronObj.nglist_white_list = newName;
+                        }
+                    });
+                    await StorageApiWrite("WebAbron", JSON.stringify(WebAbronStorage));
+                    ElementBlockerStorage.forEach((ElemnetBlockerObj) => {
+                        if (ElemnetBlockerObj.nglist_list === oldName) {
+                            ElemnetBlockerObj.nglist_list = newName;
+                        }
+                        if (ElemnetBlockerObj.nglist_white_list === oldName) {
+                            ElemnetBlockerObj.nglist_white_list = newName;
+                        }
+                    });
+                    await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockerStorage));
+                }
+
+                async BlockListText_storageSave() {
                     const StoObj = {
                         name: this.name_Ele.value
                     }
@@ -1529,27 +1501,27 @@
                         uBlacklist: this.uBlacklist_Ele.checked
                     }
                     if (await this.ListStoSave("NGList", StoObj)) {
-                        const NGListTextKeyOld = "NGList_" + this.currentName;
+                        const BlockListText_Keyname_Old = "NGList_" + this.currentName;
                         if (this.currentName !== "") {
-                            await StorageApiDelete(NGListTextKeyOld);
+                            await StorageApiDelete(BlockListText_Keyname_Old);
                         }
-                        const NGListTextKeyNew = "NGList_" + StoObj.name;
-                        await StorageApiWrite(NGListTextKeyNew, JSON.stringify(StoObj_Text));
+                        const BlockListText_Keyname_New = "NGList_" + StoObj.name;
+                        await StorageApiWrite(BlockListText_Keyname_New, JSON.stringify(StoObj_Text));
                         if (this.currentName !== "") {
-                            NGListStoUpdateOtherSetting(this.currentName, StoObj.name);
+                            this.BlockListText_storageUpdateOtherSetting(this.currentName, StoObj.name);
                         }
                     }
                 }
 
-                async NGListStoDel() {
+                async BlockListText_storageDelete() {
                     if (await this.ListStoDel("NGList")) {
-                        const NGListTextKey = "NGList_" + this.currentName;
-                        await StorageApiDelete(NGListTextKey);
-                        NGListStoUpdateOtherSetting(this.currentName, "");
+                        const BlockListText_keyName = "NGList_" + this.currentName;
+                        await StorageApiDelete(BlockListText_keyName);
+                        this.BlockListText_storageUpdateOtherSetting(this.currentName, "");
                     }
                 }
 
-                async NGListNewEditButton(NewbuttonEle) {
+                async BlockListText_newEditButton(NewbuttonEle) {
                     if (await this.NewEditButton(NewbuttonEle)) {
                         this.textarea_Ele.value = "";
                         this.fetch_enable_Ele.checked = false;
@@ -1560,7 +1532,7 @@
                     }
                 }
 
-            }(NGListStorage).init();
+            }(BlockListTextStorage).init();
         }
 
         async function settingsbox_2_3_WebAbronSet() {
@@ -1737,10 +1709,10 @@
                     this.replace_string_Ele = RootShadow.getElementById("SentenceBlockConfig3_InputText");
                     this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Form");
 
-                    for (let i = 0; i < NGListStorage.length; i++) {
+                    for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
-                        option.setAttribute("value", NGListStorage[i].name);
-                        option.textContent = NGListStorage[i].name;
+                        option.setAttribute("value", BlockListTextStorage[i].name);
+                        option.textContent = BlockListTextStorage[i].name;
                         this.nglist_list_Ele.append(option);
                         this.nglist_white_list_Ele.append(option.cloneNode(true));
                     }
@@ -2048,10 +2020,10 @@
                     this.nglist_white_lowuppDist_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input3");
                     this.nglist_white_urlMethod_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input4");
 
-                    for (let i = 0; i < NGListStorage.length; i++) {
+                    for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
-                        option.setAttribute("value", NGListStorage[i].name);
-                        option.textContent = NGListStorage[i].name;
+                        option.setAttribute("value", BlockListTextStorage[i].name);
+                        option.textContent = BlockListTextStorage[i].name;
                         this.nglist_list_Ele.append(option);
                         this.nglist_white_list_Ele.append(option.cloneNode(true));
                     }
@@ -2164,7 +2136,7 @@
             RootShadow.getElementById("ButtonHide_Setting_Input_SpanText").textContent = "ボタンを非表示にする";
             RootShadow.getElementById("PreferencesPageBack_Button").textContent = "←戻る";
 
-            RootShadow.getElementById("ImportAndExport_Setting_Button").addEventListener("click", settingsbox_2_5_2_ExportImport, false);
+            RootShadow.getElementById("ImportAndExport_Setting_Button").addEventListener("click", DB_ExportImport, false);
 
             const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Setting_Input");
             if (PreferenceSetting["hideButton"]) {
@@ -2193,8 +2165,8 @@
             }, false);
 
 
-            async function settingsbox_2_5_2_ExportImport() {
-                async function settingsbox_2_5_2_JSONFormat(mode, importjson) {
+            async function DB_ExportImport() {
+                async function DB_ExportImport_JSONFormat(mode, importjson) {
                     if (mode === "export") {
                         try {
                             const KeyList = await StorageApiKeynamelist();
@@ -2327,7 +2299,7 @@
                 const TextareaEle = RootShadow.getElementById("ExportAndImportConfig3_Textarea");
 
                 RootShadow.getElementById("ExportAndImportConfig1_Button1").addEventListener("click", async () => {
-                    const setJSON = await settingsbox_2_5_2_JSONFormat("export");
+                    const setJSON = await DB_ExportImport_JSONFormat("export");
                     if (setJSON) {
                         const d = new Date();
                         const filename = new String().concat("NagativeBlockerBackup_", d.getFullYear(), "-", d.getMonth(), "-", d.getDate(), "_", d.getHours(), "-", d.getMinutes(), "-", d.getSeconds(), ".json");
@@ -2343,7 +2315,7 @@
                 }, false);
 
                 RootShadow.getElementById("ExportAndImportConfig1_Button2").addEventListener("click", async () => {
-                    const setJSON = await settingsbox_2_5_2_JSONFormat("export");
+                    const setJSON = await DB_ExportImport_JSONFormat("export");
                     if (setJSON) {
                         copyTextToClipboard(setJSON);
                         ExportSuccessTextEle.style.display = "block";
@@ -2351,7 +2323,7 @@
                 }, false);
 
                 RootShadow.getElementById("ExportAndImportConfig1_Button3").addEventListener("click", async () => {
-                    const setJSON = await settingsbox_2_5_2_JSONFormat("export");
+                    const setJSON = await DB_ExportImport_JSONFormat("export");
                     if (setJSON) {
                         TextareaEle.value = setJSON;
                         ExportSuccessTextEle.style.display = "block";
@@ -2368,7 +2340,7 @@
                         const file = evt.target.files[0];
                         const reader = new FileReader();
                         reader.onload = async (evt) => {
-                            const result = await settingsbox_2_5_2_JSONFormat("import", evt.target.result);
+                            const result = await DB_ExportImport_JSONFormat("import", evt.target.result);
                             if (result) {
                                 ImportSuccessTextEle.style.display = "block";
                             }
@@ -2382,7 +2354,7 @@
                     if (!res) {
                         return false;
                     }
-                    const result = await settingsbox_2_5_2_JSONFormat("import", TextareaEle.value);
+                    const result = await DB_ExportImport_JSONFormat("import", TextareaEle.value);
                     if (result) {
                         ImportSuccessTextEle.style.display = "block";
                     }
