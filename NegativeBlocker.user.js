@@ -27,20 +27,21 @@
     let Dashboard_Element;
     let DashboardMain_div;
     let Dashboard_Window_Ele_stack = new Array();
-    let settingbuttonEle;
+    let DashboardButtonEle;
     let BlockCounter = 0;
     let readyStateCheckInterval;
 
-    let WebAbronTempDisableArrayElement = new Array();
-    let WebAbronExecuteResult = new Array();
-    let WebAbronDuplicateString = new Array();
-    let ElementBlockerExecuteResult = new Object();
+    let SentenceBlock_ExecuteResultList = new Array();
+    let ElementBlock_ExecuteResultList = new Object();
+
+    let SentenceBlock_TempDisableElementArray = new Array();
+    let SentenceBlock_DuplicateList = new Array();
 
     let BlockListTextStorage;
-    let WebAbronStorage;
-    let ElementBlockerStorage;
-    let WebAbronTempDisableArray;
-    let PreferenceSetting;
+    let SentenceBlockStorage;
+    let ElementBlockStorage;
+    let PreferenceSettingStorage;
+    let SentenceBlockTempDisableArray;
 
     async function StorageApiRead(keyname) {
         let StorageValue;
@@ -186,35 +187,35 @@
             await StorageApiWrite("NGList", JSON.stringify(BlockListTextStorage));
         }
 
-        WebAbronStorage = await StorageApiRead("WebAbron");
-        if (WebAbronStorage) {
-            WebAbronStorage = JSON.parse(WebAbronStorage);
+        SentenceBlockStorage = await StorageApiRead("WebAbron");
+        if (SentenceBlockStorage) {
+            SentenceBlockStorage = JSON.parse(SentenceBlockStorage);
         } else {
-            WebAbronStorage = new Array();
-            await StorageApiWrite("WebAbron", JSON.stringify(WebAbronStorage));
+            SentenceBlockStorage = new Array();
+            await StorageApiWrite("WebAbron", JSON.stringify(SentenceBlockStorage));
         }
 
-        ElementBlockerStorage = await StorageApiRead("ElementBlocker");
-        if (ElementBlockerStorage) {
-            ElementBlockerStorage = JSON.parse(ElementBlockerStorage);
+        ElementBlockStorage = await StorageApiRead("ElementBlocker");
+        if (ElementBlockStorage) {
+            ElementBlockStorage = JSON.parse(ElementBlockStorage);
         } else {
-            ElementBlockerStorage = new Array();
-            await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockerStorage));
+            ElementBlockStorage = new Array();
+            await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockStorage));
         }
 
-        PreferenceSetting = await StorageApiRead("PreferenceSetting");
-        if (PreferenceSetting) {
-            PreferenceSetting = JSON.parse(PreferenceSetting);
+        PreferenceSettingStorage = await StorageApiRead("PreferenceSetting");
+        if (PreferenceSettingStorage) {
+            PreferenceSettingStorage = JSON.parse(PreferenceSettingStorage);
         } else {
-            PreferenceSetting = new Object();
-            await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
+            PreferenceSettingStorage = new Object();
+            await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
         }
 
-        WebAbronTempDisableArray = await StorageApiRead("WebAbron_TempDisable");
-        if (WebAbronTempDisableArray) {
-            WebAbronTempDisableArray = JSON.parse(WebAbronTempDisableArray);
+        SentenceBlockTempDisableArray = await StorageApiRead("WebAbron_TempDisable");
+        if (SentenceBlockTempDisableArray) {
+            SentenceBlockTempDisableArray = JSON.parse(SentenceBlockTempDisableArray);
         } else {
-            WebAbronTempDisableArray = new Array();
+            SentenceBlockTempDisableArray = new Array();
         }
         await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(new Array()));
     }
@@ -326,18 +327,14 @@
         }
     }
 
-    const BG_WebAbron_Obj = new class extends BackGround_Func {
+    const BG_sentenceBlock_obj = new class extends BackGround_Func {
         constructor() {
             super();
             this.WebAbronfilter1 = null;
-            this.NGListRegexp1 = null;
-            this.NGListWhiteRegexp1 = null;
             this.WebAbronfilter2 = null;
-            this.NGListRegexp2 = null;
-            this.NGListWhiteRegexp2 = null;
         }
         async init() {
-            this.WebAbronfilter1 = WebAbronStorage.filter((arr) => {
+            this.WebAbronfilter1 = SentenceBlockStorage.filter((arr) => {
                 if (arr.url === "" && arr.enable === true) {
                     return true;
                 }
@@ -345,7 +342,7 @@
             });
             await this.BlockListText_StorageLoad(this.WebAbronfilter1);
             const CurrentURL = location.href;
-            this.WebAbronfilter2 = WebAbronStorage.filter((arr) => {
+            this.WebAbronfilter2 = SentenceBlockStorage.filter((arr) => {
                 if (arr.url !== "") {
                     if (arr.url_regex_enable === true && arr.enable === true) {
                         try {
@@ -394,11 +391,11 @@
             const textReplaceExecute = async (EleObj, PropertyName) => {
                 let sentenceReplaceFlag = false;
 
-                const WADupCheck = WebAbronDuplicateString.some(str => str === EleObj[PropertyName]);
-                if (WADupCheck) return;
+                const SB_dupCheck = SentenceBlock_DuplicateList.some(str => str === EleObj[PropertyName]);
+                if (SB_dupCheck) return;
 
                 Promise.all(WebAbron_SettingArray.map(async (webabronSet) => {
-                    if (WebAbronTempDisableArray.some(name => name === webabronSet.name)) {
+                    if (SentenceBlockTempDisableArray.some(name => name === webabronSet.name)) {
                         return;
                     }
 
@@ -442,29 +439,29 @@
                         if (!searchExcludeResult) {
                             if (webabronSet.replace_mode === "sentence") {
                                 EleObj[PropertyName] = webabronSet.replace_string;
-                                WebAbronDuplicateString.push(EleObj[PropertyName]);
+                                SentenceBlock_DuplicateList.push(EleObj[PropertyName]);
                                 sentenceReplaceFlag = true;
                             } else if (webabronSet.replace_mode === "word") {
                                 if (this.BlockListText_loadObj[webabronSet.nglist_list].regexp) {
-                                    searchResult.forEach((ngRegexp) => {
-                                        EleObj[PropertyName] = EleObj[PropertyName].replace(ngRegexp, webabronSet.replace_string);
+                                    searchResult.forEach((searchText) => {
+                                        EleObj[PropertyName] = EleObj[PropertyName].replace(searchText, webabronSet.replace_string);
                                     });
                                 } else {
                                     let regexflag2 = 'g';
                                     if (!this.BlockListText_loadObj[webabronSet.nglist_list].caseSensitive) {
                                         regexflag2 = regexflag2.concat('i');
                                     }
-                                    searchResult.forEach((ngRegexp) => {
-                                        EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(ngRegexp, regexflag2), webabronSet.replace_string);
+                                    searchResult.forEach((searchText) => {
+                                        EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(searchText, regexflag2), webabronSet.replace_string);
                                     });
                                 }
-                                WebAbronDuplicateString.push(EleObj[PropertyName]);
+                                SentenceBlock_DuplicateList.push(EleObj[PropertyName]);
                             }
-                            const fiindex = WebAbronExecuteResult.findIndex(({ name }) => name === webabronSet.name);
-                            if (fiindex !== -1) {
-                                WebAbronExecuteResult[fiindex].count++;
+                            const fiIndex = SentenceBlock_ExecuteResultList.findIndex(({ name }) => name === webabronSet.name);
+                            if (fiIndex !== -1) {
+                                SentenceBlock_ExecuteResultList[fiIndex].count++;
                             } else {
-                                WebAbronExecuteResult.push({
+                                SentenceBlock_ExecuteResultList.push({
                                     name: webabronSet.name,
                                     count: 1
                                 });
@@ -489,16 +486,14 @@
         }
     }
 
-    const BG_ElementBlocker_Obj = new class extends BackGround_Func {
+    const BG_elementBlocker_Obj = new class extends BackGround_Func {
         constructor() {
             super();
             this.ElementBlockerfilter;
-            this.NGListRegexp;
-            this.NGListWhiteRegexp;
         }
         async init() {
             const CurrentURL = location.href;
-            this.ElementBlockerfilter = ElementBlockerStorage.filter((arr) => {
+            this.ElementBlockerfilter = ElementBlockStorage.filter((arr) => {
                 if (arr.url === "") return false;
                 if (arr.url_regex_enable === true && arr.enable === true) {
                     try {
@@ -538,7 +533,7 @@
                 ElementNode.forEach((ElementObj) => {
                     let firstblockflag;
                     try {
-                        firstblockflag = ElementBlockerExecuteResult[EleBlockSet.name].some((arr) => {
+                        firstblockflag = ElementBlock_ExecuteResultList[EleBlockSet.name].some((arr) => {
                             return arr.element === ElementObj;
                         })
                     } catch (e) {
@@ -619,11 +614,11 @@
                                 if (ElementObj.style.display !== "none") {
                                     ElementObj.style.display = "none";
 
-                                    if (!ElementBlockerExecuteResult[EleBlockSet.name]) {
-                                        ElementBlockerExecuteResult[EleBlockSet.name] = new Array();
+                                    if (!ElementBlock_ExecuteResultList[EleBlockSet.name]) {
+                                        ElementBlock_ExecuteResultList[EleBlockSet.name] = new Array();
                                     }
 
-                                    ElementBlockerExecuteResult[EleBlockSet.name].push({
+                                    ElementBlock_ExecuteResultList[EleBlockSet.name].push({
                                         settingobj: EleBlockSet,
                                         element: ElementObj,
                                         searchProperty: searchProperty
@@ -640,18 +635,18 @@
     }
 
     async function BlockCounterUpdate() {
-        if (settingbuttonEle) {
+        if (DashboardButtonEle) {
             if (BlockCounter > 0) {
-                settingbuttonEle.style.backgroundColor = "#FFAFAF"
+                DashboardButtonEle.style.backgroundColor = "#FFAFAF"
             }
-            settingbuttonEle.textContent = "C:(" + BlockCounter + ")";
+            DashboardButtonEle.textContent = "C:(" + BlockCounter + ")";
         }
     }
 
 
 
-    await BG_WebAbron_Obj.init();
-    await BG_ElementBlocker_Obj.init();
+    await BG_sentenceBlock_obj.init();
+    await BG_elementBlocker_Obj.init();
 
     if (document.body != null) {
         await initInsertElement();
@@ -697,8 +692,8 @@
 
 
     async function StartExecute() {
-        await BG_ElementBlocker_Obj.Start(document);
-        await BG_WebAbron_Obj.Start(document);
+        await BG_elementBlocker_Obj.Start(document);
+        await BG_sentenceBlock_obj.Start(document);
     }
 
     async function readyStateSetInterval() {
@@ -709,25 +704,25 @@
 
     async function initInsertElement() {
         if (!divElement_RootShadow) {
-            await BG_WebAbron_Obj.initReadyElement();
+            await BG_sentenceBlock_obj.initReadyElement();
 
             divElement_RootShadow = document.createElement("div");
             divElement_RootShadow.style.all = "initial";
             divElement_RootShadow.attachShadow({ mode: "open" });
             document.body.append(divElement_RootShadow);
 
-            if (!PreferenceSetting["hideButton"] || PreferenceSetting["hideButton"] === false) {
+            if (!PreferenceSettingStorage["hideButton"] || PreferenceSettingStorage["hideButton"] === false) {
                 if (!inIframeDetect()) {
-                    settingbuttonEle = document.createElement("button");
-                    settingbuttonEle.style.position = "fixed";
-                    settingbuttonEle.style.top = 0;
-                    settingbuttonEle.style.right = 0;
-                    settingbuttonEle.style.zIndex = 9998;
-                    settingbuttonEle.style.width = "60px";
-                    settingbuttonEle.style.height = "40px";
-                    settingbuttonEle.style.backgroundColor = "#AFFFAF";
-                    settingbuttonEle.addEventListener("click", DashboardWindow, false);
-                    divElement_RootShadow.shadowRoot.append(settingbuttonEle);
+                    DashboardButtonEle = document.createElement("button");
+                    DashboardButtonEle.style.position = "fixed";
+                    DashboardButtonEle.style.top = 0;
+                    DashboardButtonEle.style.right = 0;
+                    DashboardButtonEle.style.zIndex = 9998;
+                    DashboardButtonEle.style.width = "60px";
+                    DashboardButtonEle.style.height = "40px";
+                    DashboardButtonEle.style.backgroundColor = "#AFFFAF";
+                    DashboardButtonEle.addEventListener("click", DashboardWindow, false);
+                    divElement_RootShadow.shadowRoot.append(DashboardButtonEle);
                     BlockCounterUpdate();
                 }
             }
@@ -744,8 +739,8 @@
 
     async function observerregister() {
         const observer = new MutationObserver(async () => {
-            BG_ElementBlocker_Obj.Start(document.body);
-            BG_WebAbron_Obj.Start(document.body);
+            BG_elementBlocker_Obj.Start(document.body);
+            BG_sentenceBlock_obj.Start(document.body);
         });
         const config = {
             attributes: false,
@@ -854,7 +849,7 @@
         RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
             Dashboard_Element.remove();
             window.removeEventListener("resize", DashboardFrameBackWidthLimit);
-            settingbuttonEle.remove();
+            DashboardButtonEle.remove();
         })
 
 
@@ -910,15 +905,15 @@
             {
                 const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
 
-                for (let i = 0; i < WebAbronExecuteResult.length; i++) {
+                for (let i = 0; i < SentenceBlock_ExecuteResultList.length; i++) {
                     const span = document.createElement("span");
-                    span.textContent = WebAbronExecuteResult[i].name + "(" + WebAbronExecuteResult[i].count + ")";
+                    span.textContent = SentenceBlock_ExecuteResultList[i].name + "(" + SentenceBlock_ExecuteResultList[i].count + ")";
                     SentenceBlock_div.append(span);
 
                     const input = document.createElement("input");
                     input.setAttribute("type", "checkbox");
-                    input.setAttribute("name", WebAbronExecuteResult[i].name);
-                    WebAbronTempDisableArrayElement.push(input);
+                    input.setAttribute("name", SentenceBlock_ExecuteResultList[i].name);
+                    SentenceBlock_TempDisableElementArray.push(input);
                     SentenceBlock_div.append(input);
 
                     SentenceBlock_div.append(document.createElement("br"));
@@ -926,27 +921,27 @@
             }
 
             RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").addEventListener("click", async () => {
-                const tempdis = new Array();
-                WebAbronTempDisableArrayElement.forEach((ele) => {
+                const tempDisable = new Array();
+                SentenceBlock_TempDisableElementArray.forEach((ele) => {
                     if (ele.checked) {
-                        tempdis.push(ele.name);
+                        tempDisable.push(ele.name);
                     }
                 })
-                await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempdis));
+                await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempDisable));
                 location.reload();
             }, false);
 
             {
                 const ElementBlock_div = RootShadow.getElementById("ItemFrame_ElementBlock");
 
-                for (let keyname in ElementBlockerExecuteResult) {
+                for (let keyname in ElementBlock_ExecuteResultList) {
                     const span = document.createElement("span");
                     span.textContent = keyname
                     ElementBlock_div.append(span);
 
                     const div = document.createElement("div");
                     div.style.border = "1px solid black"
-                    ElementBlockerExecuteResult[keyname].forEach((arr) => {
+                    ElementBlock_ExecuteResultList[keyname].forEach((arr) => {
                         if (arr.settingobj.elementSearch_property === "href") {
                             const div_p = document.createElement("p")
                             div_p.textContent = arr.searchProperty;
@@ -1021,11 +1016,11 @@
 
             RootShadow.getElementById("SentenceBlock_Setting_Title").innerHTML = "Webあぼーん機能<br>Webの文章内にNGフィルタのリストが含まれる場合、その一文章または単語を別の文字に置換します。";
             RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = "Webあぼーん機能を設定する";
-            RootShadow.getElementById("SentenceBlock_Setting_Button").addEventListener("click", settingsbox_2_3_WebAbronSet, false);
+            RootShadow.getElementById("SentenceBlock_Setting_Button").addEventListener("click", Dashboard_SentenceBlock, false);
 
             RootShadow.getElementById("ElementBlock_Setting_Title").innerHTML = "要素ブロック機能<br>要素の文字またはプロパティにNGフィルタのリストが含まれる場合、要素ごとブロックします。";
             RootShadow.getElementById("ElementBlock_Setting_Button").textContent = "要素ブロック機能を設定する";
-            RootShadow.getElementById("ElementBlock_Setting_Button").addEventListener("click", settingsbox_2_4_ElementBlockerSet, false);
+            RootShadow.getElementById("ElementBlock_Setting_Button").addEventListener("click", Dashboard_ElementBlock, false);
 
             RootShadow.getElementById("Other_Setting_Title").innerHTML = "その他設定<br>拡張機能全体の設定をします。";
             RootShadow.getElementById("Other_Setting_Button").textContent = "その他設定";
@@ -1468,7 +1463,7 @@
                 }
 
                 async BlockListText_storageUpdateOtherSetting(oldName, newName) {
-                    WebAbronStorage.forEach((WebAbronObj) => {
+                    SentenceBlockStorage.forEach((WebAbronObj) => {
                         if (WebAbronObj.nglist_list === oldName) {
                             WebAbronObj.nglist_list = newName;
                         }
@@ -1476,8 +1471,8 @@
                             WebAbronObj.nglist_white_list = newName;
                         }
                     });
-                    await StorageApiWrite("WebAbron", JSON.stringify(WebAbronStorage));
-                    ElementBlockerStorage.forEach((ElemnetBlockerObj) => {
+                    await StorageApiWrite("WebAbron", JSON.stringify(SentenceBlockStorage));
+                    ElementBlockStorage.forEach((ElemnetBlockerObj) => {
                         if (ElemnetBlockerObj.nglist_list === oldName) {
                             ElemnetBlockerObj.nglist_list = newName;
                         }
@@ -1485,7 +1480,7 @@
                             ElemnetBlockerObj.nglist_white_list = newName;
                         }
                     });
-                    await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockerStorage));
+                    await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockStorage));
                 }
 
                 async BlockListText_storageSave() {
@@ -1535,10 +1530,10 @@
             }(BlockListTextStorage).init();
         }
 
-        async function settingsbox_2_3_WebAbronSet() {
+        async function Dashboard_SentenceBlock() {
             await new class extends ListEdit_Func {
-                constructor(WebAbronStorage) {
-                    super(WebAbronStorage);
+                constructor(SB_Storage) {
+                    super(SB_Storage);
                     this.url_Ele = null;
                     this.url_regex_enable_Ele = null;
                     this.nglist_list_Ele = null;
@@ -1765,13 +1760,13 @@
                     }
                 }
 
-            }(WebAbronStorage).init();
+            }(SentenceBlockStorage).init();
         }
 
-        async function settingsbox_2_4_ElementBlockerSet() {
+        async function Dashboard_ElementBlock() {
             await new class extends ListEdit_Func {
-                constructor(ElementBlockerStorage) {
-                    super(ElementBlockerStorage);
+                constructor(EB_Storage) {
+                    super(EB_Storage);
                     this.url_Ele = null;
                     this.url_regex_enable_Ele = null;
                     this.elementHide_Ele = null;
@@ -2093,7 +2088,7 @@
                     }
                 }
 
-            }(ElementBlockerStorage).init();
+            }(ElementBlockStorage).init();
         }
 
         async function Dashboard_PreferencePage() {
@@ -2139,7 +2134,7 @@
             RootShadow.getElementById("ImportAndExport_Setting_Button").addEventListener("click", DB_ExportImport, false);
 
             const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Setting_Input");
-            if (PreferenceSetting["hideButton"]) {
+            if (PreferenceSettingStorage["hideButton"]) {
                 ButtonHide_Setting_Input.checked = true;
             } else {
                 ButtonHide_Setting_Input.checked = false;
@@ -2150,12 +2145,12 @@
                     const res = confirm("UserScriptマネージャーのメニュー画面から設定ウィンドウを呼び出せない場合、再インストールしないと二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
                     if (res) {
                         this.checked = true;
-                        PreferenceSetting["hideButton"] = true;
-                        await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
+                        PreferenceSettingStorage["hideButton"] = true;
+                        await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                     }
                 } else {
-                    PreferenceSetting["hideButton"] = false;
-                    await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSetting));
+                    PreferenceSettingStorage["hideButton"] = false;
+                    await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                 }
             });
 
