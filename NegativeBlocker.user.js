@@ -355,24 +355,25 @@
                                 }
                             }
                         }));
-                        const test2 = NGListTextObj.text.split("\n").filter(str => str !== "");
-                        NGListTextObj.text = await Promise.all(test2.map(async (ngobj) => {
-                            if (regexpEnable === true) {
-                                try {
-                                    return new RegExp(ngobj, regexflag);
-                                } catch (e) {
-                                    console.error(e);
-                                    return new RegExp("(?!)", regexflag);
-                                }
-                            } else {
-                                try {
-                                    return new RegExp(this.escapeRegExp(ngobj), regexflag);
-                                } catch (e) {
-                                    console.error(e);
-                                    return new RegExp("(?!)", regexflag);
-                                }
+                        NGListTextObj.text = NGListTextObj.text.split("\n").filter(str => str !== "");
+                        if (NGListTextObj.regexp) {
+                            let regexflag2 = 'g';
+                            if (!NGListTextObj.caseSensitive) {
+                                regexflag2 = regexflag2.concat('i');
                             }
-                        }));
+                            NGListTextObj.text = await Promise.all(NGListTextObj.text.map(async (ngobj) => {
+                                try {
+                                    return new RegExp(ngobj, regexflag2);
+                                } catch (e) {
+                                    console.error(e);
+                                    return new RegExp("(?!)", regexflag2);
+                                }
+                            }));
+                        } else if (!NGListTextObj.caseSensitive) {
+                            NGListTextObj.text = await Promise.all(NGListTextObj.text.map(async (ngobj) => {
+                                return ngobj.toLowerCase();
+                            }));
+                        }
                         this.testObj[SetObj.nglist_list] = NGListTextObj;
                         return test1;
                     } else {
@@ -469,27 +470,58 @@
                     if (sentenceReplaceFlag) return;
                     let test4;
                     if (this.testObj[webabronSet.nglist_list]) {
-                        test4 = this.testObj[webabronSet.nglist_list].text.some((ngRegexp) => {
-                            return ngRegexp.test(EleObj[PropertyName]);
-                        });
-                    } else return;
-
-                    if (test4) {
-                        let test5;
-                        if (this.testObj[webabronSet.nglist_white_list]) {
-                            test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
+                        if (this.testObj[webabronSet.nglist_list].regexp) {
+                            test4 = this.testObj[webabronSet.nglist_list].text.filter((ngRegexp) => {
                                 return ngRegexp.test(EleObj[PropertyName]);
                             });
+                        } else if (this.testObj[webabronSet.nglist_list].caseSensitive) {
+                            test4 = this.testObj[webabronSet.nglist_list].text.filter((ngRegexp) => {
+                                return EleObj[PropertyName].includes(ngRegexp);
+                            });
+                        } else {
+                            test4 = this.testObj[webabronSet.nglist_list].text.filter((ngRegexp) => {
+                                return EleObj[PropertyName].toLowerCase().includes(ngRegexp);
+                            });
                         }
+                    } else return;
+
+                    if (test4.length) {
+                        let test5;
+                        if (this.testObj[webabronSet.nglist_white_list]) {
+                            if (this.testObj[webabronSet.nglist_white_list].regexp) {
+                                test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
+                                    return ngRegexp.test(EleObj[PropertyName]);
+                                });
+                            } else if (this.testObj[webabronSet.nglist_white_list].caseSensitive) {
+                                test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
+                                    return EleObj[PropertyName].includes(ngRegexp);
+                                });
+                            } else {
+                                test5 = this.testObj[webabronSet.nglist_white_list].text.some((ngRegexp) => {
+                                    return EleObj[PropertyName].toLowerCase().includes(ngRegexp);
+                                });
+                            }
+                        }
+
                         if (!test5) {
                             if (webabronSet.replace_mode === "sentence") {
                                 EleObj[PropertyName] = webabronSet.replace_string;
                                 WebAbronDuplicateString.push(EleObj[PropertyName]);
                                 sentenceReplaceFlag = true;
                             } else if (webabronSet.replace_mode === "word") {
-                                this.testObj[webabronSet.nglist_list].text.forEach((ngRegexp) => {
-                                    EleObj[PropertyName] = EleObj[PropertyName].replace(ngRegexp, webabronSet.replace_string);
-                                });
+                                if (this.testObj[webabronSet.nglist_list].regexp) {
+                                    test4.forEach((ngRegexp) => {
+                                        EleObj[PropertyName] = EleObj[PropertyName].replace(ngRegexp, webabronSet.replace_string);
+                                    });
+                                } else {
+                                    let regexflag2 = 'g';
+                                    if (!this.testObj[webabronSet.nglist_list].caseSensitive) {
+                                        regexflag2 = regexflag2.concat('i');
+                                    }
+                                    test4.forEach((ngRegexp) => {
+                                        EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(ngRegexp, regexflag2), webabronSet.replace_string);
+                                    });
+                                }
                                 WebAbronDuplicateString.push(EleObj[PropertyName]);
                             }
                             const fiindex = WebAbronExecuteResult.findIndex(({ name }) => name === webabronSet.name);
@@ -1330,21 +1362,36 @@
         }
 
         async function settingsbox_2_2_NGListSet() {
-            new class extends ListEdit_Func {
+            await new class extends ListEdit_Func {
                 constructor(NGListStorage) {
                     super(NGListStorage);
-                    this.li_cfuncinfunction = async function EditboxEleApply() {
+                    this.textarea_Ele = null;
+                    this.fetch_enable_Ele = null;
+                    this.fetch_url_Ele = null;
+                    this.regexp_Ele = null;
+                    this.caseSensitive_Ele = null;
+                    this.uBlacklist_Ele = null;
+                    this.li_cfuncinfunction = async () => {
                         const NGListTextKey = "NGList_" + this.ListStorage[this.currentIndex].name;
                         let NGListText;
                         NGListText = await StorageApiRead(NGListTextKey);
                         if (NGListText) {
                             NGListText = JSON.parse(NGListText);
                             this.textarea_Ele.value = NGListText.text;
+                            this.fetch_enable_Ele.checked = NGListText.fetch_enable;
+                            this.fetch_url_Ele.value = NGListText.fetch_url;
+                            this.regexp_Ele.checked = NGListText.regexp;
+                            this.caseSensitive_Ele.checked = NGListText.caseSensitive;
+                            this.uBlacklist_Ele.checked = NGListText.uBlacklist;
                         } else {
                             this.textarea_Ele.value = "";
+                            this.fetch_enable_Ele.checked = false;
+                            this.fetch_url_Ele.value = "";
+                            this.regexp_Ele.checked = false;
+                            this.caseSensitive_Ele.checked = false;
+                            this.uBlacklist_Ele.checked = false;
                         }
                     }
-                    this.textarea_Ele = null;
                     this.SaveButtonFunc = this.NGListStoSave.bind(this);
                     this.DelButtonFunc = this.NGListStoDel.bind(this);
                     this.NewObjectButtonFunc = this.NGListNewEditButton.bind(this);
@@ -1363,23 +1410,65 @@
   div#BlockListText_div {
     height: calc(100% - 80px);
   }
-  textarea#BlockListText_textarea {
+  textarea#BlockListText_Textarea {
     resize: none;
-    width: 98.5%;
-    height: 98.5%;
+    margin-left: -10px;
+    width: calc(100% + 14px);
+    height: 100%;
   }
-  div#BlockListText_ReadFile {
+  div.BlockListText_Border {
     border: 1px solid black;
+  }
+  div.ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+    white-space: nowrap;
   }
 </style>
 
 <div id="BlockListText" class="EditConfigObjectPage">
-  <div id="BlockListText_div">
-    <textarea id="BlockListText_textarea" spellcheck="false"></textarea>
+  <div id="BlockListText_div" class="ItemFrame_Border">
+    <h1 id="BlockListText_Textarea_Title" class="ItemFrame_Title"></h1>
+    <textarea id="BlockListText_Textarea" spellcheck="false"></textarea>
   </div>
-  <div id="BlockListText_ReadFile">
-    <span id="BlockListText_ReadFile_Title"></span><br />
+  <div class="ItemFrame_Border">
+    <h1 id="BlockListText_ReadFile_Title" class="ItemFrame_Title"></h1>
     <input id="BlockListText_ReadFile_Input" type="file" />
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="BlockListText_Fetch_Title" class="ItemFrame_Title"></h1>
+    <label>
+      <input id="BlockListText_Fetch_InputCheckbox" type="checkbox" />
+      <span id="BlockListText_Fetch_InputCheckbox_SpanText"></span>
+    </label>
+    <input id="BlockListText_Fetch_InputText" type="text" />
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
+    <label>
+      <input id="BlockListText_Config1_Input" type="checkbox" />
+      <span id="BlockListText_Config1_SpanText"></span>
+    </label>
+    <label>
+      <input id="BlockListText_Config2_Input" type="checkbox" />
+      <span id="BlockListText_Config2_SpanText"></span>
+    </label>
+    <label>
+      <input id="BlockListText_Config3_Input" type="checkbox" />
+      <span id="BlockListText_Config3_SpanText"></span>
+    </label>
   </div>
   <div>
     <button id="BlockListText_BackButton"></button>
@@ -1389,9 +1478,21 @@
                     DashboardMain_div.append(this.EditConfigObjectPage_Ele);
                     settingsbox_2_ele_stack.push(this.EditConfigObjectPage_Ele);
 
-                    RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = "ファイルからテキストを読み込む";
+                    RootShadow.getElementById("BlockListText_Textarea_Title").textContent = "ブロックリストテキスト"
+                    RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = "テキストファイルを読み込む";
+                    RootShadow.getElementById("BlockListText_Fetch_Title").textContent = "URLから取得する";
+                    RootShadow.getElementById("BlockListText_Fetch_InputCheckbox_SpanText").textContent = "有効";
+                    RootShadow.getElementById("BlockListText_Config_Title").textContent = "オプション";
+                    RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = "正規表現";
+                    RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = "大文字と小文字を区別する";
+                    RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = "uBlacklist形式を使用する";
 
-                    this.textarea_Ele = RootShadow.getElementById("BlockListText_textarea");
+                    this.textarea_Ele = RootShadow.getElementById("BlockListText_Textarea");
+                    this.fetch_enable_Ele = RootShadow.getElementById("BlockListText_Fetch_InputCheckbox");
+                    this.fetch_url_Ele = RootShadow.getElementById("BlockListText_Fetch_InputText");
+                    this.regexp_Ele = RootShadow.getElementById("BlockListText_Config1_Input");
+                    this.caseSensitive_Ele = RootShadow.getElementById("BlockListText_Config2_Input");
+                    this.uBlacklist_Ele = RootShadow.getElementById("BlockListText_Config3_Input");
 
                     RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", (evt) => {
                         if (evt.target.files[0]) {
@@ -1419,10 +1520,15 @@
 
                 async NGListStoSave() {
                     const StoObj = {
-                        name: this.name_Ele.value,
+                        name: this.name_Ele.value
                     }
                     const StoObj_Text = {
-                        text: this.textarea_Ele.value.trim()
+                        text: this.textarea_Ele.value.trim(),
+                        fetch_enable: this.fetch_enable_Ele.checked,
+                        fetch_url: this.fetch_url_Ele.value,
+                        regexp: this.regexp_Ele.checked,
+                        caseSensitive: this.caseSensitive_Ele.checked,
+                        uBlacklist: this.uBlacklist_Ele.checked
                     }
                     if (await this.ListStoSave("NGList", StoObj)) {
                         const NGListTextKeyOld = "NGList_" + this.currentName;
@@ -1448,6 +1554,11 @@
                 async NGListNewEditButton(NewbuttonEle) {
                     if (await this.NewEditButton(NewbuttonEle)) {
                         this.textarea_Ele.value = "";
+                        this.fetch_enable_Ele.checked = false;
+                        this.fetch_url_Ele.value = "";
+                        this.regexp_Ele.checked = false;
+                        this.caseSensitive_Ele.checked = false;
+                        this.uBlacklist_Ele.checked = false;
                     }
                 }
 
@@ -1455,7 +1566,7 @@
         }
 
         async function settingsbox_2_3_WebAbronSet() {
-            new class extends ListEdit_Func {
+            await new class extends ListEdit_Func {
                 constructor(WebAbronStorage) {
                     super(WebAbronStorage);
                     this.url_Ele = null;
@@ -1469,7 +1580,7 @@
                     this.nglist_white_lowuppDist_enable_Ele = null;
                     this.replace_string_Ele = null;
                     this.replace_mode_Ele = null;
-                    this.li_cfuncinfunction = async function EditboxEleApply() {
+                    this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
                         this.enable_Ele.checked = applylist.enable;
                         this.url_Ele.value = applylist.url;
@@ -1515,6 +1626,7 @@
     margin: 0;
     transform: translateY(-50%) translateX(6px);
     background-color: #ffffb2;
+    white-space: nowrap;
   }
   select.SentenceBlock_Select {
     width: 100%;
@@ -1687,7 +1799,7 @@
         }
 
         async function settingsbox_2_4_ElementBlockerSet() {
-            new class extends ListEdit_Func {
+            await new class extends ListEdit_Func {
                 constructor(ElementBlockerStorage) {
                     super(ElementBlockerStorage);
                     this.url_Ele = null;
@@ -1709,7 +1821,7 @@
                     this.nglist_white_regex_enable_Ele = null;
                     this.nglist_white_lowuppDist_enable_Ele = null;
                     this.nglist_white_urlMethod_enable_Ele = null;
-                    this.li_cfuncinfunction = async function EditboxEleApply() {
+                    this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
                         this.enable_Ele.checked = applylist.enable;
                         this.url_Ele.value = applylist.url;
@@ -1763,6 +1875,7 @@
     margin: 0;
     transform: translateY(-50%) translateX(6px);
     background-color: #ffffb2;
+    white-space: nowrap;
   }
   select.ElementBlock_Select {
     width: 100%;
@@ -2157,6 +2270,7 @@
     margin: 0;
     transform: translateY(-50%) translateX(6px);
     background-color: #ffffb2;
+    white-space: nowrap;
   }
   textarea#ExportAndImportConfig3_Textarea {
     resize: none;
