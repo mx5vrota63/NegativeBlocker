@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           NegativeBlocker
+// @name           NegativeBlocker2
 // @namespace      mx5vrota63
 // @version        0.1.0
 // @description    Use the configured negative word or url to replace the sentence or block the element.
@@ -179,28 +179,28 @@
 
 
     async function StorageLoad() {
-        BlockListTextStorage = await StorageApiRead("NGList");
+        BlockListTextStorage = await StorageApiRead("BlockListText");
         if (BlockListTextStorage) {
             BlockListTextStorage = JSON.parse(BlockListTextStorage);
         } else {
             BlockListTextStorage = new Array();
-            await StorageApiWrite("NGList", JSON.stringify(BlockListTextStorage));
+            await StorageApiWrite("BlockListText", JSON.stringify(BlockListTextStorage));
         }
 
-        SentenceBlockStorage = await StorageApiRead("WebAbron");
+        SentenceBlockStorage = await StorageApiRead("SentenceBlock");
         if (SentenceBlockStorage) {
             SentenceBlockStorage = JSON.parse(SentenceBlockStorage);
         } else {
             SentenceBlockStorage = new Array();
-            await StorageApiWrite("WebAbron", JSON.stringify(SentenceBlockStorage));
+            await StorageApiWrite("SentenceBlock", JSON.stringify(SentenceBlockStorage));
         }
 
-        ElementBlockStorage = await StorageApiRead("ElementBlocker");
+        ElementBlockStorage = await StorageApiRead("ElementBlock");
         if (ElementBlockStorage) {
             ElementBlockStorage = JSON.parse(ElementBlockStorage);
         } else {
             ElementBlockStorage = new Array();
-            await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockStorage));
+            await StorageApiWrite("ElementBlock", JSON.stringify(ElementBlockStorage));
         }
 
         PreferenceSettingStorage = await StorageApiRead("PreferenceSetting");
@@ -211,13 +211,13 @@
             await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
         }
 
-        SentenceBlockTempDisableArray = await StorageApiRead("WebAbron_TempDisable");
+        SentenceBlockTempDisableArray = await StorageApiRead("SentenceBlock_TempDisable");
         if (SentenceBlockTempDisableArray) {
             SentenceBlockTempDisableArray = JSON.parse(SentenceBlockTempDisableArray);
         } else {
             SentenceBlockTempDisableArray = new Array();
         }
-        await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(new Array()));
+        await StorageApiWrite("SentenceBlock_TempDisable", JSON.stringify(new Array()));
     }
     await StorageLoad();
 
@@ -287,8 +287,9 @@
         async BlockListText_StorageLoad(SettingArray) {
             await Promise.all(SettingArray.map(async (SetObj) => {
                 const BLT_loadFunction = async (keyname) => {
+                    if (keyname === "") return false;
                     if (this.BlockListText_loadObj[keyname]) return true;
-                    const BlockListText_Keyname = "NGList_" + keyname;
+                    const BlockListText_Keyname = "BLT_" + keyname;
                     let BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
                     try {
                         BlockListText_Obj = JSON.parse(BlockListText_Obj);
@@ -321,8 +322,12 @@
                     }
                     return false;
                 }
-                if (SetObj.nglist_list !== "") await BLT_loadFunction(SetObj.nglist_list);
-                if (SetObj.nglist_white_list !== "") await BLT_loadFunction(SetObj.nglist_white_list);
+                await Promise.all(SetObj.BlockListText_list.map(async (BLT_name) => {
+                    await BLT_loadFunction(BLT_name);
+                }));
+                await Promise.all(SetObj.BlockListText_exclude_list.map(async (BLT_name) => {
+                    await BLT_loadFunction(BLT_name);
+                }));
             }));
         }
     }
@@ -330,19 +335,19 @@
     const BG_sentenceBlock_obj = new class extends BackGround_Func {
         constructor() {
             super();
-            this.WebAbronfilter1 = null;
-            this.WebAbronfilter2 = null;
+            this.SentenceBlock_filter1 = null;
+            this.SentenceBlock_filter2 = null;
         }
         async init() {
-            this.WebAbronfilter1 = SentenceBlockStorage.filter((arr) => {
+            this.SentenceBlock_filter1 = SentenceBlockStorage.filter((arr) => {
                 if (arr.url === "" && arr.enable === true) {
                     return true;
                 }
                 return false;
             });
-            await this.BlockListText_StorageLoad(this.WebAbronfilter1);
+            await this.BlockListText_StorageLoad(this.SentenceBlock_filter1);
             const CurrentURL = location.href;
-            this.WebAbronfilter2 = SentenceBlockStorage.filter((arr) => {
+            this.SentenceBlock_filter2 = SentenceBlockStorage.filter((arr) => {
                 if (arr.url !== "") {
                     if (arr.url_regex_enable === true && arr.enable === true) {
                         try {
@@ -366,7 +371,7 @@
                 }
                 return false;
             });
-            await this.BlockListText_StorageLoad(this.WebAbronfilter2);
+            await this.BlockListText_StorageLoad(this.SentenceBlock_filter2);
         }
         async initReadyElement() {
             const nodeText = document.evaluate('//text()', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -384,85 +389,91 @@
             }
         }
         async Start(node) {
-            this.WebAbronBackgroundExecute(node, this.WebAbronfilter1);
-            this.WebAbronBackgroundExecute(node, this.WebAbronfilter2);
+            this.SentenceBlock_BackgroundExecute(node, this.SentenceBlock_filter1);
+            this.SentenceBlock_BackgroundExecute(node, this.SentenceBlock_filter2);
         }
-        async WebAbronBackgroundExecute(node, WebAbron_SettingArray) {
+        async SentenceBlock_BackgroundExecute(node, SentenceBlock_settingArray) {
             const textReplaceExecute = async (EleObj, PropertyName) => {
                 let sentenceReplaceFlag = false;
 
                 const SB_dupCheck = SentenceBlock_DuplicateList.some(str => str === EleObj[PropertyName]);
                 if (SB_dupCheck) return;
 
-                Promise.all(WebAbron_SettingArray.map(async (webabronSet) => {
-                    if (SentenceBlockTempDisableArray.some(name => name === webabronSet.name)) {
+                Promise.all(SentenceBlock_settingArray.map(async (SB_Obj) => {
+                    if (SentenceBlockTempDisableArray.some(name => name === SB_Obj.name)) {
                         return;
                     }
 
                     if (sentenceReplaceFlag) return;
 
-                    let searchResult = new Array();
-                    if (this.BlockListText_loadObj[webabronSet.nglist_list]) {
-                        if (this.BlockListText_loadObj[webabronSet.nglist_list].regexp) {
-                            searchResult = this.BlockListText_loadObj[webabronSet.nglist_list].text.filter((searchText) => {
-                                return searchText.test(EleObj[PropertyName]);
-                            });
-                        } else if (this.BlockListText_loadObj[webabronSet.nglist_list].caseSensitive) {
-                            searchResult = this.BlockListText_loadObj[webabronSet.nglist_list].text.filter((searchText) => {
-                                return EleObj[PropertyName].includes(searchText);
-                            });
-                        } else {
-                            searchResult = this.BlockListText_loadObj[webabronSet.nglist_list].text.filter((searchText) => {
-                                return EleObj[PropertyName].toLowerCase().includes(searchText);
-                            });
-                        }
-                    }
-
-                    if (searchResult.length) {
-                        let searchExcludeResult = false;
-                        if (this.BlockListText_loadObj[webabronSet.nglist_white_list]) {
-                            if (this.BlockListText_loadObj[webabronSet.nglist_white_list].regexp) {
-                                searchExcludeResult = this.BlockListText_loadObj[webabronSet.nglist_white_list].text.some((searchText) => {
+                    const searchResultArray = await Promise.all(SB_Obj.BlockListText_list.map(async (BLT_name) => {
+                        if (this.BlockListText_loadObj[BLT_name]) {
+                            if (this.BlockListText_loadObj[BLT_name].regexp) {
+                                return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                     return searchText.test(EleObj[PropertyName]);
                                 });
-                            } else if (this.BlockListText_loadObj[webabronSet.nglist_white_list].caseSensitive) {
-                                searchExcludeResult = this.BlockListText_loadObj[webabronSet.nglist_white_list].text.some((searchText) => {
+                            } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                     return EleObj[PropertyName].includes(searchText);
                                 });
                             } else {
-                                searchExcludeResult = this.BlockListText_loadObj[webabronSet.nglist_white_list].text.some((searchText) => {
+                                return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                     return EleObj[PropertyName].toLowerCase().includes(searchText);
                                 });
                             }
                         }
+                    }));
 
-                        if (!searchExcludeResult) {
-                            if (webabronSet.replace_mode === "sentence") {
-                                EleObj[PropertyName] = webabronSet.replace_string;
-                                SentenceBlock_DuplicateList.push(EleObj[PropertyName]);
-                                sentenceReplaceFlag = true;
-                            } else if (webabronSet.replace_mode === "word") {
-                                if (this.BlockListText_loadObj[webabronSet.nglist_list].regexp) {
-                                    searchResult.forEach((searchText) => {
-                                        EleObj[PropertyName] = EleObj[PropertyName].replace(searchText, webabronSet.replace_string);
+                    if (searchResultArray.some(arr => arr.length)) {
+                        let searchExcludeResult = false;
+                        await Promise.all(SB_Obj.BlockListText_exclude_list.map(async (BLT_name) => {
+                            if (this.BlockListText_loadObj[BLT_name]) {
+                                if (this.BlockListText_loadObj[BLT_name].regexp) {
+                                    searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                        return searchText.test(EleObj[PropertyName]);
+                                    });
+                                } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                    searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                        return EleObj[PropertyName].includes(searchText);
                                     });
                                 } else {
-                                    let regexflag2 = 'g';
-                                    if (!this.BlockListText_loadObj[webabronSet.nglist_list].caseSensitive) {
-                                        regexflag2 = regexflag2.concat('i');
-                                    }
-                                    searchResult.forEach((searchText) => {
-                                        EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(searchText, regexflag2), webabronSet.replace_string);
+                                    searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                        return EleObj[PropertyName].toLowerCase().includes(searchText);
                                     });
                                 }
+                            }
+                        }));
+
+                        if (!searchExcludeResult) {
+                            if (SB_Obj.replace_mode === "sentence") {
+                                EleObj[PropertyName] = SB_Obj.replace_string;
+                                SentenceBlock_DuplicateList.push(EleObj[PropertyName]);
+                                sentenceReplaceFlag = true;
+                            } else if (SB_Obj.replace_mode === "word") {
+                                await Promise.all(SB_Obj.BlockListText_list.map(async (BLT_name, index) => {
+                                    if (this.BlockListText_loadObj[BLT_name].regexp) {
+                                        searchResultArray[index].forEach((searchText) => {
+                                            EleObj[PropertyName] = EleObj[PropertyName].replace(searchText, SB_Obj.replace_string);
+                                        });
+                                    } else {
+                                        let regexflag2 = 'g';
+                                        if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                            regexflag2 = regexflag2.concat('i');
+                                        }
+                                        searchResultArray[index].forEach((searchText) => {
+                                            EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(searchText, regexflag2), SB_Obj.replace_string);
+                                        });
+                                    }
+                                }));
                                 SentenceBlock_DuplicateList.push(EleObj[PropertyName]);
                             }
-                            const fiIndex = SentenceBlock_ExecuteResultList.findIndex(({ name }) => name === webabronSet.name);
+
+                            const fiIndex = SentenceBlock_ExecuteResultList.findIndex(({ name }) => name === SB_Obj.name);
                             if (fiIndex !== -1) {
                                 SentenceBlock_ExecuteResultList[fiIndex].count++;
                             } else {
                                 SentenceBlock_ExecuteResultList.push({
-                                    name: webabronSet.name,
+                                    name: SB_Obj.name,
                                     count: 1
                                 });
                             }
@@ -486,14 +497,14 @@
         }
     }
 
-    const BG_elementBlocker_Obj = new class extends BackGround_Func {
+    const BG_elementBlock_Obj = new class extends BackGround_Func {
         constructor() {
             super();
-            this.ElementBlockerfilter;
+            this.ElementBlockfilter;
         }
         async init() {
             const CurrentURL = location.href;
-            this.ElementBlockerfilter = ElementBlockStorage.filter((arr) => {
+            this.ElementBlockfilter = ElementBlockStorage.filter((arr) => {
                 if (arr.url === "") return false;
                 if (arr.url_regex_enable === true && arr.enable === true) {
                     try {
@@ -516,12 +527,12 @@
                 }
                 return false;
             });
-            await this.BlockListText_StorageLoad(this.ElementBlockerfilter);
+            await this.BlockListText_StorageLoad(this.ElementBlockfilter);
         }
         async Start(node) {
-            await this.ElementBlockerExecute(node, this.ElementBlockerfilter);
+            await this.ElementBlockExecute(node, this.ElementBlockfilter);
         }
-        async ElementBlockerExecute(node, EleBlock_SettingArray) {
+        async ElementBlockExecute(node, EleBlock_SettingArray) {
             EleBlock_SettingArray.forEach((EleBlockSet) => {
                 let ElementNode;
                 if (!node) return;
@@ -646,7 +657,7 @@
 
 
     await BG_sentenceBlock_obj.init();
-    await BG_elementBlocker_Obj.init();
+    await BG_elementBlock_Obj.init();
 
     if (document.body != null) {
         await initInsertElement();
@@ -692,7 +703,7 @@
 
 
     async function StartExecute() {
-        await BG_elementBlocker_Obj.Start(document);
+        await BG_elementBlock_Obj.Start(document);
         await BG_sentenceBlock_obj.Start(document);
     }
 
@@ -739,7 +750,7 @@
 
     async function observerregister() {
         const observer = new MutationObserver(async () => {
-            BG_elementBlocker_Obj.Start(document.body);
+            BG_elementBlock_Obj.Start(document.body);
             BG_sentenceBlock_obj.Start(document.body);
         });
         const config = {
@@ -830,6 +841,7 @@
 
 `
         RootShadow.append(Dashboard_Element);
+
         function DashboardFrameBackWidthLimit() {
             const DashboardFrameBack = RootShadow.getElementById("FrameBack");
             if (window.innerWidth <= 400) {
@@ -927,7 +939,7 @@
                         tempDisable.push(ele.name);
                     }
                 })
-                await StorageApiWrite("WebAbron_TempDisable", JSON.stringify(tempDisable));
+                await StorageApiWrite("SentenceBlock_TempDisable", JSON.stringify(tempDisable));
                 location.reload();
             }, false);
 
@@ -1311,7 +1323,7 @@
                     this.caseSensitive_Ele = null;
                     this.uBlacklist_Ele = null;
                     this.li_cfuncinfunction = async () => {
-                        const BlockListText_Keyname = "NGList_" + this.ListStorage[this.currentIndex].name;
+                        const BlockListText_Keyname = "BLT_" + this.ListStorage[this.currentIndex].name;
                         let BlockListText_Obj;
                         BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
                         try {
@@ -1463,24 +1475,47 @@
                 }
 
                 async BlockListText_storageUpdateOtherSetting(oldName, newName) {
-                    SentenceBlockStorage.forEach((WebAbronObj) => {
-                        if (WebAbronObj.nglist_list === oldName) {
-                            WebAbronObj.nglist_list = newName;
+                    const SentenceBlockStorageTemp = JSON.parse(await StorageApiRead("SentenceBlock"));
+                    SentenceBlockStorageTemp.forEach((SentenceBlock_Obj) => {
+                        const indexOldB = SentenceBlock_Obj.BlockListText_list.indexOf(oldName);
+                        if (indexOldB != -1) {
+                            if (newName) {
+                                SentenceBlock_Obj.BlockListText_list[indexOldB] = newName;
+                            } else {
+                                SentenceBlock_Obj.BlockListText_list.splice(indexOldB, 1);
+                            }
                         }
-                        if (WebAbronObj.nglist_white_list === oldName) {
-                            WebAbronObj.nglist_white_list = newName;
+                        const indexOldE = SentenceBlock_Obj.BlockListText_exclude_list.indexOf(oldName);
+                        if (indexOldE != -1) {
+                            if (newName) {
+                                SentenceBlock_Obj.BlockListText_exclude_list[indexOldE] = newName;
+                            } else {
+                                SentenceBlock_Obj.BlockListText_exclude_list.splice(indexOldE, 1);
+                            }
                         }
                     });
-                    await StorageApiWrite("WebAbron", JSON.stringify(SentenceBlockStorage));
-                    ElementBlockStorage.forEach((ElemnetBlockerObj) => {
-                        if (ElemnetBlockerObj.nglist_list === oldName) {
-                            ElemnetBlockerObj.nglist_list = newName;
+                    await StorageApiWrite("SentenceBlock", JSON.stringify(SentenceBlockStorageTemp));
+
+                    const ElementBlockStorageTemp = JSON.parse(await StorageApiRead("ElementBlock"));
+                    ElementBlockStorageTemp.forEach((ElementBlock_Obj) => {
+                        const indexOldB = ElementBlock_Obj.BlockListText_list.indexOf(oldName);
+                        if (indexOldB != -1) {
+                            if (newName) {
+                                ElementBlock_Obj.BlockListText_list[indexOldB] = newName;
+                            } else {
+                                ElementBlock_Obj.BlockListText_list.splice(indexOldB, 1);
+                            }
                         }
-                        if (ElemnetBlockerObj.nglist_white_list === oldName) {
-                            ElemnetBlockerObj.nglist_white_list = newName;
+                        const indexOldE = ElementBlock_Obj.BlockListText_exclude_list.indexOf(oldName);
+                        if (indexOldE != -1) {
+                            if (newName) {
+                                ElementBlock_Obj.BlockListText_exclude_list[indexOldE] = newName;
+                            } else {
+                                ElementBlock_Obj.BlockListText_exclude_list.splice(indexOldE, 1);
+                            }
                         }
                     });
-                    await StorageApiWrite("ElementBlocker", JSON.stringify(ElementBlockStorage));
+                    await StorageApiWrite("ElementBlock", JSON.stringify(ElementBlockStorageTemp));
                 }
 
                 async BlockListText_storageSave() {
@@ -1495,12 +1530,12 @@
                         caseSensitive: this.caseSensitive_Ele.checked,
                         uBlacklist: this.uBlacklist_Ele.checked
                     }
-                    if (await this.ListStoSave("NGList", StoObj)) {
-                        const BlockListText_Keyname_Old = "NGList_" + this.currentName;
+                    if (await this.ListStoSave("BlockListText", StoObj)) {
+                        const BlockListText_Keyname_Old = "BLT_" + this.currentName;
                         if (this.currentName !== "") {
                             await StorageApiDelete(BlockListText_Keyname_Old);
                         }
-                        const BlockListText_Keyname_New = "NGList_" + StoObj.name;
+                        const BlockListText_Keyname_New = "BLT_" + StoObj.name;
                         await StorageApiWrite(BlockListText_Keyname_New, JSON.stringify(StoObj_Text));
                         if (this.currentName !== "") {
                             this.BlockListText_storageUpdateOtherSetting(this.currentName, StoObj.name);
@@ -1509,10 +1544,10 @@
                 }
 
                 async BlockListText_storageDelete() {
-                    if (await this.ListStoDel("NGList")) {
-                        const BlockListText_keyName = "NGList_" + this.currentName;
+                    if (await this.ListStoDel("BlockListText")) {
+                        const BlockListText_keyName = "BLT_" + this.currentName;
                         await StorageApiDelete(BlockListText_keyName);
-                        this.BlockListText_storageUpdateOtherSetting(this.currentName, "");
+                        this.BlockListText_storageUpdateOtherSetting(this.currentName);
                     }
                 }
 
@@ -1536,13 +1571,8 @@
                     super(SB_Storage);
                     this.url_Ele = null;
                     this.url_regex_enable_Ele = null;
-                    this.nglist_list_Ele = null;
-                    this.nglist_regex_enable_Ele = null;
-                    this.nglist_lowuppDist_enable_Ele = null;
-                    this.nglist_white_enable_Ele = null;
-                    this.nglist_white_list_Ele = null;
-                    this.nglist_white_regex_enable_Ele = null;
-                    this.nglist_white_lowuppDist_enable_Ele = null;
+                    this.BlockListText_list_Ele = null;
+                    this.BlockListText_exclude_list_Ele = null;
                     this.replace_string_Ele = null;
                     this.replace_mode_Ele = null;
                     this.li_cfuncinfunction = async () => {
@@ -1550,20 +1580,24 @@
                         this.enable_Ele.checked = applylist.enable;
                         this.url_Ele.value = applylist.url;
                         this.url_regex_enable_Ele.checked = applylist.url_regex_enable;
-                        this.nglist_list_Ele.value = applylist.nglist_list;
-                        this.nglist_regex_enable_Ele.checked = applylist.nglist_regex_enable;
-                        this.nglist_lowuppDist_enable_Ele.checked = applylist.nglist_lowuppDist_enable;
-                        this.nglist_white_enable_Ele.checked = applylist.nglist_white_enable;
-                        this.nglist_white_list_Ele.value = applylist.nglist_white_list;
-                        this.nglist_white_regex_enable_Ele.checked = applylist.nglist_white_regex_enable;
-                        this.nglist_white_lowuppDist_enable_Ele.checked = applylist.nglist_white_lowuppDist_enable;
                         this.replace_string_Ele.value = applylist.replace_string;
-                        this.replace_mode_Ele.webabron_mode.value = applylist.replace_mode;
+                        this.replace_mode_Ele.replace_mode.value = applylist.replace_mode;
+
+                        Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
+                            if (applylist.BlockListText_list.indexOf(htmlOption.value) != -1) {
+                                htmlOption.selected = true;
+                            }
+                        });
+                        Array.from(this.BlockListText_exclude_list_Ele.options).forEach((htmlOption) => {
+                            if (applylist.BlockListText_exclude_list.indexOf(htmlOption.value) != -1) {
+                                htmlOption.selected = true;
+                            }
+                        });
                     }
 
-                    this.SaveButtonFunc = this.WebAbronListStoSave.bind(this);
-                    this.DelButtonFunc = this.WebAbronListStoDel.bind(this);
-                    this.NewObjectButtonFunc = this.WebAbronListNewEditButton.bind(this);
+                    this.SaveButtonFunc = this.SentenceBlock_ListStoSave.bind(this);
+                    this.DelButtonFunc = this.SentenceBlock_ListStoDel.bind(this);
+                    this.NewObjectButtonFunc = this.SentenceBlock_ListNewEditButton.bind(this);
                 }
 
                 async init() {
@@ -1615,41 +1649,22 @@
     <select
       id="SentenceBlockConfig2_Select"
       class="SentenceBlock_Select"
-      size="1"
+      size="7"
+      multiple
     >
       <option value="">-----</option>
     </select>
     <div>
-      <label>
-        <input id="SentenceBlockConfig2_Input1" type="checkbox" />
-        <span id="SentenceBlockConfig2_Input1_SpanText"></span>
-      </label>
-      <label>
-        <input id="SentenceBlockConfig2_Input2" type="checkbox" />
-        <span id="SentenceBlockConfig2_Input2_SpanText"></span>
-      </label>
       <div class="ItemFrame_Border">
-        <label>
-          <input id="SentenceBlockConfig2-2_Input1" type="checkbox" />
-          <span id="SentenceBlockConfig2-2_Input1_SpanText"></span>
-        </label>
+        <p id="SentenceBlockConfig2-2_Description"></p>
         <select
           id="SentenceBlockConfig2-2_Select"
           class="SentenceBlock_Select"
-          size="1"
+          size="7"
+          multiple
         >
           <option value="">-----</option>
         </select>
-        <div>
-          <label>
-            <input id="SentenceBlockConfig2-2_Input2" type="checkbox" />
-            <span id="SentenceBlockConfig2-2_Input2_SpanText"></span>
-          </label>
-          <label>
-            <input id="SentenceBlockConfig2-2_Input3" type="checkbox" />
-            <span id="SentenceBlockConfig2-2_Input3_SpanText"></span>
-          </label>
-        </div>
       </div>
     </div>
   </div>
@@ -1659,11 +1674,11 @@
     <input id="SentenceBlockConfig3_InputText" type="text" />
     <form id="SentenceBlockConfig3_Form">
       <label>
-        <input type="radio" name="webabron_mode" value="sentence" checked />
+        <input type="radio" name="replace_mode" value="sentence" checked />
         <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
       </label>
       <label>
-        <input type="radio" name="webabron_mode" value="word" />
+        <input type="radio" name="replace_mode" value="word" />
         <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
       </label>
     </form>
@@ -1681,11 +1696,7 @@
                     RootShadow.getElementById("SentenceBlockConfig1_Input2_SpanText").textContent = "正規表現";
                     RootShadow.getElementById("SentenceBlockConfig2_Title").textContent = "NGフィルタ";
                     RootShadow.getElementById("SentenceBlockConfig2_Description").textContent = "使用するNGフィルタを指定します。";
-                    RootShadow.getElementById("SentenceBlockConfig2_Input1_SpanText").textContent = "正規表現";
-                    RootShadow.getElementById("SentenceBlockConfig2_Input2_SpanText").textContent = "大文字小文字を区別";
-                    RootShadow.getElementById("SentenceBlockConfig2-2_Input1_SpanText").textContent = "ホワイトリストも使用する";
-                    RootShadow.getElementById("SentenceBlockConfig2-2_Input2_SpanText").textContent = "正規表現";
-                    RootShadow.getElementById("SentenceBlockConfig2-2_Input3_SpanText").textContent = "大文字小文字を区別";
+                    RootShadow.getElementById("SentenceBlockConfig2-2_Description").textContent = "除外リストも使用する場合は下のリストから選択してください。";
                     RootShadow.getElementById("SentenceBlockConfig3_Title").textContent = "置換文字";
                     RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = "置換する文字列を入力します。";
                     RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = "一文章で置換える";
@@ -1694,13 +1705,8 @@
 
                     this.url_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input1");
                     this.url_regex_enable_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input2");
-                    this.nglist_list_Ele = RootShadow.getElementById("SentenceBlockConfig2_Select");
-                    this.nglist_regex_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2_Input1");
-                    this.nglist_lowuppDist_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2_Input2");
-                    this.nglist_white_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input1");
-                    this.nglist_white_list_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Select");
-                    this.nglist_white_regex_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input2");
-                    this.nglist_white_lowuppDist_enable_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Input3");
+                    this.BlockListText_list_Ele = RootShadow.getElementById("SentenceBlockConfig2_Select");
+                    this.BlockListText_exclude_list_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Select");
                     this.replace_string_Ele = RootShadow.getElementById("SentenceBlockConfig3_InputText");
                     this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Form");
 
@@ -1708,8 +1714,8 @@
                         const option = document.createElement("option");
                         option.setAttribute("value", BlockListTextStorage[i].name);
                         option.textContent = BlockListTextStorage[i].name;
-                        this.nglist_list_Ele.append(option);
-                        this.nglist_white_list_Ele.append(option.cloneNode(true));
+                        this.BlockListText_list_Ele.append(option);
+                        this.BlockListText_exclude_list_Ele.append(option.cloneNode(true));
                     }
 
                     RootShadow.getElementById("SentenceBlockConfig_BackButton").addEventListener("click", () => {
@@ -1718,42 +1724,38 @@
                     }, false);
                 }
 
-                async WebAbronListStoSave() {
+                async SentenceBlock_ListStoSave() {
+                    const BLT_list_map = Array.from(this.BlockListText_list_Ele.selectedOptions).map((htmlOption) => {
+                        return htmlOption.value;
+                    });
+                    const BLT_exclude_list_map = Array.from(this.BlockListText_exclude_list_Ele.selectedOptions).map((htmlOption) => {
+                        return htmlOption.value;
+                    });
                     const StoObj = {
                         name: this.name_Ele.value,
                         enable: this.enable_Ele.checked,
                         url: this.url_Ele.value,
                         url_regex_enable: this.url_regex_enable_Ele.checked,
-                        nglist_list: this.nglist_list_Ele.value,
-                        nglist_regex_enable: this.nglist_regex_enable_Ele.checked,
-                        nglist_lowuppDist_enable: this.nglist_lowuppDist_enable_Ele.checked,
-                        nglist_white_enable: this.nglist_white_enable_Ele.checked,
-                        nglist_white_list: this.nglist_white_list_Ele.value,
-                        nglist_white_regex_enable: this.nglist_white_regex_enable_Ele.checked,
-                        nglist_white_lowuppDist_enable: this.nglist_white_lowuppDist_enable_Ele.checked,
+                        BlockListText_list: BLT_list_map,
+                        BlockListText_exclude_list: BLT_exclude_list_map,
                         replace_string: this.replace_string_Ele.value,
-                        replace_mode: this.replace_mode_Ele.webabron_mode.value,
+                        replace_mode: this.replace_mode_Ele.replace_mode.value,
                     }
-                    await this.ListStoSave("WebAbron", StoObj);
+                    await this.ListStoSave("SentenceBlock", StoObj);
                 }
 
-                async WebAbronListStoDel() {
-                    await this.ListStoDel("WebAbron");
+                async SentenceBlock_ListStoDel() {
+                    await this.ListStoDel("SentenceBlock");
                 }
 
-                async WebAbronListNewEditButton(NewbuttonEle) {
+                async SentenceBlock_ListNewEditButton(NewbuttonEle) {
                     if (await this.NewEditButton(NewbuttonEle)) {
                         this.url_Ele.value = "";
                         this.url_regex_enable_Ele.checked = false;
-                        this.nglist_list_Ele.value = "";
-                        this.nglist_regex_enable_Ele.checked = false;
-                        this.nglist_lowuppDist_enable_Ele.checked = false;
-                        this.nglist_white_enable_Ele.checked = false;
-                        this.nglist_white_list_Ele.value = "";
-                        this.nglist_white_regex_enable_Ele.checked = false;
-                        this.nglist_white_lowuppDist_enable_Ele.checked = false;
+                        this.BlockListText_list_Ele.value = "";
+                        this.BlockListText_exclude_list_Ele.value = "";
                         this.replace_string_Ele.value = "";
-                        this.replace_mode_Ele.webabron_mode.value = "sentence";
+                        this.replace_mode_Ele.replace_mode.value = "sentence";
 
                         this.enable_Ele.checked = true;
                         return 0;
@@ -1773,19 +1775,10 @@
                     this.elementHide_method_Ele = null;
                     this.elementSearch_Ele = null;
                     this.elementSearch_method_Ele = null;
-                    this.elementSearch_index_enable_Ele = null;
-                    this.elementSearch_index_Ele = null;
                     this.elementSearch_property_Ele = null;
                     this.elementSearch_property_style_Ele = null;
-                    this.nglist_list_Ele = null;
-                    this.nglist_regex_enable_Ele = null;
-                    this.nglist_lowuppDist_enable_Ele = null;
-                    this.nglist_urlMethod_enable_Ele = null;
-                    this.nglist_white_enable_Ele = null;
-                    this.nglist_white_list_Ele = null;
-                    this.nglist_white_regex_enable_Ele = null;
-                    this.nglist_white_lowuppDist_enable_Ele = null;
-                    this.nglist_white_urlMethod_enable_Ele = null;
+                    this.BlockListText_list_Ele = null;
+                    this.BlockListText_exclude_list_Ele = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
                         this.enable_Ele.checked = applylist.enable;
@@ -1795,24 +1788,15 @@
                         this.elementHide_method_Ele.pickerMethod.value = applylist.elementHide_method;
                         this.elementSearch_Ele.value = applylist.elementSearch;
                         this.elementSearch_method_Ele.pickerMethod.value = applylist.elementSearch_method;
-                        // this.elementSearch_index_enable_Ele.checked = applylist.elementSearch_index_enable;
-                        // this.elementSearch_index_Ele.value = applylist.elementSearch_index;
                         this.elementSearch_property_Ele.propertyMode.value = applylist.elementSearch_property;
                         this.elementSearch_property_style_Ele.value = applylist.elementSearch_property_style;
-                        this.nglist_list_Ele.value = applylist.nglist_list;
-                        this.nglist_regex_enable_Ele.checked = applylist.nglist_regex_enable;
-                        this.nglist_lowuppDist_enable_Ele.checked = applylist.nglist_lowuppDist_enable;
-                        this.nglist_urlMethod_enable_Ele.checked = applylist.nglist_urlMethod_enable;
-                        this.nglist_white_enable_Ele.checked = applylist.nglist_white_enable;
-                        this.nglist_white_list_Ele.value = applylist.nglist_white_list;
-                        this.nglist_white_regex_enable_Ele.checked = applylist.nglist_white_regex_enable;
-                        this.nglist_white_lowuppDist_enable_Ele.checked = applylist.nglist_white_lowuppDist_enable;
-                        this.nglist_white_urlMethod_enable_Ele.checked = applylist.nglist_white_urlMethod_enable;
+                        this.BlockListText_list_Ele.value = applylist.BlockListText_list;
+                        this.BlockListText_exclude_list_Ele.value = applylist.BlockListText_exclude_list;
                     }
 
-                    this.SaveButtonFunc = this.ElementBlockerListStoSave.bind(this);
-                    this.DelButtonFunc = this.ElementBlockerListStoDel.bind(this);
-                    this.NewObjectButtonFunc = this.ElementBlockerListNewEditButton.bind(this);
+                    this.SaveButtonFunc = this.ElementBlock_ListStoSave.bind(this);
+                    this.DelButtonFunc = this.ElementBlock_ListStoDel.bind(this);
+                    this.NewObjectButtonFunc = this.ElementBlock_ListNewEditButton.bind(this);
                 }
 
                 async init() {
@@ -2005,22 +1989,15 @@
                     this.elementSearch_method_Ele = RootShadow.getElementById("ElementBlockConfig3_Form");
                     this.elementSearch_property_Ele = RootShadow.getElementById("ElementBlockConfig3-2_From");
                     this.elementSearch_property_style_Ele = RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_InputText");
-                    this.nglist_list_Ele = RootShadow.getElementById("ElementBlockConfig4_Select");
-                    this.nglist_regex_enable_Ele = RootShadow.getElementById("ElementBlockConfig4_Input1");
-                    this.nglist_lowuppDist_enable_Ele = RootShadow.getElementById("ElementBlockConfig4_Input2");
-                    this.nglist_urlMethod_enable_Ele = RootShadow.getElementById("ElementBlockConfig4_Input3");
-                    this.nglist_white_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input1");
-                    this.nglist_white_list_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Select");
-                    this.nglist_white_regex_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input2");
-                    this.nglist_white_lowuppDist_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input3");
-                    this.nglist_white_urlMethod_enable_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Input4");
+                    this.BlockListText_list_Ele = RootShadow.getElementById("ElementBlockConfig4_Select");
+                    this.BlockListText_exclude_list_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Select");
 
                     for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
                         option.setAttribute("value", BlockListTextStorage[i].name);
                         option.textContent = BlockListTextStorage[i].name;
-                        this.nglist_list_Ele.append(option);
-                        this.nglist_white_list_Ele.append(option.cloneNode(true));
+                        this.BlockListText_list_Ele.append(option);
+                        this.BlockListText_exclude_list_Ele.append(option.cloneNode(true));
                     }
 
                     RootShadow.getElementById("ElementBlockConfig_BackButton").addEventListener("click", () => {
@@ -2029,7 +2006,7 @@
                     }, false);
                 }
 
-                async ElementBlockerListStoSave() {
+                async ElementBlock_ListStoSave() {
                     const StoObj = {
                         name: this.name_Ele.value,
                         enable: this.enable_Ele.checked,
@@ -2039,28 +2016,19 @@
                         elementHide_method: this.elementHide_method_Ele.pickerMethod.value,
                         elementSearch: this.elementSearch_Ele.value,
                         elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
-                        // elementSearch_index_enable: this.elementSearch_index_enable_Ele.checked,
-                        // elementSearch_index: this.elementSearch_index_Ele.value,
                         elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
                         elementSearch_property_style: this.elementSearch_property_style_Ele.value,
-                        nglist_list: this.nglist_list_Ele.value,
-                        nglist_regex_enable: this.nglist_regex_enable_Ele.checked,
-                        nglist_lowuppDist_enable: this.nglist_lowuppDist_enable_Ele.checked,
-                        nglist_urlMethod_enable: this.nglist_urlMethod_enable_Ele.checked,
-                        nglist_white_enable: this.nglist_white_enable_Ele.checked,
-                        nglist_white_list: this.nglist_white_list_Ele.value,
-                        nglist_white_regex_enable: this.nglist_white_regex_enable_Ele.checked,
-                        nglist_white_lowuppDist_enable: this.nglist_white_lowuppDist_enable_Ele.checked,
-                        nglist_white_urlMethod_enable: this.nglist_white_urlMethod_enable_Ele.checked
+                        BlockListText_list: this.BlockListText_list_Ele.value,
+                        BlockListText_exclude_list: this.BlockListText_exclude_list_Ele.value,
                     }
-                    await this.ListStoSave("ElementBlocker", StoObj);
+                    await this.ListStoSave("ElementBlock", StoObj);
                 }
 
-                async ElementBlockerListStoDel() {
-                    await this.ListStoDel("ElementBlocker");
+                async ElementBlock_ListStoDel() {
+                    await this.ListStoDel("ElementBlock");
                 }
 
-                async ElementBlockerListNewEditButton(NewbuttonEle) {
+                async ElementBlock_ListNewEditButton(NewbuttonEle) {
                     if (await this.NewEditButton(NewbuttonEle)) {
                         this.enable_Ele.checked = false;
                         this.url_Ele.value = "";
@@ -2069,19 +2037,10 @@
                         this.elementHide_method_Ele.pickerMethod.value = "css";
                         this.elementSearch_Ele.value = "";
                         this.elementSearch_method_Ele.pickerMethod.value = "css";
-                        // this.elementSearch_index_enable_Ele.checked = false;
-                        // this.elementSearch_index_Ele.value = "";
                         this.elementSearch_property_Ele.propertyMode.value = "text";
                         this.elementSearch_property_style_Ele.value = "";
-                        this.nglist_list_Ele.value = "";
-                        this.nglist_regex_enable_Ele.checked = false;
-                        this.nglist_lowuppDist_enable_Ele.checked = false;
-                        this.nglist_urlMethod_enable_Ele.checked = false;
-                        this.nglist_white_enable_Ele.checked = false;
-                        this.nglist_white_list_Ele.value = "";
-                        this.nglist_white_regex_enable_Ele.checked = false;
-                        this.nglist_white_lowuppDist_enable_Ele.checked = false;
-                        this.nglist_white_urlMethod_enable_Ele.checked = false;
+                        this.BlockListText_list_Ele.value = "";
+                        this.BlockListText_exclude_list_Ele.value = "";
 
                         this.enable_Ele.checked = true;
                         return 0;
