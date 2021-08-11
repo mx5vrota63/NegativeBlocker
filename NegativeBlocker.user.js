@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           NegativeBlocker2
+// @name           NegativeBlocker
 // @namespace      mx5vrota63
 // @version        0.1.0
 // @description    Use the configured negative word or url to replace the sentence or block the element.
@@ -32,7 +32,7 @@
     let readyStateCheckInterval;
 
     let SentenceBlock_ExecuteResultList = new Array();
-    let ElementBlock_ExecuteResultList = new Object();
+    let ElementBlock_executeResultList = new Object();
 
     let SentenceBlock_TempDisableElementArray = new Array();
     let SentenceBlock_DuplicateList = new Array();
@@ -43,19 +43,19 @@
     let PreferenceSettingStorage;
     let SentenceBlockTempDisableArray;
 
-    async function StorageApiRead(keyname) {
+    async function StorageApiRead(keyName) {
         let StorageValue;
         try {
             // eslint-disable-next-line no-undef
-            StorageValue = await GM.getValue(keyname);
+            StorageValue = await GM.getValue(keyName);
         } catch (e) {
             console.error(e);
             console.log("GM Function Not Detected");
             try {
                 let value_data
                 // eslint-disable-next-line no-undef
-                chrome.storage.local.get(keyname, (value) => {
-                    value_data = value[keyname];
+                chrome.storage.local.get(keyName, (value) => {
+                    value_data = value[keyName];
                 });
                 return value_data;
             } catch (e) {
@@ -69,24 +69,24 @@
         // debug only WeblocalStorage
         /*
         try {
-            StorageValue = localStorage.getItem(keyname);
+            StorageValue = localStorage.getItem(keyName);
         } catch (e) {
             console.error(e);
             console.log("localStorage API Not Detected");
         }
         */
     }
-    async function StorageApiWrite(keyname, setvalue) {
+    async function StorageApiWrite(keyName, setValue) {
         try {
             // eslint-disable-next-line no-undef
-            await GM.setValue(keyname, setvalue);
+            await GM.setValue(keyName, setValue);
             return true;
         } catch (e) {
             console.error(e);
             console.log("GM Function Not Detected");
             try {
                 // eslint-disable-next-line no-undef
-                chrome.storage.local.set({ keyname: setvalue });
+                chrome.storage.local.set({ keyName: setValue });
                 return true;
             } catch (e) {
                 console.error(e);
@@ -98,7 +98,7 @@
         // debug only WeblocalStorage
         /*
         try {
-            localStorage.setItem(keyname, value);
+            localStorage.setItem(keyName, value);
             return true;
         } catch (e) {
             console.error(e);
@@ -108,10 +108,10 @@
         */
 
     }
-    async function StorageApiDelete(keyname) {
+    async function StorageApiDelete(keyName) {
         try {
             // eslint-disable-next-line no-undef
-            await GM.deleteValue(keyname);
+            await GM.deleteValue(keyName);
             return true;
         } catch (e) {
             console.error(e);
@@ -286,13 +286,15 @@
 
         async BlockListText_StorageLoad(SettingArray) {
             await Promise.all(SettingArray.map(async (SetObj) => {
-                const BLT_loadFunction = async (keyname) => {
-                    if (keyname === "") return false;
-                    if (this.BlockListText_loadObj[keyname]) return true;
-                    const BlockListText_Keyname = "BLT_" + keyname;
+                const BLT_loadFunction = async (keyName) => {
+                    if (keyName === "") return false;
+                    if (this.BlockListText_loadObj[keyName]) return true;
+                    const BlockListText_Keyname = "BLT_" + keyName;
                     let BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
                     try {
                         BlockListText_Obj = JSON.parse(BlockListText_Obj);
+                        const indexBLTSet = BlockListTextStorage.findIndex(({ name }) => name === keyName);
+                        Object.assign(BlockListText_Obj, BlockListTextStorage[indexBLTSet]);
                     } catch (e) {
                         console.error(e);
                         return false;
@@ -317,7 +319,7 @@
                                 return str.toLowerCase();
                             }));
                         }
-                        this.BlockListText_loadObj[keyname] = BlockListText_Obj;
+                        this.BlockListText_loadObj[keyName] = BlockListText_Obj;
                         return true;
                     }
                     return false;
@@ -421,6 +423,8 @@
                                     return EleObj[PropertyName].toLowerCase().includes(searchText);
                                 });
                             }
+                        } else {
+                            return new Array();
                         }
                     }));
 
@@ -533,7 +537,7 @@
             await this.ElementBlockExecute(node, this.ElementBlockfilter);
         }
         async ElementBlockExecute(node, EleBlock_SettingArray) {
-            EleBlock_SettingArray.forEach((EleBlockSet) => {
+            Promise.all(EleBlock_SettingArray.map(async (EleBlockSet) => {
                 let ElementNode;
                 if (!node) return;
                 if (EleBlockSet.elementHide_method === "css") {
@@ -541,10 +545,10 @@
                 } else if (EleBlockSet.elementHide_method === "xpath") {
                     ElementNode = XPathSelectorAll(EleBlockSet.elementHide, node);
                 }
-                ElementNode.forEach((ElementObj) => {
+                Promise.all(Array.from(ElementNode).map(async (ElementObj) => {
                     let firstblockflag;
                     try {
-                        firstblockflag = ElementBlock_ExecuteResultList[EleBlockSet.name].some((arr) => {
+                        firstblockflag = ElementBlock_executeResultList[EleBlockSet.name].some((arr) => {
                             return arr.element === ElementObj;
                         })
                     } catch (e) {
@@ -566,7 +570,7 @@
                         SearchEleNode = XPathSelectorAll(EleBlockSet.elementSearch, ElementObj);
                     }
 
-                    SearchEleNode.forEach((SearchEleObj) => {
+                    Promise.all(Array.from(SearchEleNode).map(async (SearchEleObj) => {
                         let searchProperty;
                         switch (EleBlockSet.elementSearch_property) {
                             case "text":
@@ -584,52 +588,57 @@
                         }
 
                         let searchResult = false;
-                        if (this.BlockListText_loadObj[EleBlockSet.nglist_list]) {
-                            if (this.BlockListText_loadObj[EleBlockSet.nglist_list].uBlacklist) {
-                                searchResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[EleBlockSet.nglist_list].text, searchProperty);
-                            } else if (this.BlockListText_loadObj[EleBlockSet.nglist_list].regexp) {
-                                searchResult = this.BlockListText_loadObj[EleBlockSet.nglist_list].text.some((searchText) => {
-                                    return searchText.test(searchProperty);
-                                });
-                            } else if (this.BlockListText_loadObj[EleBlockSet.nglist_list].caseSensitive) {
-                                searchResult = this.BlockListText_loadObj[EleBlockSet.nglist_list].text.some((searchText) => {
-                                    return searchProperty.includes(searchText);
-                                });
-                            } else {
-                                searchResult = this.BlockListText_loadObj[EleBlockSet.nglist_list].text.some((searchText) => {
-                                    return searchProperty.toLowerCase().includes(searchText);
-                                });
-                            }
-                        }
-
-                        if (searchResult) {
-                            let searchExcludeResult = false;
-                            if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list]) {
-                                if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list].uBlacklist) {
-                                    searchExcludeResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text, searchProperty);
-                                } else if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list].regexp) {
-                                    searchExcludeResult = this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text.some((searchText) => {
+                        await Promise.all(EleBlockSet.BlockListText_list.map(async (BLT_name) => {
+                            if (this.BlockListText_loadObj[BLT_name]) {
+                                if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
+                                    searchResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty);
+                                } else if (this.BlockListText_loadObj[BLT_name].regexp) {
+                                    searchResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
                                         return searchText.test(searchProperty);
                                     });
-                                } else if (this.BlockListText_loadObj[EleBlockSet.nglist_white_list].caseSensitive) {
-                                    searchExcludeResult = this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text.some((searchText) => {
+                                } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                    searchResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
                                         return searchProperty.includes(searchText);
                                     });
                                 } else {
-                                    searchExcludeResult = this.BlockListText_loadObj[EleBlockSet.nglist_white_list].text.some((searchText) => {
+                                    searchResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
                                         return searchProperty.toLowerCase().includes(searchText);
                                     });
                                 }
                             }
+                        }));
+
+                        if (searchResult) {
+                            let searchExcludeResult = false;
+                            await Promise.all(EleBlockSet.BlockListText_exclude_list.map(async (BLT_name) => {
+                                if (this.BlockListText_loadObj[BLT_name]) {
+                                    if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
+                                        searchExcludeResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty);
+                                    } else if (this.BlockListText_loadObj[BLT_name].regexp) {
+                                        searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                            return searchText.test(searchProperty);
+                                        });
+                                    } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                        searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                            return searchProperty.includes(searchText);
+                                        });
+                                    } else {
+                                        searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                            return searchProperty.toLowerCase().includes(searchText);
+                                        });
+                                    }
+                                }
+                            }));
+
                             if (!searchExcludeResult) {
                                 if (ElementObj.style.display !== "none") {
                                     ElementObj.style.display = "none";
 
-                                    if (!ElementBlock_ExecuteResultList[EleBlockSet.name]) {
-                                        ElementBlock_ExecuteResultList[EleBlockSet.name] = new Array();
+                                    if (!ElementBlock_executeResultList[EleBlockSet.name]) {
+                                        ElementBlock_executeResultList[EleBlockSet.name] = new Array();
                                     }
 
-                                    ElementBlock_ExecuteResultList[EleBlockSet.name].push({
+                                    ElementBlock_executeResultList[EleBlockSet.name].push({
                                         settingobj: EleBlockSet,
                                         element: ElementObj,
                                         searchProperty: searchProperty
@@ -639,9 +648,9 @@
                                 }
                             }
                         }
-                    });
-                })
-            })
+                    }));
+                }));
+            }));
         }
     }
 
@@ -946,14 +955,14 @@
             {
                 const ElementBlock_div = RootShadow.getElementById("ItemFrame_ElementBlock");
 
-                for (let keyname in ElementBlock_ExecuteResultList) {
+                for (let keyName in ElementBlock_executeResultList) {
                     const span = document.createElement("span");
-                    span.textContent = keyname
+                    span.textContent = keyName
                     ElementBlock_div.append(span);
 
                     const div = document.createElement("div");
                     div.style.border = "1px solid black"
-                    ElementBlock_ExecuteResultList[keyname].forEach((arr) => {
+                    ElementBlock_executeResultList[keyName].forEach((arr) => {
                         if (arr.settingobj.elementSearch_property === "href") {
                             const div_p = document.createElement("p")
                             div_p.textContent = arr.searchProperty;
@@ -1323,9 +1332,15 @@
                     this.caseSensitive_Ele = null;
                     this.uBlacklist_Ele = null;
                     this.li_cfuncinfunction = async () => {
-                        const BlockListText_Keyname = "BLT_" + this.ListStorage[this.currentIndex].name;
-                        let BlockListText_Obj;
-                        BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
+                        const applylist = this.ListStorage[this.currentIndex];
+                        this.fetch_enable_Ele.checked = applylist.fetch_enable;
+                        this.fetch_url_Ele.value = applylist.fetch_url;
+                        this.regexp_Ele.checked = applylist.regexp;
+                        this.caseSensitive_Ele.checked = applylist.caseSensitive;
+                        this.uBlacklist_Ele.checked = applylist.uBlacklist;
+
+                        const BlockListText_Keyname = "BLT_" + applylist.name;
+                        let BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
                         try {
                             BlockListText_Obj = JSON.parse(BlockListText_Obj);
                         } catch (e) {
@@ -1334,18 +1349,8 @@
                         }
                         if (BlockListText_Obj) {
                             this.textarea_Ele.value = BlockListText_Obj.text;
-                            this.fetch_enable_Ele.checked = BlockListText_Obj.fetch_enable;
-                            this.fetch_url_Ele.value = BlockListText_Obj.fetch_url;
-                            this.regexp_Ele.checked = BlockListText_Obj.regexp;
-                            this.caseSensitive_Ele.checked = BlockListText_Obj.caseSensitive;
-                            this.uBlacklist_Ele.checked = BlockListText_Obj.uBlacklist;
                         } else {
                             this.textarea_Ele.value = "";
-                            this.fetch_enable_Ele.checked = false;
-                            this.fetch_url_Ele.value = "";
-                            this.regexp_Ele.checked = false;
-                            this.caseSensitive_Ele.checked = false;
-                            this.uBlacklist_Ele.checked = false;
                         }
                     }
                     this.SaveButtonFunc = this.BlockListText_storageSave.bind(this);
@@ -1520,15 +1525,15 @@
 
                 async BlockListText_storageSave() {
                     const StoObj = {
-                        name: this.name_Ele.value
-                    }
-                    const StoObj_Text = {
-                        text: this.textarea_Ele.value.trim(),
+                        name: this.name_Ele.value,
                         fetch_enable: this.fetch_enable_Ele.checked,
                         fetch_url: this.fetch_url_Ele.value,
                         regexp: this.regexp_Ele.checked,
                         caseSensitive: this.caseSensitive_Ele.checked,
                         uBlacklist: this.uBlacklist_Ele.checked
+                    }
+                    const StoObj_Text = {
+                        text: this.textarea_Ele.value.trim(),
                     }
                     if (await this.ListStoSave("BlockListText", StoObj)) {
                         const BlockListText_Keyname_Old = "BLT_" + this.currentName;
@@ -1586,11 +1591,15 @@
                         Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
                             if (applylist.BlockListText_list.indexOf(htmlOption.value) != -1) {
                                 htmlOption.selected = true;
+                            } else {
+                                htmlOption.selected = false;
                             }
                         });
                         Array.from(this.BlockListText_exclude_list_Ele.options).forEach((htmlOption) => {
                             if (applylist.BlockListText_exclude_list.indexOf(htmlOption.value) != -1) {
                                 htmlOption.selected = true;
+                            } else {
+                                htmlOption.selected = false;
                             }
                         });
                     }
@@ -1739,7 +1748,7 @@
                         BlockListText_list: BLT_list_map,
                         BlockListText_exclude_list: BLT_exclude_list_map,
                         replace_string: this.replace_string_Ele.value,
-                        replace_mode: this.replace_mode_Ele.replace_mode.value,
+                        replace_mode: this.replace_mode_Ele.replace_mode.value
                     }
                     await this.ListStoSave("SentenceBlock", StoObj);
                 }
@@ -1790,8 +1799,21 @@
                         this.elementSearch_method_Ele.pickerMethod.value = applylist.elementSearch_method;
                         this.elementSearch_property_Ele.propertyMode.value = applylist.elementSearch_property;
                         this.elementSearch_property_style_Ele.value = applylist.elementSearch_property_style;
-                        this.BlockListText_list_Ele.value = applylist.BlockListText_list;
-                        this.BlockListText_exclude_list_Ele.value = applylist.BlockListText_exclude_list;
+
+                        Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
+                            if (applylist.BlockListText_list.indexOf(htmlOption.value) != -1) {
+                                htmlOption.selected = true;
+                            } else {
+                                htmlOption.selected = false;
+                            }
+                        });
+                        Array.from(this.BlockListText_exclude_list_Ele.options).forEach((htmlOption) => {
+                            if (applylist.BlockListText_exclude_list.indexOf(htmlOption.value) != -1) {
+                                htmlOption.selected = true;
+                            } else {
+                                htmlOption.selected = false;
+                            }
+                        });
                     }
 
                     this.SaveButtonFunc = this.ElementBlock_ListStoSave.bind(this);
@@ -1900,49 +1922,22 @@
     <select
       id="ElementBlockConfig4_Select"
       class="ElementBlock_Select"
-      size="1"
+      size="7"
+      multiple
     >
       <option value="">-----</option>
     </select>
     <div>
-      <label>
-        <input id="ElementBlockConfig4_Input1" type="checkbox" />
-        <span id="ElementBlockConfig4_Input1_SpanText"></span>
-      </label>
-      <label>
-        <input id="ElementBlockConfig4_Input2" type="checkbox" />
-        <span id="ElementBlockConfig4_Input2_SpanText"></span>
-      </label>
-      <label>
-        <input id="ElementBlockConfig4_Input3" type="checkbox" />
-        <span id="ElementBlockConfig4_Input3_SpanText"></span>
-      </label>
       <div class="ItemFrame_Border">
-        <label>
-          <input id="ElementBlockConfig4-2_Input1" type="checkbox" />
-          <span id="ElementBlockkConfig4-2_Input1_SpanText"></span>
-        </label>
+        <p id="ElementBlockConfig4-2_Description"></p>
         <select
           id="ElementBlockConfig4-2_Select"
           class="ElementBlock_Select"
-          size="1"
+          size="7"
+          multiple
         >
           <option value="">-----</option>
         </select>
-        <div>
-          <label>
-            <input id="ElementBlockConfig4-2_Input2" type="checkbox" />
-            <span id="ElementBlockConfig4-2_Input2_SpanText"></span>
-          </label>
-          <label>
-            <input id="ElementBlockConfig4-2_Input3" type="checkbox" />
-            <span id="ElementBlockConfig4-2_Input3_SpanText"></span>
-          </label>
-          <label>
-            <input id="ElementBlockConfig4-2_Input4" type="checkbox" />
-            <span id="ElementBlockConfig4-2_Input4_SpanText"></span>
-          </label>
-        </div>
       </div>
     </div>
   </div>
@@ -1972,13 +1967,7 @@
                     RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = "要素のスタイルシートを検索する（上級者向け）";
                     RootShadow.getElementById("ElementBlockConfig4_Title").textContent = "NGフィルタ";
                     RootShadow.getElementById("ElementBlockConfig4_Description").textContent = "要素検索に使用するNGフィルタを指定します。";
-                    RootShadow.getElementById("ElementBlockConfig4_Input1_SpanText").textContent = "正規表現";
-                    RootShadow.getElementById("ElementBlockConfig4_Input2_SpanText").textContent = "大文字小文字を区別";
-                    RootShadow.getElementById("ElementBlockConfig4_Input3_SpanText").textContent = "URL専用の軽量処理をする";
-                    RootShadow.getElementById("ElementBlockkConfig4-2_Input1_SpanText").textContent = "ホワイトリストも使用する";
-                    RootShadow.getElementById("ElementBlockConfig4-2_Input2_SpanText").textContent = "正規表現";
-                    RootShadow.getElementById("ElementBlockConfig4-2_Input3_SpanText").textContent = "大文字小文字を区別";
-                    RootShadow.getElementById("ElementBlockConfig4-2_Input4_SpanText").textContent = "URL専用の軽量処理をする";
+                    RootShadow.getElementById("ElementBlockConfig4-2_Description").textContent = "除外リストも使用する場合は下のリストから選択してください。";
                     RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = "←戻る";
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
@@ -2007,6 +1996,12 @@
                 }
 
                 async ElementBlock_ListStoSave() {
+                    const BLT_list_map = Array.from(this.BlockListText_list_Ele.selectedOptions).map((htmlOption) => {
+                        return htmlOption.value;
+                    });
+                    const BLT_exclude_list_map = Array.from(this.BlockListText_exclude_list_Ele.selectedOptions).map((htmlOption) => {
+                        return htmlOption.value;
+                    });
                     const StoObj = {
                         name: this.name_Ele.value,
                         enable: this.enable_Ele.checked,
@@ -2018,8 +2013,8 @@
                         elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
                         elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
                         elementSearch_property_style: this.elementSearch_property_style_Ele.value,
-                        BlockListText_list: this.BlockListText_list_Ele.value,
-                        BlockListText_exclude_list: this.BlockListText_exclude_list_Ele.value,
+                        BlockListText_list: BLT_list_map,
+                        BlockListText_exclude_list: BLT_exclude_list_map
                     }
                     await this.ListStoSave("ElementBlock", StoObj);
                 }
