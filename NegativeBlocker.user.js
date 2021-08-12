@@ -537,19 +537,38 @@
             await this.ElementBlockExecute(node, this.ElementBlockfilter);
         }
         async ElementBlockExecute(node, EleBlock_SettingArray) {
-            Promise.all(EleBlock_SettingArray.map(async (EleBlockSet) => {
-                let ElementNode;
-                if (!node) return;
-                if (EleBlockSet.elementHide_method === "css") {
-                    ElementNode = node.querySelectorAll(EleBlockSet.elementHide);
-                } else if (EleBlockSet.elementHide_method === "xpath") {
-                    ElementNode = XPathSelectorAll(EleBlockSet.elementHide, node);
+            Promise.all(EleBlock_SettingArray.map(async (eleBlockSet) => {
+                const ElementBlock_executeResultList_func = (eleSetObj, eleObj, searchPropertyText) => {
+                    if (!ElementBlock_executeResultList[eleBlockSet.name]) {
+                        ElementBlock_executeResultList[eleBlockSet.name] = new Array();
+                    }
+                    ElementBlock_executeResultList[eleBlockSet.name].push({
+                        settingobj: eleSetObj,
+                        element: eleObj,
+                        searchProperty: searchPropertyText
+                    });
+                    BlockCounter++;
+                    BlockCounterUpdate();
                 }
-                Promise.all(Array.from(ElementNode).map(async (ElementObj) => {
+
+                let elementNode;
+                if (!node) return;
+                try {
+                    if (eleBlockSet.elementHide_method === "css") {
+                        elementNode = node.querySelectorAll(eleBlockSet.elementHide);
+                    } else if (eleBlockSet.elementHide_method === "xpath") {
+                        elementNode = XPathSelectorAll(eleBlockSet.elementHide, node);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    return;
+                }
+
+                Promise.all(Array.from(elementNode).map(async (elementObj) => {
                     let firstblockflag;
                     try {
-                        firstblockflag = ElementBlock_executeResultList[EleBlockSet.name].some((arr) => {
-                            return arr.element === ElementObj;
+                        firstblockflag = ElementBlock_executeResultList[eleBlockSet.name].some((arr) => {
+                            return arr.element === elementObj;
                         })
                     } catch (e) {
                         firstblockflag = false;
@@ -559,20 +578,26 @@
                     }
 
                     let SearchEleNode;
-                    if (EleBlockSet.elementSearch === "") {
-                        ElementObj.style.display = "none";
+                    if (eleBlockSet.elementSearch === "") {
+                        elementObj.style.display = "none";
+                        ElementBlock_executeResultList_func(eleBlockSet, elementObj, "");
                         return;
                     }
 
-                    if (EleBlockSet.elementSearch_method === "css") {
-                        SearchEleNode = ElementObj.querySelectorAll(EleBlockSet.elementSearch);
-                    } else if (EleBlockSet.elementSearch_method === "xpath") {
-                        SearchEleNode = XPathSelectorAll(EleBlockSet.elementSearch, ElementObj);
+                    try {
+                        if (eleBlockSet.elementSearch_method === "css") {
+                            SearchEleNode = elementObj.querySelectorAll(eleBlockSet.elementSearch);
+                        } else if (eleBlockSet.elementSearch_method === "xpath") {
+                            SearchEleNode = XPathSelectorAll(eleBlockSet.elementSearch, elementObj);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        return;
                     }
 
                     Promise.all(Array.from(SearchEleNode).map(async (SearchEleObj) => {
                         let searchProperty;
-                        switch (EleBlockSet.elementSearch_property) {
+                        switch (eleBlockSet.elementSearch_property) {
                             case "text":
                                 searchProperty = SearchEleObj.textContent;
                                 break;
@@ -580,7 +605,10 @@
                                 searchProperty = SearchEleObj.href;
                                 break;
                             case "style":
-                                searchProperty = window.getComputedStyle(SearchEleObj)[EleBlockSet.elementSearch_property_style];
+                                searchProperty = window.getComputedStyle(SearchEleObj)[eleBlockSet.elementSearch_property_style];
+                                break;
+                            case "advanced":
+                                searchProperty = SearchEleObj[eleBlockSet.elementSearch_property_advanced];
                                 break;
                         }
                         if (searchProperty === undefined) {
@@ -588,7 +616,7 @@
                         }
 
                         let searchResult = false;
-                        await Promise.all(EleBlockSet.BlockListText_list.map(async (BLT_name) => {
+                        await Promise.all(eleBlockSet.BlockListText_list.map(async (BLT_name) => {
                             if (this.BlockListText_loadObj[BLT_name]) {
                                 if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
                                     searchResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty);
@@ -610,7 +638,7 @@
 
                         if (searchResult) {
                             let searchExcludeResult = false;
-                            await Promise.all(EleBlockSet.BlockListText_exclude_list.map(async (BLT_name) => {
+                            await Promise.all(eleBlockSet.BlockListText_exclude_list.map(async (BLT_name) => {
                                 if (this.BlockListText_loadObj[BLT_name]) {
                                     if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
                                         searchExcludeResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty);
@@ -631,20 +659,14 @@
                             }));
 
                             if (!searchExcludeResult) {
-                                if (ElementObj.style.display !== "none") {
-                                    ElementObj.style.display = "none";
-
-                                    if (!ElementBlock_executeResultList[EleBlockSet.name]) {
-                                        ElementBlock_executeResultList[EleBlockSet.name] = new Array();
+                                if (eleBlockSet.elementHide_hideMethod === "displayNone") {
+                                    if (elementObj.style.display !== "none") {
+                                        elementObj.style.display = "none";
+                                        ElementBlock_executeResultList_func(eleBlockSet, elementObj, searchProperty);
                                     }
-
-                                    ElementBlock_executeResultList[EleBlockSet.name].push({
-                                        settingobj: EleBlockSet,
-                                        element: ElementObj,
-                                        searchProperty: searchProperty
-                                    });
-                                    BlockCounter++;
-                                    BlockCounterUpdate();
+                                } else if (eleBlockSet.elementHide_hideMethod === "remove") {
+                                    elementObj.remove();
+                                    ElementBlock_executeResultList_func(eleBlockSet, undefined, searchProperty);
                                 }
                             }
                         }
@@ -659,7 +681,7 @@
             if (BlockCounter > 0) {
                 DashboardButtonEle.style.backgroundColor = "#FFAFAF"
             }
-            DashboardButtonEle.textContent = "C:(" + BlockCounter + ")";
+            DashboardButtonEle.textContent = "NB:" + BlockCounter;
         }
     }
 
@@ -955,36 +977,55 @@
             {
                 const ElementBlock_div = RootShadow.getElementById("ItemFrame_ElementBlock");
 
-                for (let keyName in ElementBlock_executeResultList) {
-                    const span = document.createElement("span");
-                    span.textContent = keyName
-                    ElementBlock_div.append(span);
+                Promise.all(Object.keys(ElementBlock_executeResultList).map(async (keyName) => {
+                    let resultEnable = false;
 
                     const div = document.createElement("div");
                     div.style.border = "1px solid black"
-                    ElementBlock_executeResultList[keyName].forEach((arr) => {
-                        if (arr.settingobj.elementSearch_property === "href") {
+                    ElementBlock_executeResultList[keyName].forEach((arr, index) => {
+                        if (arr.settingobj.resultShow === "none") return;
+
+                        if (arr.settingobj.resultShow === "number") {
+                            const div_p = document.createElement("p")
+                            const indexNumShow = index + 1;
+                            div_p.textContent = indexNumShow + "件目";
+                            div.append(div_p);
+                        } else if (arr.settingobj.resultShow === "property") {
                             const div_p = document.createElement("p")
                             div_p.textContent = arr.searchProperty;
                             div.append(div_p);
+                        } else {
+                            const div_p = document.createElement("p")
+                            div_p.textContent = "";
+                            div.append(div_p);
+                        }
 
+                        if (arr.element) {
                             const div_button1 = document.createElement("button");
                             div_button1.textContent = "再表示する"
                             div_button1.addEventListener("click", () => {
                                 arr.element.style.display = "";
                             })
                             div.append(div_button1);
-
-                            const div_button2 = document.createElement("button");
-                            div_button2.textContent = "URLをコピー"
-                            div_button2.addEventListener("click", () => {
-                                copyTextToClipboard(arr.searchProperty);
-                            })
-                            div.append(div_button2);
                         }
-                    })
-                    ElementBlock_div.append(div);
-                }
+
+                        const div_button2 = document.createElement("button");
+                        div_button2.textContent = "コピー"
+                        div_button2.addEventListener("click", () => {
+                            copyTextToClipboard(arr.searchProperty);
+                        })
+                        div.append(div_button2);
+
+                        resultEnable = true;
+                    });
+
+                    if (resultEnable) {
+                        const span = document.createElement("span");
+                        span.textContent = keyName
+                        ElementBlock_div.append(span);
+                        ElementBlock_div.append(div);
+                    }
+                }));
             }
 
             RootShadow.getElementById("ItemFrame-SettingPageButton").addEventListener("click", Dashboard_SettingsTop, false);
@@ -1782,12 +1823,15 @@
                     this.url_regex_enable_Ele = null;
                     this.elementHide_Ele = null;
                     this.elementHide_method_Ele = null;
+                    this.elementHide_hideMethod_Ele = null;
                     this.elementSearch_Ele = null;
                     this.elementSearch_method_Ele = null;
                     this.elementSearch_property_Ele = null;
                     this.elementSearch_property_style_Ele = null;
+                    this.elementSearch_property_advanced_Ele = null;
                     this.BlockListText_list_Ele = null;
                     this.BlockListText_exclude_list_Ele = null;
+                    this.resultShow_Ele = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
                         this.enable_Ele.checked = applylist.enable;
@@ -1795,10 +1839,13 @@
                         this.url_regex_enable_Ele.checked = applylist.url_regex_enable;
                         this.elementHide_Ele.value = applylist.elementHide;
                         this.elementHide_method_Ele.pickerMethod.value = applylist.elementHide_method;
+                        this.elementHide_hideMethod_Ele.hideMethod.value = applylist.elementHide_hideMethod;
                         this.elementSearch_Ele.value = applylist.elementSearch;
                         this.elementSearch_method_Ele.pickerMethod.value = applylist.elementSearch_method;
                         this.elementSearch_property_Ele.propertyMode.value = applylist.elementSearch_property;
                         this.elementSearch_property_style_Ele.value = applylist.elementSearch_property_style;
+                        this.elementSearch_property_advanced_Ele.value = applylist.elementSearch_property_advanced;
+                        this.resultShow_Ele.resultShow.value = applylist.resultShow;
 
                         Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
                             if (applylist.BlockListText_list.indexOf(htmlOption.value) != -1) {
@@ -1880,6 +1927,17 @@
       </label>
     </form>
     <button id="ElementBlockConfig2_Button"></button>
+    <form id="ElementBlockConfig2-2_From" class="ItemFrame_Border">
+      <label>
+        <input type="radio" name="hideMethod" value="displayNone" checked />
+        <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="hideMethod" value="remove" />
+        <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
+      </label>
+    </form>
   </div>
 
   <div class="ItemFrame_Border">
@@ -1911,7 +1969,15 @@
       <label>
         <input type="radio" name="propertyMode" value="style" />
         <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+        <br />
         <input id="ElementBlockConfig3-2_Form_Input3_InputText" type="text" />
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="propertyMode" value="advanced" />
+        <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
+        <br />
+        <input id="ElementBlockConfig3-2_Form_Input4_InputText" type="text" />
       </label>
     </form>
   </div>
@@ -1941,6 +2007,24 @@
       </div>
     </div>
   </div>
+  <div class="ItemFrame_Border">
+    <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlockConfig5_Description"></p>
+    <form id="ElementBlockConfig5_Form">
+      <label>
+        <input type="radio" name="resultShow" value="none" checked />
+        <span id="ElementBlockConfig5_Form_Input1_SpanText"></span>
+      </label>
+      <label>
+        <input type="radio" name="resultShow" value="number" />
+        <span id="ElementBlockConfig5_Form_Input2_SpanText"></span>
+      </label>
+      <label>
+        <input type="radio" name="resultShow" value="property" />
+        <span id="ElementBlockConfig5_Form_Input3_SpanText"></span>
+      </label>
+    </form>
+  </div>
   <div>
     <button id="ElementBlockConfig_BackButton"></button>
   </div>
@@ -1957,6 +2041,8 @@
                     RootShadow.getElementById("ElementBlockConfig2_Form_Input1_SpanText").textContent = "CSS";
                     RootShadow.getElementById("ElementBlockConfig2_Form_Input2_SpanText").textContent = "XPath";
                     RootShadow.getElementById("ElementBlockConfig2_Button").textContent = "要素を選択する";
+                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input1_SpanText").textContent = "非表示要素をCSSで非表示にする";
+                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input2_SpanText").textContent = "非表示要素を削除する";
                     RootShadow.getElementById("ElementBlockConfig3_Title").textContent = "検索要素";
                     RootShadow.getElementById("ElementBlockConfig3_Description").textContent = "非表示するために検索する要素をCSS方式「querySelectorAll」かXPath方式「document.evaluate」で指定します。何も入力せず空欄にすると無条件で非表示要素を隠します。";
                     RootShadow.getElementById("ElementBlockConfig3_Form_Input1_SpanText").textContent = "CSS";
@@ -1965,21 +2051,30 @@
                     RootShadow.getElementById("ElementBlockConfig3-2_Form_Input1_SpanText").textContent = "要素のテキストを検索する";
                     RootShadow.getElementById("ElementBlockConfig3-2_Form_Input2_SpanText").textContent = "要素のリンクを検索する（検索要素に「a」要素が含まれている場合のみ）";
                     RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = "要素のスタイルシートを検索する（上級者向け）";
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input4_SpanText").textContent = "要素の要素のプロパティを直接指定する（上級者向け）";
                     RootShadow.getElementById("ElementBlockConfig4_Title").textContent = "NGフィルタ";
                     RootShadow.getElementById("ElementBlockConfig4_Description").textContent = "要素検索に使用するNGフィルタを指定します。";
                     RootShadow.getElementById("ElementBlockConfig4-2_Description").textContent = "除外リストも使用する場合は下のリストから選択してください。";
+                    RootShadow.getElementById("ElementBlockConfig5_Title").textContent = "ブロック適用リストの表示";
+                    RootShadow.getElementById("ElementBlockConfig5_Description").textContent = "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。";
+                    RootShadow.getElementById("ElementBlockConfig5_Form_Input1_SpanText").textContent = "非表示";
+                    RootShadow.getElementById("ElementBlockConfig5_Form_Input2_SpanText").textContent = "番号で表示";
+                    RootShadow.getElementById("ElementBlockConfig5_Form_Input3_SpanText").textContent = "検索要素のプロパティの値を表示";
                     RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = "←戻る";
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
                     this.url_regex_enable_Ele = RootShadow.getElementById("ElementBlockConfig1_Input2");
                     this.elementHide_Ele = RootShadow.getElementById("ElementBlockConfig2_InputText");
                     this.elementHide_method_Ele = RootShadow.getElementById("ElementBlockConfig2_Form");
+                    this.elementHide_hideMethod_Ele = RootShadow.getElementById("ElementBlockConfig2-2_From");
                     this.elementSearch_Ele = RootShadow.getElementById("ElementBlockConfig3_InputText");
                     this.elementSearch_method_Ele = RootShadow.getElementById("ElementBlockConfig3_Form");
                     this.elementSearch_property_Ele = RootShadow.getElementById("ElementBlockConfig3-2_From");
                     this.elementSearch_property_style_Ele = RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_InputText");
+                    this.elementSearch_property_advanced_Ele = RootShadow.getElementById("ElementBlockConfig3-2_Form_Input4_InputText");
                     this.BlockListText_list_Ele = RootShadow.getElementById("ElementBlockConfig4_Select");
                     this.BlockListText_exclude_list_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Select");
+                    this.resultShow_Ele = RootShadow.getElementById("ElementBlockConfig5_Form");
 
                     for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
@@ -2009,12 +2104,15 @@
                         url_regex_enable: this.url_regex_enable_Ele.checked,
                         elementHide: this.elementHide_Ele.value,
                         elementHide_method: this.elementHide_method_Ele.pickerMethod.value,
+                        elementHide_hideMethod: this.elementHide_hideMethod_Ele.hideMethod.value,
                         elementSearch: this.elementSearch_Ele.value,
                         elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
                         elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
                         elementSearch_property_style: this.elementSearch_property_style_Ele.value,
+                        elementSearch_property_advanced: this.elementSearch_property_advanced_Ele.value,
                         BlockListText_list: BLT_list_map,
-                        BlockListText_exclude_list: BLT_exclude_list_map
+                        BlockListText_exclude_list: BLT_exclude_list_map,
+                        resultShow: this.resultShow_Ele.resultShow.value
                     }
                     await this.ListStoSave("ElementBlock", StoObj);
                 }
@@ -2030,12 +2128,15 @@
                         this.url_regex_enable_Ele.checked = false;
                         this.elementHide_Ele.value = "";
                         this.elementHide_method_Ele.pickerMethod.value = "css";
+                        this.elementHide_hideMethod_Ele.hideMethod.value = "displayNone";
                         this.elementSearch_Ele.value = "";
                         this.elementSearch_method_Ele.pickerMethod.value = "css";
                         this.elementSearch_property_Ele.propertyMode.value = "text";
                         this.elementSearch_property_style_Ele.value = "";
+                        this.elementSearch_property_advanced_Ele.value = "";
                         this.BlockListText_list_Ele.value = "";
                         this.BlockListText_exclude_list_Ele.value = "";
+                        this.resultShow_Ele.resultShow.value = "number";
 
                         this.enable_Ele.checked = true;
                         return 0;
