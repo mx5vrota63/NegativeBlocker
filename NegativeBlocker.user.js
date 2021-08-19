@@ -42,6 +42,7 @@
     let ElementBlockStorage;
     let PreferenceSettingStorage;
     let SentenceBlockTempDisableArray;
+    let fetchtimeStampGlobalStorage;
 
     async function StorageApiRead(keyName) {
         let StorageValue;
@@ -133,37 +134,38 @@
     const ArrayLast = array => array[array.length - 1];
 
     function XPathSelectorAll(expression, parentElement) {
-        var XPathNode = new Array();
-        var evaluateobj = document.evaluate(expression, parentElement || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        for (var i = 0, l = evaluateobj.snapshotLength; i < l; i++) {
+        const XPathNode = new Array();
+        const evaluateobj = document.evaluate(expression, parentElement || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+        for (let i = 0; i < evaluateobj.snapshotLength; i++) {
             XPathNode.push(evaluateobj.snapshotItem(i));
         }
         return XPathNode;
     }
 
     async function copyTextToClipboard(text) {
-        var textArea = document.createElement("textarea");
+        const textArea = document.createElement("textarea");
 
-        textArea.style.position = 'fixed';
+        textArea.style.position = "fixed";
         textArea.style.top = 0;
         textArea.style.left = 0;
-        textArea.style.width = '2em';
-        textArea.style.height = '2em';
+        textArea.style.width = "2em";
+        textArea.style.height = "2em";
         textArea.style.padding = 0;
-        textArea.style.border = 'none';
-        textArea.style.outline = 'none';
-        textArea.style.boxShadow = 'none';
-        textArea.style.background = 'transparent';
+        textArea.style.border = "none";
+        textArea.style.outline = "none";
+        textArea.style.boxShadow = "none";
+        textArea.style.background = "transparent";
         textArea.value = text;
         document.body.append(textArea);
         textArea.focus();
         textArea.select();
         try {
-            var successful = document.execCommand('copy');
-            var msg = successful ? 'successful' : 'unsuccessful';
-            console.log('Copying text command was ' + msg);
-        } catch (err) {
-            console.log('Oops, unable to copy');
+            const successful = document.execCommand('copy');
+            const msg = successful ? 'successful' : 'failure';
+            console.log('Clipboard Copy' + msg);
+        } catch (e) {
+            console.error(e);
+            console.log('Copy Command ERROR');
         }
         document.body.removeChild(textArea);
     }
@@ -222,13 +224,48 @@
     await StorageLoad();
 
 
+    async function BlockListText_feathLoad() {
+        await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
+            if (BlockListText_Obj.fetch_enable) {
+                let BlockListText_textObj = await StorageApiRead("BLT_" + BlockListText_Obj.name);
+                try {
+                    BlockListText_textObj = JSON.parse(BlockListText_textObj);
+                    if (Date.now() - BlockListText_textObj.fetch_timeStamp >= 3600000) {
+                        await fetch(BlockListText_Obj.fetch_url).then(async (response) => {
+                            if (response.ok) {
+                                BlockListText_textObj.text = await response.text();
+                            } else {
+                                throw new Error('[NegativeBlocker] FetchAPI Failure: ' + response.status);
+                            }
+                        }).catch((e) => {
+                            console.error(e);
+                        });
+                        BlockListText_textObj.fetch_timeStamp = Date.now();
+                        await StorageApiWrite("BLT_" + BlockListText_Obj.name, JSON.stringify(BlockListText_textObj));
+                    }
+                } catch (e) {
+                    console.error(e);
+                    return false;
+                }
+            }
+        }));
+        await StorageApiWrite("fetchLastTime", Date.now());
+        console.log("fetch update");
+    }
+
+    fetchtimeStampGlobalStorage = await StorageApiRead("fetchLastTime");
+    if (!fetchtimeStampGlobalStorage) {
+        fetchtimeStampGlobalStorage = Date.now();
+        await StorageApiWrite("fetchLastTime", fetchtimeStampGlobalStorage);
+    }
+    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
+        BlockListText_feathLoad();
+    }
+
     // BackGround Fuction Start
     class BackGround_Func {
         constructor() {
             this.BlockListText_loadObj = new Object();
-        }
-        escapeRegExp(string) {
-            return string.replace(/[/.*+?^${}()|[\]\\]/g, '\\$&');
         }
         escapeRegExpExcludewildcard(string) {
             return string.replace(/[/.+?^${}()|[\]\\]/g, '\\$&').replace(/[*]/g, '.$&');
@@ -820,6 +857,7 @@
     text-align: center;
     margin: 0em auto;
     height: calc(100vh - 150px);
+    color: #000000;
     font-size: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -856,6 +894,32 @@
     font-size: medium;
     background-color: #ffffb2;
   }
+  div#DashboardMain div.ItemFrame_Border {
+    position: relative;
+    margin-top: 1em;
+    padding: 12px;
+    border: 1px solid black;
+  }
+  div#DashboardMain h1.ItemFrame_Title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 1em;
+    padding: 0 4px;
+    margin: 0;
+    transform: translateY(-50%) translateX(6px);
+    background-color: #ffffb2;
+    white-space: nowrap;
+  }
+  div#DashboardMain input.TextBoxWidth {
+    width: 100%;
+    height: 26px;
+    box-sizing: border-box;
+  }
+  button {
+    min-width: 60px;
+    height: 35px;
+  }
 </style>
 
 <div id="FrameBack">
@@ -868,8 +932,6 @@
   </div>
   <div id="DashboardMain"></div>
 </div>
-
-
 `
         RootShadow.append(Dashboard_Element);
 
@@ -903,22 +965,6 @@
             const DB_blockResult_div = document.createElement("div");
             DB_blockResult_div.innerHTML = `
 <style type="text/css">
-  div.ItemFrame_Border {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
-  h1.ItemFrame_Title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 1em;
-    padding: 0 4px;
-    margin: 0;
-    transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
-  }
   div.ItemFrame_ElementBlock_ItemListFrame {
     border: 1px solid black;
   }
@@ -935,7 +981,6 @@
 <div>
   <button id="ItemFrame-SettingPageButton"></button>
 </div>
-
 `
             Dashboard_Window_Ele_stack.push(DB_blockResult_div);
             DashboardMain_div.append(DB_blockResult_div);
@@ -1137,7 +1182,7 @@
   }
   div#ObjectLists_Frame {
     width: auto;
-    height: calc(100% - 130px);
+    height: calc(100% - 154px);
     overflow: auto;
     border: 2px solid black;
   }
@@ -1146,6 +1191,22 @@
     list-style-position: inside;
     margin: 0 0 0 0;
     padding: 0 0 0 0;
+  }
+  div#SettingsObject_ConfigItems_Name {
+    display: flex;
+  }
+  div#SettingsObject_ConfigItems div {
+    margin: 2px 0 2px 0;
+  }
+  input#SettingsObject_ConfigItems_Name_Form {
+    flex: 1;
+    height: 20px;
+  }
+  select#SettingsObject_ConfigItems_Sort_Form {
+    transform: scale(1.2);
+  }
+  input#SettingsObject_ConfigItems_Enable_Form {
+    transform: scale(1.3);
   }
 </style>
 
@@ -1203,6 +1264,18 @@
                 for (let i = 0; i < this.ListStorage.length + 1; i++) {
                     this.SelectOption_Add();
                 }
+
+                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Form").addEventListener("change", () => {
+                    this.Editflag = true;
+                }, false);
+
+                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Form").addEventListener("change", () => {
+                    this.Editflag = true;
+                }, false);
+
+                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Form").addEventListener("change", () => {
+                    this.Editflag = true;
+                }, false);
 
                 RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").addEventListener("click", () => {
                     this.Editflag = true;
@@ -1327,6 +1400,7 @@
                 li.style.borderColor = "silver";
                 li.style.padding = "0 0 0 5px";
                 li.style.cursor = "pointer";
+                li.style.minHeight = "30px";
                 li.textContent = this.ListStorage[index].name;
                 this.li_cfuncinfunction_arg.unshift(li);
                 li.addEventListener("click", await this.li_cfunc(this.li_cfunchandlers.length, Array.from(this.li_cfuncinfunction_arg)), false);
@@ -1367,6 +1441,7 @@
                 constructor(BLT_Storage) {
                     super(BLT_Storage);
                     this.textarea_Ele = null;
+                    this.textareaDisable_Ele = null;
                     this.fetch_enable_Ele = null;
                     this.fetch_url_Ele = null;
                     this.regexp_Ele = null;
@@ -1393,6 +1468,14 @@
                         } else {
                             this.textarea_Ele.value = "";
                         }
+
+                        if (applylist.fetch_enable) {
+                            this.textarea_Ele.style.display = "none";
+                            this.textareaDisable_Ele.style.display = "block";
+                        } else {
+                            this.textarea_Ele.style.display = "block";
+                            this.textareaDisable_Ele.style.display = "none";
+                        }
                     }
                     this.SaveButtonFunc = this.BlockListText_storageSave.bind(this);
                     this.DelButtonFunc = this.BlockListText_storageDelete.bind(this);
@@ -1409,41 +1492,26 @@
   div.EditConfigObjectPage {
     height: 100%;
   }
-  div#BlockListText_div {
-    height: calc(100% - 80px);
+  div#BlockListText_Textarea_div {
+    height: calc(100% - 110px);
   }
   textarea#BlockListText_Textarea {
     resize: none;
     margin-left: -10px;
-    width: calc(100% + 14px);
+    width: calc(100% + 20px);
     height: 100%;
-  }
-  div.BlockListText_Border {
-    border: 1px solid black;
-  }
-  div.ItemFrame_Border {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
-  h1.ItemFrame_Title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 1em;
-    padding: 0 4px;
-    margin: 0;
-    transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
-    white-space: nowrap;
+    box-sizing: border-box;
   }
 </style>
 
 <div id="BlockListText" class="EditConfigObjectPage">
-  <div id="BlockListText_div" class="ItemFrame_Border">
+  <div id="BlockListText_Textarea_div" class="ItemFrame_Border">
     <h1 id="BlockListText_Textarea_Title" class="ItemFrame_Title"></h1>
     <textarea id="BlockListText_Textarea" spellcheck="false"></textarea>
+    <div id="BlockListText_Textarea_Disable" style="display: none">
+      <span id="BlockListText_Textarea_Disable_SpanText"></span>
+      <button id="BlockListText_Textarea_Disable_ShowButton"></button>
+    </div>
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_ReadFile_Title" class="ItemFrame_Title"></h1>
@@ -1455,7 +1523,12 @@
       <input id="BlockListText_Fetch_InputCheckbox" type="checkbox" />
       <span id="BlockListText_Fetch_InputCheckbox_SpanText"></span>
     </label>
-    <input id="BlockListText_Fetch_InputText" type="text" />
+    <br />
+    <input
+      id="BlockListText_Fetch_InputText"
+      class="TextBoxWidth"
+      type="text"
+    />
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
@@ -1463,10 +1536,12 @@
       <input id="BlockListText_Config1_Input" type="checkbox" />
       <span id="BlockListText_Config1_SpanText"></span>
     </label>
+    <br />
     <label>
       <input id="BlockListText_Config2_Input" type="checkbox" />
       <span id="BlockListText_Config2_SpanText"></span>
     </label>
+    <br />
     <label>
       <input id="BlockListText_Config3_Input" type="checkbox" />
       <span id="BlockListText_Config3_SpanText"></span>
@@ -1480,7 +1555,9 @@
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
-                    RootShadow.getElementById("BlockListText_Textarea_Title").textContent = "ブロックリストテキスト"
+                    RootShadow.getElementById("BlockListText_Textarea_Title").textContent = "ブロックリストテキスト";
+                    RootShadow.getElementById("BlockListText_Textarea_Disable_SpanText").textContent = "URLから取得する設定になっているため自動的にブロックリストテキストは上書きされます。";
+                    RootShadow.getElementById("BlockListText_Textarea_Disable_ShowButton").textContent = "テキストを表示";
                     RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = "テキストファイルを読み込む";
                     RootShadow.getElementById("BlockListText_Fetch_Title").textContent = "URLから取得する";
                     RootShadow.getElementById("BlockListText_Fetch_InputCheckbox_SpanText").textContent = "有効";
@@ -1488,6 +1565,8 @@
                     RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = "正規表現";
                     RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = "大文字と小文字を区別する";
                     RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = "uBlacklist形式を使用する";
+
+                    this.textareaDisable_Ele = RootShadow.getElementById("BlockListText_Textarea_Disable");
 
                     this.textarea_Ele = RootShadow.getElementById("BlockListText_Textarea");
                     this.fetch_enable_Ele = RootShadow.getElementById("BlockListText_Fetch_InputCheckbox");
@@ -1509,7 +1588,12 @@
                             }
                             reader.readAsText(file);
                         }
-                    })
+                    });
+
+                    RootShadow.getElementById("BlockListText_Textarea_Disable_ShowButton").addEventListener("click", () => {
+                        this.textarea_Ele.style.display = "block";
+                        this.textareaDisable_Ele.style.display = "none";
+                    }, false);
 
                     RootShadow.getElementById("BlockListText_BackButton").textContent = "←戻る"
                     RootShadow.getElementById("BlockListText_BackButton").addEventListener("click", () => {
@@ -1575,6 +1659,7 @@
                     }
                     const StoObj_Text = {
                         text: this.textarea_Ele.value.trim(),
+                        fetch_timeStamp: 0
                     }
                     if (await this.ListStoSave("BlockListText", StoObj)) {
                         const BlockListText_Keyname_Old = "BLT_" + this.currentName;
@@ -1587,6 +1672,7 @@
                             this.BlockListText_storageUpdateOtherSetting(this.currentName, StoObj.name);
                         }
                     }
+                    BlockListText_feathLoad();
                 }
 
                 async BlockListText_storageDelete() {
@@ -1605,6 +1691,9 @@
                         this.regexp_Ele.checked = false;
                         this.caseSensitive_Ele.checked = false;
                         this.uBlacklist_Ele.checked = false;
+
+                        this.textarea_Ele.style.display = "block";
+                        this.textareaDisable_Ele.style.display = "none";
                     }
                 }
 
@@ -1660,23 +1749,6 @@
   div.EditConfigObjectPage {
     height: 100%;
   }
-  div.ItemFrame_Border {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
-  h1.ItemFrame_Title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 1em;
-    padding: 0 4px;
-    margin: 0;
-    transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
-    white-space: nowrap;
-  }
   select.SentenceBlock_Select {
     width: 100%;
   }
@@ -1686,7 +1758,7 @@
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig1_Description"></p>
-    <input id="SentenceBlockConfig1_Input1" type="text" />
+    <input id="SentenceBlockConfig1_Input1" class="TextBoxWidth" type="text" />
     <br />
     <label>
       <input id="SentenceBlockConfig1_Input2" type="checkbox" />
@@ -1721,7 +1793,11 @@
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig3_Description"></p>
-    <input id="SentenceBlockConfig3_InputText" type="text" />
+    <input
+      id="SentenceBlockConfig3_InputText"
+      class="TextBoxWidth"
+      type="text"
+    />
     <form id="SentenceBlockConfig3_Form">
       <label>
         <input type="radio" name="replace_mode" value="sentence" checked />
@@ -1878,23 +1954,6 @@
   div.EditConfigObjectPage {
     height: 100%;
   }
-  .ItemFrame_Border {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
-  h1.ItemFrame_Title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 1em;
-    padding: 0 4px;
-    margin: 0;
-    transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
-    white-space: nowrap;
-  }
   select.ElementBlock_Select {
     width: 100%;
   }
@@ -1904,7 +1963,7 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig1_Description"></p>
-    <input id="ElementBlockConfig1_Input1" type="text" />
+    <input id="ElementBlockConfig1_Input1" class="TextBoxWidth" type="text" />
     <br />
     <label>
       <input id="ElementBlockConfig1_Input2" type="checkbox" />
@@ -1915,7 +1974,11 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig2_Description"></p>
-    <input id="ElementBlockConfig2_InputText" type="text" />
+    <input
+      id="ElementBlockConfig2_InputText"
+      class="TextBoxWidth"
+      type="text"
+    />
     <form id="ElementBlockConfig2_Form">
       <label>
         <input type="radio" name="pickerMethod" value="css" checked />
@@ -1927,23 +1990,29 @@
       </label>
     </form>
     <button id="ElementBlockConfig2_Button"></button>
-    <form id="ElementBlockConfig2-2_From" class="ItemFrame_Border">
-      <label>
-        <input type="radio" name="hideMethod" value="displayNone" checked />
-        <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="hideMethod" value="remove" />
-        <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
-      </label>
-    </form>
+    <div class="ItemFrame_Border">
+      <form id="ElementBlockConfig2-2_From">
+        <label>
+          <input type="radio" name="hideMethod" value="displayNone" checked />
+          <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
+        </label>
+        <br />
+        <label>
+          <input type="radio" name="hideMethod" value="remove" />
+          <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
+        </label>
+      </form>
+    </div>
   </div>
 
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig3_Description"></p>
-    <input id="ElementBlockConfig3_InputText" type="text" />
+    <input
+      id="ElementBlockConfig3_InputText"
+      class="TextBoxWidth"
+      type="text"
+    />
     <form id="ElementBlockConfig3_Form">
       <label>
         <input type="radio" name="pickerMethod" value="css" checked />
@@ -1955,31 +2024,41 @@
       </label>
     </form>
     <button id="ElementBlockConfig3_Button"></button>
-    <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
-      <label>
-        <input type="radio" name="propertyMode" value="text" checked />
-        <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="propertyMode" value="href" />
-        <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="propertyMode" value="style" />
-        <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+    <div class="ItemFrame_Border">
+      <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
+        <label>
+          <input type="radio" name="propertyMode" value="text" checked />
+          <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
+        </label>
         <br />
-        <input id="ElementBlockConfig3-2_Form_Input3_InputText" type="text" />
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="propertyMode" value="advanced" />
-        <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
+        <label>
+          <input type="radio" name="propertyMode" value="href" />
+          <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
+        </label>
         <br />
-        <input id="ElementBlockConfig3-2_Form_Input4_InputText" type="text" />
-      </label>
-    </form>
+        <label>
+          <input type="radio" name="propertyMode" value="style" />
+          <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+          <br />
+          <input
+            id="ElementBlockConfig3-2_Form_Input3_InputText"
+            class="TextBoxWidth"
+            type="text"
+          />
+        </label>
+        <br />
+        <label>
+          <input type="radio" name="propertyMode" value="advanced" />
+          <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
+          <br />
+          <input
+            id="ElementBlockConfig3-2_Form_Input4_InputText"
+            class="TextBoxWidth"
+            type="text"
+          />
+        </label>
+      </form>
+    </div>
   </div>
 
   <div class="ItemFrame_Border">
@@ -2221,9 +2300,9 @@
                         try {
                             const KeyList = await StorageApiKeynamelist();
                             let JSONObject = new Object;
-                            for (let i = 0; i < KeyList.length; i++) {
-                                JSONObject[KeyList[i]] = await StorageApiRead(KeyList[i]);
-                            }
+                            await Promise.all(KeyList.map(async (keyName) => {
+                                JSONObject[keyName] = await StorageApiRead(keyName);
+                            }));
                             return JSON.stringify(JSONObject);
                         } catch (e) {
                             console.error(e);
@@ -2232,10 +2311,6 @@
                         }
                     } else if (mode === "import") {
                         try {
-                            const ExistKeyList = await StorageApiKeynamelist();
-                            for (let i = 0; i < ExistKeyList.length; i++) {
-                                await StorageApiDelete(ExistKeyList[i]);
-                            }
                             let importset;
                             try {
                                 importset = JSON.parse(importjson);
@@ -2244,9 +2319,13 @@
                                 alert("エラー：設定を読み込めませんでした。JSONファイル（テキスト）が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。");
                                 return undefined;
                             }
-                            for (let key in importset) {
-                                await StorageApiWrite(key, importset[key]);
-                            }
+                            const ExistKeyList = await StorageApiKeynamelist();
+                            await Promise.all(ExistKeyList.map(async (ExistKey) => {
+                                await StorageApiDelete(ExistKey);
+                            }));
+                            await Promise.all(Object.keys(importset).map(async (keyName) => {
+                                await StorageApiWrite(keyName, importset[keyName]);
+                            }));
                             StorageLoad();
                             return true;
                         } catch (e) {
@@ -2266,36 +2345,14 @@
     display: block;
     margin: 0 0 20px 0;
   }
-  #ExportAndImportPage {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
   #ExportAndImportPage p {
     margin: 0;
   }
-  div.ItemFrame_Border {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
-  h1.ItemFrame_Title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 1em;
-    padding: 0 4px;
-    margin: 0;
-    transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
-    white-space: nowrap;
-  }
   textarea#ExportAndImportConfig3_Textarea {
     resize: none;
-    width: 98.5%;
+    width: 100%;
     height: 300px;
+    box-sizing: border-box;
   }
 </style>
 

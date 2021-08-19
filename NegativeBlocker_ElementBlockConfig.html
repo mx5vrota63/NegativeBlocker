@@ -2,23 +2,6 @@
   div.EditConfigObjectPage {
     height: 100%;
   }
-  .ItemFrame_Border {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
-  h1.ItemFrame_Title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 1em;
-    padding: 0 4px;
-    margin: 0;
-    transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
-    white-space: nowrap;
-  }
   select.ElementBlock_Select {
     width: 100%;
   }
@@ -28,7 +11,7 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig1_Description"></p>
-    <input id="ElementBlockConfig1_Input1" type="text" />
+    <input id="ElementBlockConfig1_Input1" class="TextBoxWidth" type="text" />
     <br />
     <label>
       <input id="ElementBlockConfig1_Input2" type="checkbox" />
@@ -39,7 +22,11 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig2_Description"></p>
-    <input id="ElementBlockConfig2_InputText" type="text" />
+    <input
+      id="ElementBlockConfig2_InputText"
+      class="TextBoxWidth"
+      type="text"
+    />
     <form id="ElementBlockConfig2_Form">
       <label>
         <input type="radio" name="pickerMethod" value="css" checked />
@@ -51,23 +38,29 @@
       </label>
     </form>
     <button id="ElementBlockConfig2_Button"></button>
-    <form id="ElementBlockConfig2-2_From" class="ItemFrame_Border">
-      <label>
-        <input type="radio" name="hideMethod" value="displayNone" checked />
-        <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="hideMethod" value="remove" />
-        <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
-      </label>
-    </form>
+    <div class="ItemFrame_Border">
+      <form id="ElementBlockConfig2-2_From">
+        <label>
+          <input type="radio" name="hideMethod" value="displayNone" checked />
+          <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
+        </label>
+        <br />
+        <label>
+          <input type="radio" name="hideMethod" value="remove" />
+          <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
+        </label>
+      </form>
+    </div>
   </div>
 
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig3_Description"></p>
-    <input id="ElementBlockConfig3_InputText" type="text" />
+    <input
+      id="ElementBlockConfig3_InputText"
+      class="TextBoxWidth"
+      type="text"
+    />
     <form id="ElementBlockConfig3_Form">
       <label>
         <input type="radio" name="pickerMethod" value="css" checked />
@@ -79,31 +72,41 @@
       </label>
     </form>
     <button id="ElementBlockConfig3_Button"></button>
-    <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
-      <label>
-        <input type="radio" name="propertyMode" value="text" checked />
-        <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="propertyMode" value="href" />
-        <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="propertyMode" value="style" />
-        <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+    <div class="ItemFrame_Border">
+      <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
+        <label>
+          <input type="radio" name="propertyMode" value="text" checked />
+          <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
+        </label>
         <br />
-        <input id="ElementBlockConfig3-2_Form_Input3_InputText" type="text" />
-      </label>
-      <br />
-      <label>
-        <input type="radio" name="propertyMode" value="advanced" />
-        <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
+        <label>
+          <input type="radio" name="propertyMode" value="href" />
+          <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
+        </label>
         <br />
-        <input id="ElementBlockConfig3-2_Form_Input4_InputText" type="text" />
-      </label>
-    </form>
+        <label>
+          <input type="radio" name="propertyMode" value="style" />
+          <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+          <br />
+          <input
+            id="ElementBlockConfig3-2_Form_Input3_InputText"
+            class="TextBoxWidth"
+            type="text"
+          />
+        </label>
+        <br />
+        <label>
+          <input type="radio" name="propertyMode" value="advanced" />
+          <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
+          <br />
+          <input
+            id="ElementBlockConfig3-2_Form_Input4_InputText"
+            class="TextBoxWidth"
+            type="text"
+          />
+        </label>
+      </form>
+    </div>
   </div>
 
   <div class="ItemFrame_Border">
