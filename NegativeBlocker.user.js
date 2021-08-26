@@ -253,23 +253,145 @@
         console.log("fetch update");
     }
 
-    fetchtimeStampGlobalStorage = await StorageApiRead("fetchLastTime");
-    if (!fetchtimeStampGlobalStorage) {
-        fetchtimeStampGlobalStorage = Date.now();
-        await StorageApiWrite("fetchLastTime", fetchtimeStampGlobalStorage);
-    }
-    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
-        BlockListText_feathLoad();
-    }
-
     // BackGround Fuction Start
     class BackGround_Func {
         constructor() {
             this.BlockListText_loadObj = new Object();
         }
+        escapeRegExp(string) {
+            return string.replace(/[/.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
         escapeRegExpExcludewildcard(string) {
             return string.replace(/[/.+?^${}()|[\]\\]/g, '\\$&').replace(/[*]/g, '.$&');
         }
+
+        async uBlacklistFormatSearch(BLT_uBL_Obj, source, mode) {
+            const urlMatchPatterns = async (blockurlarray, SourceUrl) => {
+                let DomainSplit;
+                let pathSplit;
+                let urlhitarray = new Array();
+
+                try {
+                    const URLSplit = SourceUrl.match(/(.*):\/\/([\w.-]+)(.*)/);
+                    if (URLSplit === null) return false;
+                    const [URLAll, URLProtocol, URLDomain, URLPath] = URLSplit;
+                    if (URLAll === "") return false;
+                    DomainSplit = URLDomain.split(".");
+                    DomainSplit.reverse();
+                    pathSplit = URLPath.replace(/#.*$/, "").split("/");
+                    pathSplit.splice(0, 1);
+                    pathSplit = pathSplit.map((str) => {
+                        return this.escapeRegExp(str);
+                    })
+
+                    let DomainLinking = "";
+                    for (let i = 0; i < DomainSplit.length; i++) {
+                        const domainRegexp = "^.*://(?:\\." + DomainSplit[i] + "|\\*)" + DomainLinking + "/.*$";
+                        blockurlarray.filter(RegExp.prototype.test, new RegExp(domainRegexp)).forEach((filterResult) => {
+                            urlhitarray.push(filterResult);
+                        });
+                        if (i + 1 < DomainSplit.length) {
+                            DomainLinking = "\\." + DomainSplit[i] + DomainLinking;
+                        } else {
+                            const domainRegexpLast = "^.*://(?:" + DomainSplit[i] + "|\\*\\." + DomainSplit[i] + ")" + DomainLinking + "/.*$";
+                            blockurlarray.filter(RegExp.prototype.test, new RegExp(domainRegexpLast)).forEach((filterResult) => {
+                                urlhitarray.push(filterResult);
+                            });
+                        }
+                    }
+
+                    if (urlhitarray.length) {
+                        if (urlhitarray.some(RegExp.prototype.test, new RegExp(/^.*:\/\/[^/]*\/\*$/))) return true;
+
+                        let pathSimpleSeatch_regexp = "^.*://[^/]*/";
+                        for (let i = 0; i < pathSplit.length; i++) {
+                            if (i + 1 < pathSplit.length) {
+                                pathSimpleSeatch_regexp = pathSimpleSeatch_regexp + "(?:" + pathSplit[i] + "/|(?=\\*)(?:\\*/)?)";
+                            } else {
+                                if (pathSplit[i] === "") {
+                                    pathSimpleSeatch_regexp = pathSimpleSeatch_regexp + "(?:$|\\*$)";
+                                } else {
+                                    pathSimpleSeatch_regexp = pathSimpleSeatch_regexp + "(?:" + pathSplit[i] + "|(?=\\*)(?:\\*)?)$";
+                                }
+                            }
+                        }
+                        if (urlhitarray.some(RegExp.prototype.test, new RegExp(pathSimpleSeatch_regexp))) return true;
+
+                        const pathWildcardSearch_regexp = "^.*://[^/]*/.*(?=[^/]*\\*[^/]+(/|$)|[^/]+\\*[^/]*(/|$)).*"
+                        const pathWildcardSearch_Result = urlhitarray.filter(RegExp.prototype.test, new RegExp(pathWildcardSearch_regexp));
+                        return pathWildcardSearch_Result.some((str) => {
+                            str = str.replace(/^.*:\/\/[^/]*(\/.*)$/g, "$1");
+                            str = new RegExp(this.escapeRegExpExcludewildcard(str).replace(/(.*)/, "^$&$"));
+                            return str.test(URLPath);
+                        });
+                    } else {
+                        return false;
+                    }
+                } catch (e) {
+                    console.error(e);
+                    return false;
+                }
+            }
+
+            const regexpAsync = async (regexpArray, source) => {
+                return regexpArray.some((str) => {
+                    try {
+                        return new RegExp(str).test(source);
+                    } catch (e) {
+                        console.error(e);
+                        return false;
+                    }
+                })
+            }
+
+            const regexpTitleAsync = async (regexpArray, source) => {
+                return regexpArray.filter((str) => {
+                    try {
+                        return new RegExp(str).test(source);
+                    } catch (e) {
+                        console.error(e);
+                        return false;
+                    }
+                })
+            }
+
+            let textURLArray = new Array();
+            if (mode === "hrefandtext") {
+                textURLArray = source.match(/(?:(?:https|http|ttp(?<!http)|ttps(?<!https)):\/\/)\S+\b\/?/g);
+                if (textURLArray === null) textURLArray = new Array();
+                const resultArray = await Promise.all([(async () => {
+                    const resultTextArray = await Promise.all(textURLArray.map(async (textURL) => {
+                        const resultBoolArray = await Promise.all([urlMatchPatterns(BLT_uBL_Obj.matchPatterns, textURL), regexpAsync(BLT_uBL_Obj.regexp, textURL)]);
+                        if (resultBoolArray.some(bool => bool === true)) {
+                            return this.escapeRegExp(textURL);
+                        } else {
+                            return undefined;
+                        }
+                    }));
+                    return resultTextArray.filter((str) => {
+                        return str !== undefined;
+                    })
+                })(), (async () => {
+                    return await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
+                })()]);
+                return resultArray.reduce((pre, current) => {
+                    pre.push(...current);
+                    return pre;
+                }, [])
+            } else if (mode === "href") {
+                const resultBoolArray = await Promise.all([urlMatchPatterns(BLT_uBL_Obj.matchPatterns, source), regexpAsync(BLT_uBL_Obj.regexp, source)]);
+                if (resultBoolArray.some(bool => bool === true)) {
+                    return new Array(source);
+                } else {
+                    return new Array();
+                }
+            } else if (mode === "text") {
+                return await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
+            } else return new Array();
+        }
+
+        /*
         UrlArrayReverseSearch(blockurlarray, SourceUrl) {
             let BlockUrlFilter;
             let BlockUrlDomainFilter;
@@ -320,6 +442,7 @@
             }
             return UrlHit;
         }
+        */
 
         async BlockListText_StorageLoad(SettingArray) {
             await Promise.all(SettingArray.map(async (SetObj) => {
@@ -338,10 +461,34 @@
                     }
                     if (BlockListText_Obj) {
                         BlockListText_Obj.text = BlockListText_Obj.text.split("\n").filter(str => str !== "");
+                        if (BlockListText_Obj.uBlacklist) {
+                            const uBlacklist_matchPatterns = BlockListText_Obj.text.filter((str) => {
+                                if (!(str.slice(-1) === "/" && (str.slice(0, 1) === "/" || str.slice(0, 6) === "title/"))) return true;
+                            });
+
+                            const uBlacklist_regexp = BlockListText_Obj.text.filter((str) => {
+                                if (str.slice(0, 1) === "/" && str.slice(-1) === "/") return true;
+                            }).map((str) => {
+                                return str.slice(1).slice(0, -1);
+                            });
+
+                            const uBlacklist_titleRegexp = BlockListText_Obj.text.filter((str) => {
+                                if (str.slice(0, 6) === "title/" && str.slice(-1) === "/") return true;
+                            }).map((str) => {
+                                return str.slice(6).slice(0, -1);
+                            });
+                            BlockListText_Obj.text = {
+                                matchPatterns: uBlacklist_matchPatterns,
+                                regexp: uBlacklist_regexp,
+                                titleRegexp: uBlacklist_titleRegexp
+                            }
+                            this.BlockListText_loadObj[keyName] = BlockListText_Obj;
+                            return true;
+                        }
                         if (BlockListText_Obj.regexp) {
                             let regexpFlag = 'g';
                             if (!BlockListText_Obj.caseSensitive) {
-                                regexpFlag = regexpFlag.concat('i');
+                                regexpFlag = regexpFlag + 'i';
                             }
                             BlockListText_Obj.text = await Promise.all(BlockListText_Obj.text.map(async (str) => {
                                 try {
@@ -460,32 +607,29 @@
                                     return EleObj[PropertyName].toLowerCase().includes(searchText);
                                 });
                             }
-                        } else {
-                            return new Array();
-                        }
+                        } else return new Array();
                     }));
 
                     if (searchResultArray.some(arr => arr.length)) {
-                        let searchExcludeResult = false;
-                        await Promise.all(SB_Obj.BlockListText_exclude_list.map(async (BLT_name) => {
+                        const searchExcludeResult = await Promise.all(SB_Obj.BlockListText_exclude_list.map(async (BLT_name) => {
                             if (this.BlockListText_loadObj[BLT_name]) {
                                 if (this.BlockListText_loadObj[BLT_name].regexp) {
-                                    searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                         return searchText.test(EleObj[PropertyName]);
                                     });
                                 } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                    searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                         return EleObj[PropertyName].includes(searchText);
                                     });
                                 } else {
-                                    searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                         return EleObj[PropertyName].toLowerCase().includes(searchText);
                                     });
                                 }
-                            }
+                            } else return new Array();
                         }));
 
-                        if (!searchExcludeResult) {
+                        if (!searchExcludeResult.some(arr => arr.length)) {
                             if (SB_Obj.replace_mode === "sentence") {
                                 EleObj[PropertyName] = SB_Obj.replace_string;
                                 SentenceBlock_DuplicateList.push(EleObj[PropertyName]);
@@ -497,12 +641,12 @@
                                             EleObj[PropertyName] = EleObj[PropertyName].replace(searchText, SB_Obj.replace_string);
                                         });
                                     } else {
-                                        let regexflag2 = 'g';
+                                        let regexpFlag = 'g';
                                         if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                            regexflag2 = regexflag2.concat('i');
+                                            regexpFlag = regexpFlag + 'i';
                                         }
                                         searchResultArray[index].forEach((searchText) => {
-                                            EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(searchText, regexflag2), SB_Obj.replace_string);
+                                            EleObj[PropertyName] = EleObj[PropertyName].replace(new RegExp(this.escapeRegExp(searchText), regexpFlag), SB_Obj.replace_string);
                                         });
                                     }
                                 }));
@@ -652,50 +796,48 @@
                             return;
                         }
 
-                        let searchResult = false;
-                        await Promise.all(eleBlockSet.BlockListText_list.map(async (BLT_name) => {
+                        const searchResult = await Promise.all(eleBlockSet.BlockListText_list.map(async (BLT_name) => {
                             if (this.BlockListText_loadObj[BLT_name]) {
                                 if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
-                                    searchResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty);
+                                    return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty, "href");
                                 } else if (this.BlockListText_loadObj[BLT_name].regexp) {
-                                    searchResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                         return searchText.test(searchProperty);
                                     });
                                 } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                    searchResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                         return searchProperty.includes(searchText);
                                     });
                                 } else {
-                                    searchResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                         return searchProperty.toLowerCase().includes(searchText);
                                     });
                                 }
-                            }
+                            } else return new Array();
                         }));
 
-                        if (searchResult) {
-                            let searchExcludeResult = false;
-                            await Promise.all(eleBlockSet.BlockListText_exclude_list.map(async (BLT_name) => {
+                        if (searchResult.some(arr => arr.length)) {
+                            const searchExcludeResult = await Promise.all(eleBlockSet.BlockListText_exclude_list.map(async (BLT_name) => {
                                 if (this.BlockListText_loadObj[BLT_name]) {
                                     if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
-                                        searchExcludeResult = this.UrlArrayReverseSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty);
+                                        return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty, "href");
                                     } else if (this.BlockListText_loadObj[BLT_name].regexp) {
-                                        searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                             return searchText.test(searchProperty);
                                         });
                                     } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                        searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                             return searchProperty.includes(searchText);
                                         });
                                     } else {
-                                        searchExcludeResult = this.BlockListText_loadObj[BLT_name].text.some((searchText) => {
+                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                                             return searchProperty.toLowerCase().includes(searchText);
                                         });
                                     }
-                                }
+                                } else return new Array();
                             }));
 
-                            if (!searchExcludeResult) {
+                            if (!searchExcludeResult.some(arr => arr.length)) {
                                 if (eleBlockSet.elementHide_hideMethod === "displayNone") {
                                     if (elementObj.style.display !== "none") {
                                         elementObj.style.display = "none";
@@ -713,19 +855,17 @@
         }
     }
 
-    async function BlockCounterUpdate() {
-        if (DashboardButtonEle) {
-            if (BlockCounter > 0) {
-                DashboardButtonEle.style.backgroundColor = "#FFAFAF"
-            }
-            DashboardButtonEle.textContent = "NB:" + BlockCounter;
-        }
-    }
-
-
-
     await BG_sentenceBlock_obj.init();
     await BG_elementBlock_Obj.init();
+
+    fetchtimeStampGlobalStorage = await StorageApiRead("fetchLastTime");
+    if (!fetchtimeStampGlobalStorage) {
+        fetchtimeStampGlobalStorage = Date.now();
+        await StorageApiWrite("fetchLastTime", fetchtimeStampGlobalStorage);
+    }
+    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
+        BlockListText_feathLoad();
+    }
 
     if (document.body != null) {
         await initInsertElement();
@@ -779,6 +919,15 @@
         readyStateCheckInterval = setInterval(async () => {
             StartExecute();
         }, 10);
+    }
+
+    async function BlockCounterUpdate() {
+        if (DashboardButtonEle) {
+            if (BlockCounter > 0) {
+                DashboardButtonEle.style.backgroundColor = "#FFAFAF"
+            }
+            DashboardButtonEle.textContent = "NB:" + BlockCounter;
+        }
     }
 
     async function initInsertElement() {
@@ -840,6 +989,7 @@
 
     async function DashboardWindow() {
         const RootShadow = divElement_RootShadow.shadowRoot;
+        DashboardButtonEle.style.display = "none";
 
         Dashboard_Element = document.createElement("div");
         Dashboard_Element.innerHTML = `
@@ -942,6 +1092,11 @@
             } else {
                 DashboardFrameBack.style.width = "400px";
             }
+            if (window.innerHeight <= 630) {
+                DashboardFrameBack.style.height = "calc(100vh - 4px)";
+            } else {
+                DashboardFrameBack.style.height = "630px";
+            }
         }
         DashboardFrameBackWidthLimit();
         window.addEventListener("resize", DashboardFrameBackWidthLimit);
@@ -949,6 +1104,7 @@
         RootShadow.getElementById("FrameBackHeaderButton1").addEventListener("click", () => {
             Dashboard_Element.remove();
             window.removeEventListener("resize", DashboardFrameBackWidthLimit);
+            DashboardButtonEle.style.display = "block";
         })
 
         RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
@@ -2409,7 +2565,7 @@
                     const setJSON = await DB_ExportImport_JSONFormat("export");
                     if (setJSON) {
                         const d = new Date();
-                        const filename = new String().concat("NagativeBlockerBackup_", d.getFullYear(), "-", d.getMonth(), "-", d.getDate(), "_", d.getHours(), "-", d.getMinutes(), "-", d.getSeconds(), ".json");
+                        const filename = "NagativeBlockerBackup_" + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "_" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + ".json";
 
                         const blob = new Blob([setJSON], { type: 'text/plain' });
                         const a = document.createElement("a");
