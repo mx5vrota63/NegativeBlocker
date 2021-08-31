@@ -277,13 +277,20 @@
                     if (URLSplit === null) return false;
                     const [URLAll, URLProtocol, URLDomain, URLPath] = URLSplit;
                     if (URLAll === "") return false;
+
+                    blockurlarray = blockurlarray.filter((str) => {
+                        if (str.slice(0, 2) === "*:" && (URLProtocol === "http" || URLProtocol === "https")) return true;
+                        if (str.slice(0, 5) === "http:" && URLProtocol === "http") return true;
+                        if (str.slice(0, 6) === "https:" && URLProtocol === "https") return true;
+                        if (str.slice(0, 3) === "ws:" && URLProtocol === "ws") return true;
+                        if (str.slice(0, 4) === "wss:" && URLProtocol === "wss") return true;
+                        if (str.slice(0, 4) === "ftp:" && URLProtocol === "ftp") return true;
+                        if (str.slice(0, 5) === "ftps:" && URLProtocol === "ftps") return true;
+                        return false;
+                    });
+
                     DomainSplit = URLDomain.split(".");
                     DomainSplit.reverse();
-                    pathSplit = URLPath.replace(/#.*$/, "").split("/");
-                    pathSplit.splice(0, 1);
-                    pathSplit = pathSplit.map((str) => {
-                        return this.escapeRegExp(str);
-                    })
 
                     let DomainLinking = "";
                     for (let i = 0; i < DomainSplit.length; i++) {
@@ -303,6 +310,13 @@
 
                     if (urlhitarray.length) {
                         if (urlhitarray.some(RegExp.prototype.test, new RegExp(/^.*:\/\/[^/]*\/\*$/))) return true;
+
+                        pathSplit = URLPath.split("/");
+                        pathSplit.splice(0, 1);
+                        pathSplit[pathSplit.length - 1] = pathSplit[pathSplit.length - 1].replace(/#.*$/, "");
+                        pathSplit = pathSplit.map((str) => {
+                            return this.escapeRegExp(str);
+                        });
 
                         let pathSimpleSeatch_regexp = "^.*://[^/]*/";
                         for (let i = 0; i < pathSplit.length; i++) {
@@ -390,59 +404,6 @@
                 return await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
             } else return new Array();
         }
-
-        /*
-        UrlArrayReverseSearch(blockurlarray, SourceUrl) {
-            let BlockUrlFilter;
-            let BlockUrlDomainFilter;
-            let DomainSplit;
-            let DomainHit = false;
-            let UrlHit = false;
-
-            try {
-                SourceUrl = SourceUrl.match(/^.*:\/{2,}(.*)/)[1].split("/");
-                if (!SourceUrl.length) return false;
-                DomainSplit = SourceUrl[0].split(".");
-                DomainSplit.reverse();
-            } catch (e) {
-                return false;
-            }
-
-            let DomainLinking = "";
-            for (let i = 0; i < DomainSplit.length; i++) {
-                DomainLinking = DomainSplit[i] + DomainLinking;
-                const DomainLinkingRegexp = DomainLinking.replace(/(.*)/, "^$1(?:/|$)+.*$");
-                BlockUrlDomainFilter = blockurlarray.filter(RegExp.prototype.test, new RegExp(DomainLinkingRegexp));
-                if (BlockUrlDomainFilter.length) {
-                    DomainHit = true;
-                    break;
-                }
-                DomainLinking = '.' + DomainLinking;
-            }
-
-            if (DomainHit) {
-                const DomainLinkingRegexp = DomainLinking.replace(/(.*)/, "$1/?(?!.+)");
-                BlockUrlFilter = BlockUrlDomainFilter.filter(RegExp.prototype.test, new RegExp(DomainLinkingRegexp));
-                if (BlockUrlFilter.length) {
-                    UrlHit = true;
-                } else {
-                    let SourceUrlLinking = DomainLinking + '/';
-                    for (let i = 1; i < SourceUrl.length; i++) {
-                        SourceUrlLinking = SourceUrlLinking + SourceUrl[i];
-                        const SourceUrlLinkingRegexp = SourceUrlLinking.replace(/(.*)/, "^$1/?$");
-                        BlockUrlFilter = BlockUrlDomainFilter.filter(RegExp.prototype.test, new RegExp(SourceUrlLinkingRegexp));
-                        if (!BlockUrlFilter.length) {
-                            SourceUrlLinking = SourceUrlLinking + '/';
-                            continue;
-                        }
-                        UrlHit = true;
-                        break;
-                    }
-                }
-            }
-            return UrlHit;
-        }
-        */
 
         async BlockListText_StorageLoad(SettingArray) {
             await Promise.all(SettingArray.map(async (SetObj) => {
@@ -593,38 +554,54 @@
                     if (sentenceReplaceFlag) return;
 
                     const searchResultArray = await Promise.all(SB_Obj.BlockListText_list.map(async (BLT_name) => {
+                        let sourceText = EleObj[PropertyName];
                         if (this.BlockListText_loadObj[BLT_name]) {
-                            if (this.BlockListText_loadObj[BLT_name].regexp) {
+                            if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
+                                return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, "hrefandtext");
+                            } else if (this.BlockListText_loadObj[BLT_name].regexp) {
                                 return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                    return searchText.test(EleObj[PropertyName]);
-                                });
-                            } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                    return EleObj[PropertyName].includes(searchText);
+                                    return searchText.test(sourceText);
                                 });
                             } else {
-                                return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                    return EleObj[PropertyName].toLowerCase().includes(searchText);
-                                });
+                                if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                    sourceText = sourceText.toLowerCase();
+                                }
+                                if (this.BlockListText_loadObj[BLT_name].exact) {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                        return sourceText === searchText;
+                                    });
+                                } else {
+                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                        return sourceText.includes(searchText);
+                                    });
+                                }
                             }
                         } else return new Array();
                     }));
 
                     if (searchResultArray.some(arr => arr.length)) {
                         const searchExcludeResult = await Promise.all(SB_Obj.BlockListText_exclude_list.map(async (BLT_name) => {
+                            let sourceText = EleObj[PropertyName];
                             if (this.BlockListText_loadObj[BLT_name]) {
-                                if (this.BlockListText_loadObj[BLT_name].regexp) {
+                                if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
+                                    return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, "hrefandtext");
+                                } else if (this.BlockListText_loadObj[BLT_name].regexp) {
                                     return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                        return searchText.test(EleObj[PropertyName]);
-                                    });
-                                } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                        return EleObj[PropertyName].includes(searchText);
+                                        return searchText.test(sourceText);
                                     });
                                 } else {
-                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                        return EleObj[PropertyName].toLowerCase().includes(searchText);
-                                    });
+                                    if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                        sourceText = sourceText.toLowerCase();
+                                    }
+                                    if (this.BlockListText_loadObj[BLT_name].exact) {
+                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                            return sourceText === searchText;
+                                        });
+                                    } else {
+                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                            return sourceText.includes(searchText);
+                                        });
+                                    }
                                 }
                             } else return new Array();
                         }));
@@ -797,42 +774,54 @@
                         }
 
                         const searchResult = await Promise.all(eleBlockSet.BlockListText_list.map(async (BLT_name) => {
+                            let sourceText = searchProperty;
                             if (this.BlockListText_loadObj[BLT_name]) {
                                 if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
-                                    return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty, "href");
+                                    return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, "href");
                                 } else if (this.BlockListText_loadObj[BLT_name].regexp) {
                                     return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                        return searchText.test(searchProperty);
-                                    });
-                                } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                        return searchProperty.includes(searchText);
+                                        return searchText.test(sourceText);
                                     });
                                 } else {
-                                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                        return searchProperty.toLowerCase().includes(searchText);
-                                    });
+                                    if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                        sourceText = sourceText.toLowerCase();
+                                    }
+                                    if (this.BlockListText_loadObj[BLT_name].exact) {
+                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                            return sourceText === searchText;
+                                        });
+                                    } else {
+                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                            return sourceText.includes(searchText);
+                                        });
+                                    }
                                 }
                             } else return new Array();
                         }));
 
                         if (searchResult.some(arr => arr.length)) {
                             const searchExcludeResult = await Promise.all(eleBlockSet.BlockListText_exclude_list.map(async (BLT_name) => {
+                                let sourceText = searchProperty;
                                 if (this.BlockListText_loadObj[BLT_name]) {
                                     if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
-                                        return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, searchProperty, "href");
+                                        return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, "href");
                                     } else if (this.BlockListText_loadObj[BLT_name].regexp) {
                                         return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                            return searchText.test(searchProperty);
-                                        });
-                                    } else if (this.BlockListText_loadObj[BLT_name].caseSensitive) {
-                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                            return searchProperty.includes(searchText);
+                                            return searchText.test(sourceText);
                                         });
                                     } else {
-                                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                            return searchProperty.toLowerCase().includes(searchText);
-                                        });
+                                        if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
+                                            sourceText = sourceText.toLowerCase();
+                                        }
+                                        if (this.BlockListText_loadObj[BLT_name].exact) {
+                                            return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                                return sourceText === searchText;
+                                            });
+                                        } else {
+                                            return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                                return sourceText.includes(searchText);
+                                            });
+                                        }
                                     }
                                 } else return new Array();
                             }));
@@ -988,8 +977,9 @@
 
 
     async function DashboardWindow() {
+        if (Dashboard_Element) return;
         const RootShadow = divElement_RootShadow.shadowRoot;
-        DashboardButtonEle.style.display = "none";
+        if (DashboardButtonEle) DashboardButtonEle.style.display = "none";
 
         Dashboard_Element = document.createElement("div");
         Dashboard_Element.innerHTML = `
@@ -1093,7 +1083,7 @@
                 DashboardFrameBack.style.width = "400px";
             }
             if (window.innerHeight <= 630) {
-                DashboardFrameBack.style.height = "calc(100vh - 4px)";
+                DashboardFrameBack.style.height = "calc(100vh - 20px)";
             } else {
                 DashboardFrameBack.style.height = "630px";
             }
@@ -1103,14 +1093,16 @@
 
         RootShadow.getElementById("FrameBackHeaderButton1").addEventListener("click", () => {
             Dashboard_Element.remove();
+            Dashboard_Element = null;
             window.removeEventListener("resize", DashboardFrameBackWidthLimit);
-            DashboardButtonEle.style.display = "block";
+            if (DashboardButtonEle) DashboardButtonEle.style.display = "block";
         })
 
         RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
             Dashboard_Element.remove();
+            Dashboard_Element = null;
             window.removeEventListener("resize", DashboardFrameBackWidthLimit);
-            DashboardButtonEle.remove();
+            if (DashboardButtonEle) DashboardButtonEle.remove();
         })
 
 
@@ -1560,7 +1552,6 @@
                 li.textContent = this.ListStorage[index].name;
                 this.li_cfuncinfunction_arg.unshift(li);
                 li.addEventListener("click", await this.li_cfunc(this.li_cfunchandlers.length, Array.from(this.li_cfuncinfunction_arg)), false);
-                // li.removeEventListener("click", await this.li_cfunc(this.li_cfuncArgTemp[0], this.li_cfuncArgTemp[1]), false);
                 if (index < this.ulol_Ele.childNodes.length) {
                     this.ulol_Ele.childNodes[index].before(li);
                 } else {
@@ -1602,6 +1593,7 @@
                     this.fetch_url_Ele = null;
                     this.regexp_Ele = null;
                     this.caseSensitive_Ele = null;
+                    this.exact_Ele = null;
                     this.uBlacklist_Ele = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
@@ -1609,6 +1601,7 @@
                         this.fetch_url_Ele.value = applylist.fetch_url;
                         this.regexp_Ele.checked = applylist.regexp;
                         this.caseSensitive_Ele.checked = applylist.caseSensitive;
+                        this.exact_Ele.checked = applylist.exact;
                         this.uBlacklist_Ele.checked = applylist.uBlacklist;
 
                         const BlockListText_Keyname = "BLT_" + applylist.name;
@@ -1663,7 +1656,11 @@
 <div id="BlockListText" class="EditConfigObjectPage">
   <div id="BlockListText_Textarea_div" class="ItemFrame_Border">
     <h1 id="BlockListText_Textarea_Title" class="ItemFrame_Title"></h1>
-    <textarea id="BlockListText_Textarea" spellcheck="false"></textarea>
+    <textarea
+      id="BlockListText_Textarea"
+      spellcheck="false"
+      wrap="off"
+    ></textarea>
     <div id="BlockListText_Textarea_Disable" style="display: none">
       <span id="BlockListText_Textarea_Disable_SpanText"></span>
       <button id="BlockListText_Textarea_Disable_ShowButton"></button>
@@ -1702,6 +1699,11 @@
       <input id="BlockListText_Config3_Input" type="checkbox" />
       <span id="BlockListText_Config3_SpanText"></span>
     </label>
+    <br />
+    <label>
+      <input id="BlockListText_Config4_Input" type="checkbox" />
+      <span id="BlockListText_Config4_SpanText"></span>
+    </label>
   </div>
   <div>
     <button id="BlockListText_BackButton"></button>
@@ -1720,7 +1722,8 @@
                     RootShadow.getElementById("BlockListText_Config_Title").textContent = "オプション";
                     RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = "正規表現";
                     RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = "大文字と小文字を区別する";
-                    RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = "uBlacklist形式を使用する";
+                    RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = "完全一致";
+                    RootShadow.getElementById("BlockListText_Config4_SpanText").textContent = "uBlacklist形式を使用する";
 
                     this.textareaDisable_Ele = RootShadow.getElementById("BlockListText_Textarea_Disable");
 
@@ -1729,7 +1732,8 @@
                     this.fetch_url_Ele = RootShadow.getElementById("BlockListText_Fetch_InputText");
                     this.regexp_Ele = RootShadow.getElementById("BlockListText_Config1_Input");
                     this.caseSensitive_Ele = RootShadow.getElementById("BlockListText_Config2_Input");
-                    this.uBlacklist_Ele = RootShadow.getElementById("BlockListText_Config3_Input");
+                    this.exact_Ele = RootShadow.getElementById("BlockListText_Config3_Input");
+                    this.uBlacklist_Ele = RootShadow.getElementById("BlockListText_Config4_Input");
 
                     RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", (evt) => {
                         if (evt.target.files[0]) {
@@ -1811,6 +1815,7 @@
                         fetch_url: this.fetch_url_Ele.value,
                         regexp: this.regexp_Ele.checked,
                         caseSensitive: this.caseSensitive_Ele.checked,
+                        exact: this.exact_Ele.checked,
                         uBlacklist: this.uBlacklist_Ele.checked
                     }
                     const StoObj_Text = {
@@ -1846,6 +1851,7 @@
                         this.fetch_url_Ele.value = "";
                         this.regexp_Ele.checked = false;
                         this.caseSensitive_Ele.checked = false;
+                        this.exact_Ele = false;
                         this.uBlacklist_Ele.checked = false;
 
                         this.textarea_Ele.style.display = "block";
