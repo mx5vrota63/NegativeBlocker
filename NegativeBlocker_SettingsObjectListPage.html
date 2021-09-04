@@ -25,6 +25,7 @@
     height: 20px;
   }
   select#SettingsObject_ConfigItems_Sort_Form {
+    width: auto !important;
     transform: scale(1.2);
   }
   input#SettingsObject_ConfigItems_Enable_Form {
@@ -39,7 +40,11 @@
   <div id="SettingsObject_ConfigItems" style="display: none">
     <div id="SettingsObject_ConfigItems_Name">
       <span id="SettingsObject_ConfigItems_Name_Span"></span>
-      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
+      <input
+        id="SettingsObject_ConfigItems_Name_Form"
+        type="text"
+        spellcheck="false"
+      />
     </div>
     <div id="SettingsObject_ConfigItems_Sort">
       <span id="SettingsObject_ConfigItems_Sort_Span"></span>

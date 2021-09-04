@@ -44,90 +44,50 @@
     let SentenceBlockTempDisableArray;
     let fetchtimeStampGlobalStorage;
 
-    async function StorageApiRead(keyName) {
-        let StorageValue;
-        try {
-            // eslint-disable-next-line no-undef
-            StorageValue = await GM.getValue(keyName);
-        } catch (e) {
-            console.error(e);
-            console.log("GM Function Not Detected");
+    class storageAPI {
+        constructor() { }
+        static async read(keyName) {
+            let StorageValue = undefined;
             try {
-                let value_data
                 // eslint-disable-next-line no-undef
-                chrome.storage.local.get(keyName, (value) => {
-                    value_data = value[keyName];
-                });
-                return value_data;
+                StorageValue = await GM.getValue(keyName);
             } catch (e) {
                 console.error(e);
-                console.log("Chrome API Not Detected");
-                StorageValue = undefined;
+                console.log("GM Function Not Detected");
             }
+            return StorageValue;
         }
-        return StorageValue;
-
-        // debug only WeblocalStorage
-        /*
-        try {
-            StorageValue = localStorage.getItem(keyName);
-        } catch (e) {
-            console.error(e);
-            console.log("localStorage API Not Detected");
-        }
-        */
-    }
-    async function StorageApiWrite(keyName, setValue) {
-        try {
-            // eslint-disable-next-line no-undef
-            await GM.setValue(keyName, setValue);
-            return true;
-        } catch (e) {
-            console.error(e);
-            console.log("GM Function Not Detected");
+        static async write(keyName, setValue) {
             try {
                 // eslint-disable-next-line no-undef
-                chrome.storage.local.set({ keyName: setValue });
+                await GM.setValue(keyName, setValue);
                 return true;
             } catch (e) {
                 console.error(e);
-                console.log("Chrome API Not Detected");
+                console.log("GM Function Not Detected");
                 return false;
             }
         }
-
-        // debug only WeblocalStorage
-        /*
-        try {
-            localStorage.setItem(keyName, value);
-            return true;
-        } catch (e) {
-            console.error(e);
-            console.log("localStorage API Not Detected");
-            return false;
+        static async delete(keyName) {
+            try {
+                // eslint-disable-next-line no-undef
+                await GM.deleteValue(keyName);
+                return true;
+            } catch (e) {
+                console.error(e);
+                console.log("GM Function Not Detected");
+                return false;
+            }
         }
-        */
-
-    }
-    async function StorageApiDelete(keyName) {
-        try {
-            // eslint-disable-next-line no-undef
-            await GM.deleteValue(keyName);
-            return true;
-        } catch (e) {
-            console.error(e);
-            console.log("GM Function Not Detected");
-            return false;
-        }
-    }
-    async function StorageApiKeynamelist() {
-        try {
-            // eslint-disable-next-line no-undef
-            return await GM.listValues();
-        } catch (e) {
-            console.error(e);
-            console.log("GM Function Not Detected");
-            return undefined;
+        static async keynameList() {
+            try {
+                // eslint-disable-next-line no-undef
+                return await GM.listValues();
+            } catch (e) {
+                console.error(e);
+                console.log("GM Function Not Detected");
+                return undefined;
+            }
         }
     }
 
@@ -181,45 +141,45 @@
 
 
     async function StorageLoad() {
-        BlockListTextStorage = await StorageApiRead("BlockListText");
+        BlockListTextStorage = await storageAPI.read("BlockListText");
         if (BlockListTextStorage) {
             BlockListTextStorage = JSON.parse(BlockListTextStorage);
         } else {
             BlockListTextStorage = new Array();
-            await StorageApiWrite("BlockListText", JSON.stringify(BlockListTextStorage));
+            await storageAPI.write("BlockListText", JSON.stringify(BlockListTextStorage));
         }
 
-        SentenceBlockStorage = await StorageApiRead("SentenceBlock");
+        SentenceBlockStorage = await storageAPI.read("SentenceBlock");
         if (SentenceBlockStorage) {
             SentenceBlockStorage = JSON.parse(SentenceBlockStorage);
         } else {
             SentenceBlockStorage = new Array();
-            await StorageApiWrite("SentenceBlock", JSON.stringify(SentenceBlockStorage));
+            await storageAPI.write("SentenceBlock", JSON.stringify(SentenceBlockStorage));
         }
 
-        ElementBlockStorage = await StorageApiRead("ElementBlock");
+        ElementBlockStorage = await storageAPI.read("ElementBlock");
         if (ElementBlockStorage) {
             ElementBlockStorage = JSON.parse(ElementBlockStorage);
         } else {
             ElementBlockStorage = new Array();
-            await StorageApiWrite("ElementBlock", JSON.stringify(ElementBlockStorage));
+            await storageAPI.write("ElementBlock", JSON.stringify(ElementBlockStorage));
         }
 
-        PreferenceSettingStorage = await StorageApiRead("PreferenceSetting");
+        PreferenceSettingStorage = await storageAPI.read("PreferenceSetting");
         if (PreferenceSettingStorage) {
             PreferenceSettingStorage = JSON.parse(PreferenceSettingStorage);
         } else {
             PreferenceSettingStorage = new Object();
-            await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+            await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
         }
 
-        SentenceBlockTempDisableArray = await StorageApiRead("SentenceBlock_TempDisable");
+        SentenceBlockTempDisableArray = await storageAPI.read("SentenceBlock_TempDisable");
         if (SentenceBlockTempDisableArray) {
             SentenceBlockTempDisableArray = JSON.parse(SentenceBlockTempDisableArray);
         } else {
             SentenceBlockTempDisableArray = new Array();
         }
-        await StorageApiWrite("SentenceBlock_TempDisable", JSON.stringify(new Array()));
+        await storageAPI.write("SentenceBlock_TempDisable", JSON.stringify(new Array()));
     }
     await StorageLoad();
 
@@ -227,7 +187,7 @@
     async function BlockListText_feathLoad() {
         await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
             if (BlockListText_Obj.fetch_enable) {
-                let BlockListText_textObj = await StorageApiRead("BLT_" + BlockListText_Obj.name);
+                let BlockListText_textObj = await storageAPI.read("BLT_" + BlockListText_Obj.name);
                 try {
                     BlockListText_textObj = JSON.parse(BlockListText_textObj);
                     if (Date.now() - BlockListText_textObj.fetch_timeStamp >= 3600000) {
@@ -241,7 +201,7 @@
                             console.error(e);
                         });
                         BlockListText_textObj.fetch_timeStamp = Date.now();
-                        await StorageApiWrite("BLT_" + BlockListText_Obj.name, JSON.stringify(BlockListText_textObj));
+                        await storageAPI.write("BLT_" + BlockListText_Obj.name, JSON.stringify(BlockListText_textObj));
                     }
                 } catch (e) {
                     console.error(e);
@@ -249,7 +209,7 @@
                 }
             }
         }));
-        await StorageApiWrite("fetchLastTime", Date.now());
+        await storageAPI.write("fetchLastTime", Date.now());
         console.log("fetch update");
     }
 
@@ -430,7 +390,7 @@
                     if (keyName === "") return false;
                     if (this.BlockListText_loadObj[keyName]) return true;
                     const BlockListText_Keyname = "BLT_" + keyName;
-                    let BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
+                    let BlockListText_Obj = await storageAPI.read(BlockListText_Keyname);
                     try {
                         BlockListText_Obj = JSON.parse(BlockListText_Obj);
                         const indexBLTSet = BlockListTextStorage.findIndex(({ name }) => name === keyName);
@@ -648,11 +608,12 @@
                 if (SB_dupCheck) return;
 
                 Promise.all(SentenceBlock_settingArray.map(async (SB_Obj) => {
-                    if (SentenceBlockTempDisableArray.some(name => name === SB_Obj.name)) {
-                        return;
-                    }
+                    if (SentenceBlockTempDisableArray.some(name => name === SB_Obj.name)) return;
 
                     if (sentenceReplaceFlag) return;
+
+                    if (SB_Obj.aTag_replace_mode === "hrefexclude" && EleObj.nodeName === "href") return;
+                    if (SB_Obj.aTag_replace_mode === "hrefonly" && EleObj.nodeName !== "href") return;
 
                     const searchResultArray = await Promise.all(SB_Obj.BlockListText_list.map(async (BLT_name) => {
                         return await this.BlockListTextSearch(BLT_name, EleObj[PropertyName], "hrefandtext");
@@ -755,7 +716,7 @@
             await this.ElementBlockExecute(node, this.ElementBlockfilter);
         }
         async ElementBlockExecute(node, EleBlock_SettingArray) {
-            Promise.all(EleBlock_SettingArray.map(async (eleBlockSet) => {
+            await Promise.all(EleBlock_SettingArray.map(async (eleBlockSet) => {
                 const ElementBlock_executeResultList_func = (eleSetObj, eleObj, searchPropertyText) => {
                     if (!ElementBlock_executeResultList[eleBlockSet.name]) {
                         ElementBlock_executeResultList[eleBlockSet.name] = new Array();
@@ -782,7 +743,7 @@
                     return;
                 }
 
-                Promise.all(Array.from(elementNode).map(async (elementObj) => {
+                await Promise.all(Array.from(elementNode).map(async (elementObj) => {
                     let firstblockflag;
                     try {
                         firstblockflag = ElementBlock_executeResultList[eleBlockSet.name].some((arr) => {
@@ -816,7 +777,7 @@
                         return;
                     }
 
-                    Promise.all(Array.from(SearchEleNode).map(async (SearchEleObj) => {
+                    await Promise.all(Array.from(SearchEleNode).map(async (SearchEleObj) => {
                         let searchProperty;
                         try {
                             switch (eleBlockSet.elementSearch_property) {
@@ -900,10 +861,10 @@
     await BG_sentenceBlock_obj.init();
     await BG_elementBlock_Obj.init();
 
-    fetchtimeStampGlobalStorage = await StorageApiRead("fetchLastTime");
+    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
     if (!fetchtimeStampGlobalStorage) {
         fetchtimeStampGlobalStorage = Date.now();
-        await StorageApiWrite("fetchLastTime", fetchtimeStampGlobalStorage);
+        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
     }
     if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
         BlockListText_feathLoad();
@@ -1104,14 +1065,23 @@
     background-color: #ffffb2;
     white-space: nowrap;
   }
-  div#DashboardMain input.TextBoxWidth {
+  div#DashboardMain input[type="text"] {
     width: 100%;
     height: 26px;
     box-sizing: border-box;
   }
-  button {
+  div#DashboardMain button {
     min-width: 60px;
     height: 35px;
+  }
+  div#DashboardMain select {
+    width: 100%;
+  }
+  div#DashboardMain input[type="checkbox"] {
+    transform: scale(1.3);
+  }
+  div#DashboardMain input[type="radio"] {
+    transform: scale(1.3);
   }
 </style>
 
@@ -1216,7 +1186,7 @@
                         tempDisable.push(ele.name);
                     }
                 })
-                await StorageApiWrite("SentenceBlock_TempDisable", JSON.stringify(tempDisable));
+                await storageAPI.write("SentenceBlock_TempDisable", JSON.stringify(tempDisable));
                 location.reload();
             }, false);
 
@@ -1280,6 +1250,7 @@
 
         async function Dashboard_SettingsTop() {
             ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+            DashboardMain_div.scroll({ top: 0 });
             const DB_settingTop_div = document.createElement("div");
             Dashboard_Window_Ele_stack.push(DB_settingTop_div);
             DB_settingTop_div.innerHTML = `
@@ -1339,6 +1310,7 @@
             RootShadow.getElementById("SettingMainPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                DashboardMain_div.scroll({ top: 0 });
             }, false)
         }
 
@@ -1373,6 +1345,7 @@
 
             async init() {
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+                DashboardMain_div.scroll({ top: 0 });
                 this.ListEditPage_Ele = document.createElement("div");
                 this.ListEditPage_Ele.style.height = "100%";
                 Dashboard_Window_Ele_stack.push(this.ListEditPage_Ele);
@@ -1404,6 +1377,7 @@
     height: 20px;
   }
   select#SettingsObject_ConfigItems_Sort_Form {
+    width: auto !important;
     transform: scale(1.2);
   }
   input#SettingsObject_ConfigItems_Enable_Form {
@@ -1418,7 +1392,11 @@
   <div id="SettingsObject_ConfigItems" style="display: none">
     <div id="SettingsObject_ConfigItems_Name">
       <span id="SettingsObject_ConfigItems_Name_Span"></span>
-      <input id="SettingsObject_ConfigItems_Name_Form" type="text" />
+      <input
+        id="SettingsObject_ConfigItems_Name_Form"
+        type="text"
+        spellcheck="false"
+      />
     </div>
     <div id="SettingsObject_ConfigItems_Sort">
       <span id="SettingsObject_ConfigItems_Sort_Span"></span>
@@ -1482,6 +1460,7 @@
                     this.Editflag = true;
                     this.ListEditPage_Ele.style.display = "none";
                     this.EditConfigPage_Ele.style.display = "block";
+                    DashboardMain_div.scroll({ top: 0 });
                 }, false);
 
                 RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", () => {
@@ -1494,6 +1473,7 @@
                     Dashboard_Window_Ele_stack.pop().remove();
                     Dashboard_Window_Ele_stack.pop().remove();
                     ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                    DashboardMain_div.scroll({ top: 0 });
                 }, false);
                 RootShadow.getElementById("SettingsObject_ActionButton_NewObject").addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
                 RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").addEventListener("click", async () => await this.DelButtonFunc(), false);
@@ -1521,7 +1501,7 @@
                     this.ListStorage.splice(fiindex, 1);
                 }
                 this.ListStorage.splice(this.index_Ele.value, 0, StoObj);
-                await StorageApiWrite(StoKey, JSON.stringify(this.ListStorage));
+                await storageAPI.write(StoKey, JSON.stringify(this.ListStorage));
 
                 if (fiindex !== -1) {
                     this.currentEle_li.remove();
@@ -1546,7 +1526,7 @@
                     this.currentEle_li.remove();
                     this.SelectOption_Del()
                     this.ListStorage.splice(fiindex, 1);
-                    await StorageApiWrite(StoKey, JSON.stringify(this.ListStorage));
+                    await storageAPI.write(StoKey, JSON.stringify(this.ListStorage));
                     this.editarea_Ele.style.display = "none";
                     this.Editflag = false;
                     return true;
@@ -1662,7 +1642,7 @@
                         this.uBlacklist_Ele.checked = applylist.uBlacklist;
 
                         const BlockListText_Keyname = "BLT_" + applylist.name;
-                        let BlockListText_Obj = await StorageApiRead(BlockListText_Keyname);
+                        let BlockListText_Obj = await storageAPI.read(BlockListText_Keyname);
                         try {
                             BlockListText_Obj = JSON.parse(BlockListText_Obj);
                         } catch (e) {
@@ -1734,11 +1714,7 @@
       <span id="BlockListText_Fetch_InputCheckbox_SpanText"></span>
     </label>
     <br />
-    <input
-      id="BlockListText_Fetch_InputText"
-      class="TextBoxWidth"
-      type="text"
-    />
+    <input id="BlockListText_Fetch_InputText" type="text" spellcheck="false" />
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
@@ -1793,6 +1769,7 @@
                     RootShadow.getElementById("BlockListText_Config4_SpanText").textContent = "空白スペースを無視する";
                     RootShadow.getElementById("BlockListText_Config5_SpanText").textContent = "NOT検索をする";
                     RootShadow.getElementById("BlockListText_Config6_SpanText").textContent = "uBlacklist形式を使用する";
+                    RootShadow.getElementById("BlockListText_BackButton").textContent = "←戻る"
 
                     this.textareaDisable_Ele = RootShadow.getElementById("BlockListText_Textarea_Disable");
 
@@ -1826,17 +1803,17 @@
                         this.textareaDisable_Ele.style.display = "none";
                     }, false);
 
-                    RootShadow.getElementById("BlockListText_BackButton").textContent = "←戻る"
                     RootShadow.getElementById("BlockListText_BackButton").addEventListener("click", () => {
                         this.ListEditPage_Ele.style.display = "block";
                         this.EditConfigPage_Ele.style.display = "none";
+                        DashboardMain_div.scroll({ top: 0 });
                     }, false);
 
                     RootShadow.getElementById("SettingsObject_ConfigItems_Enable").style.display = "none";
                 }
 
                 async BlockListText_storageUpdateOtherSetting(oldName, newName) {
-                    const SentenceBlockStorageTemp = JSON.parse(await StorageApiRead("SentenceBlock"));
+                    const SentenceBlockStorageTemp = JSON.parse(await storageAPI.read("SentenceBlock"));
                     SentenceBlockStorageTemp.forEach((SentenceBlock_Obj) => {
                         const indexOldB = SentenceBlock_Obj.BlockListText_list.indexOf(oldName);
                         if (indexOldB != -1) {
@@ -1855,9 +1832,9 @@
                             }
                         }
                     });
-                    await StorageApiWrite("SentenceBlock", JSON.stringify(SentenceBlockStorageTemp));
+                    await storageAPI.write("SentenceBlock", JSON.stringify(SentenceBlockStorageTemp));
 
-                    const ElementBlockStorageTemp = JSON.parse(await StorageApiRead("ElementBlock"));
+                    const ElementBlockStorageTemp = JSON.parse(await storageAPI.read("ElementBlock"));
                     ElementBlockStorageTemp.forEach((ElementBlock_Obj) => {
                         const indexOldB = ElementBlock_Obj.BlockListText_list.indexOf(oldName);
                         if (indexOldB != -1) {
@@ -1876,7 +1853,7 @@
                             }
                         }
                     });
-                    await StorageApiWrite("ElementBlock", JSON.stringify(ElementBlockStorageTemp));
+                    await storageAPI.write("ElementBlock", JSON.stringify(ElementBlockStorageTemp));
                     StorageLoad();
                 }
 
@@ -1899,10 +1876,10 @@
                     if (await this.ListStoSave("BlockListText", StoObj)) {
                         const BlockListText_Keyname_Old = "BLT_" + this.currentName;
                         if (this.currentName !== "") {
-                            await StorageApiDelete(BlockListText_Keyname_Old);
+                            await storageAPI.delete(BlockListText_Keyname_Old);
                         }
                         const BlockListText_Keyname_New = "BLT_" + StoObj.name;
-                        await StorageApiWrite(BlockListText_Keyname_New, JSON.stringify(StoObj_Text));
+                        await storageAPI.write(BlockListText_Keyname_New, JSON.stringify(StoObj_Text));
                         if (this.currentName !== "") {
                             this.BlockListText_storageUpdateOtherSetting(this.currentName, StoObj.name);
                         }
@@ -1913,7 +1890,7 @@
                 async BlockListText_storageDelete() {
                     if (await this.ListStoDel("BlockListText")) {
                         const BlockListText_keyName = "BLT_" + this.currentName;
-                        await StorageApiDelete(BlockListText_keyName);
+                        await storageAPI.delete(BlockListText_keyName);
                         this.BlockListText_storageUpdateOtherSetting(this.currentName);
                     }
                 }
@@ -1948,6 +1925,7 @@
                     this.BlockListText_exclude_list_Ele = null;
                     this.replace_string_Ele = null;
                     this.replace_mode_Ele = null;
+                    this.aTag_replace_mode_ELe = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
                         this.enable_Ele.checked = applylist.enable;
@@ -1955,6 +1933,7 @@
                         this.url_regex_enable_Ele.checked = applylist.url_regex_enable;
                         this.replace_string_Ele.value = applylist.replace_string;
                         this.replace_mode_Ele.replace_mode.value = applylist.replace_mode;
+                        this.aTag_replace_mode_ELe.value = applylist.aTag_replace_mode;
 
                         Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
                             if (applylist.BlockListText_list.indexOf(htmlOption.value) != -1) {
@@ -1988,7 +1967,12 @@
     height: 100%;
   }
   select.SentenceBlock_Select {
-    width: 100%;
+    overflow: scroll;
+  }
+  option.SentenceBlock_Option {
+    display: table;
+    min-width: 100%;
+    box-sizing: border-box;
   }
 </style>
 
@@ -1996,7 +1980,7 @@
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig1_Description"></p>
-    <input id="SentenceBlockConfig1_Input1" class="TextBoxWidth" type="text" />
+    <input id="SentenceBlockConfig1_Input1" type="text" spellcheck="false" />
     <br />
     <label>
       <input id="SentenceBlockConfig1_Input2" type="checkbox" />
@@ -2031,11 +2015,7 @@
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig3_Description"></p>
-    <input
-      id="SentenceBlockConfig3_InputText"
-      class="TextBoxWidth"
-      type="text"
-    />
+    <input id="SentenceBlockConfig3_InputText" type="text" spellcheck="false" />
     <form id="SentenceBlockConfig3_Form">
       <label>
         <input type="radio" name="replace_mode" value="sentence" checked />
@@ -2046,6 +2026,25 @@
         <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
       </label>
     </form>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="SentenceBlockConfig4_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlockConfig4_Description"></p>
+    <select
+      id="SentenceBlockConfig4_Select"
+      class="ElementBlock_Select"
+      size="1"
+    >
+      <option
+        id="SentenceBlockConfig4_Select_Option1"
+        value="hrefexclude"
+      ></option>
+      <option
+        id="SentenceBlockConfig4_Select_Option2"
+        value="hrefonly"
+      ></option>
+      <option id="SentenceBlockConfig4_Select_Option3" value="all"></option>
+    </select>
   </div>
   <div>
     <button id="SentenceBlockConfig_BackButton"></button>
@@ -2065,6 +2064,11 @@
                     RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = "置換する文字列を入力します。";
                     RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = "一文章で置換える";
                     RootShadow.getElementById("SentenceBlockConfig3_Form_Input2_SpanText").textContent = "単語で置換える";
+                    RootShadow.getElementById("SentenceBlockConfig4_Title").textContent = "aタグのリンク置換";
+                    RootShadow.getElementById("SentenceBlockConfig4_Description").textContent = "aタグのリンクを置換をするかどうか設定します。（aタグのリンクを置換するとリンクが正常に機能しなくなります。）";
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option1").textContent = "aタグのリンクは置換えない";
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option2").textContent = "aタグのリンクのみ置換える";
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option3").textContent = "すべて置換する";
                     RootShadow.getElementById("SentenceBlockConfig_BackButton").textContent = "←戻る";
 
                     this.url_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input1");
@@ -2073,9 +2077,11 @@
                     this.BlockListText_exclude_list_Ele = RootShadow.getElementById("SentenceBlockConfig2-2_Select");
                     this.replace_string_Ele = RootShadow.getElementById("SentenceBlockConfig3_InputText");
                     this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Form");
+                    this.aTag_replace_mode_ELe = RootShadow.getElementById("SentenceBlockConfig4_Select");
 
                     for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
+                        option.className = "SentenceBlock_Option";
                         option.setAttribute("value", BlockListTextStorage[i].name);
                         option.textContent = BlockListTextStorage[i].name;
                         this.BlockListText_list_Ele.append(option);
@@ -2085,6 +2091,7 @@
                     RootShadow.getElementById("SentenceBlockConfig_BackButton").addEventListener("click", () => {
                         this.ListEditPage_Ele.style.display = "block";
                         this.EditConfigPage_Ele.style.display = "none";
+                        DashboardMain_div.scroll({ top: 0 });
                     }, false);
                 }
 
@@ -2103,7 +2110,8 @@
                         BlockListText_list: BLT_list_map,
                         BlockListText_exclude_list: BLT_exclude_list_map,
                         replace_string: this.replace_string_Ele.value,
-                        replace_mode: this.replace_mode_Ele.replace_mode.value
+                        replace_mode: this.replace_mode_Ele.replace_mode.value,
+                        aTag_replace_mode: this.aTag_replace_mode_ELe.value
                     }
                     await this.ListStoSave("SentenceBlock", StoObj);
                 }
@@ -2120,6 +2128,7 @@
                         this.BlockListText_exclude_list_Ele.value = "";
                         this.replace_string_Ele.value = "";
                         this.replace_mode_Ele.replace_mode.value = "sentence";
+                        this.aTag_replace_mode_ELe.value = "hrefexclude";
 
                         this.enable_Ele.checked = true;
                         return 0;
@@ -2211,7 +2220,7 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig1_Description"></p>
-    <input id="ElementBlockConfig1_Input1" class="TextBoxWidth" type="text" />
+    <input id="ElementBlockConfig1_Input1" type="text" spellcheck="false" />
     <br />
     <label>
       <input id="ElementBlockConfig1_Input2" type="checkbox" />
@@ -2222,11 +2231,7 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig2_Description"></p>
-    <input
-      id="ElementBlockConfig2_InputText"
-      class="TextBoxWidth"
-      type="text"
-    />
+    <input id="ElementBlockConfig2_InputText" type="text" spellcheck="false" />
     <form id="ElementBlockConfig2_Form">
       <label>
         <input type="radio" name="pickerMethod" value="css" checked />
@@ -2256,11 +2261,7 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig3_Description"></p>
-    <input
-      id="ElementBlockConfig3_InputText"
-      class="TextBoxWidth"
-      type="text"
-    />
+    <input id="ElementBlockConfig3_InputText" type="text" spellcheck="false" />
     <form id="ElementBlockConfig3_Form">
       <label>
         <input type="radio" name="pickerMethod" value="css" checked />
@@ -2295,8 +2296,8 @@
           <br />
           <input
             id="ElementBlockConfig3-2_Form_Input3_InputText"
-            class="TextBoxWidth"
             type="text"
+            spellcheck="false"
           />
         </label>
         <br />
@@ -2306,8 +2307,8 @@
           <br />
           <input
             id="ElementBlockConfig3-2_Form_Input4_InputText"
-            class="TextBoxWidth"
             type="text"
+            spellcheck="false"
           />
         </label>
       </form>
@@ -2446,6 +2447,7 @@
                     RootShadow.getElementById("ElementBlockConfig_BackButton").addEventListener("click", () => {
                         this.ListEditPage_Ele.style.display = "block";
                         this.EditConfigPage_Ele.style.display = "none";
+                        DashboardMain_div.scroll({ top: 0 });
                     }, false);
                 }
 
@@ -2511,6 +2513,7 @@
 
         async function Dashboard_PreferencePage() {
             ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+            DashboardMain_div.scroll({ top: 0 });
             const DB_preference_div = document.createElement("div");
             DB_preference_div.innerHTML = `
 <style type="text/css">
@@ -2564,17 +2567,18 @@
                     if (res) {
                         this.checked = true;
                         PreferenceSettingStorage["hideButton"] = true;
-                        await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                        await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                     }
                 } else {
                     PreferenceSettingStorage["hideButton"] = false;
-                    await StorageApiWrite("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                 }
             });
 
             RootShadow.getElementById("PreferencesPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                DashboardMain_div.scroll({ top: 0 });
             }, false);
 
 
@@ -2582,10 +2586,10 @@
                 async function DB_ExportImport_JSONFormat(mode, importjson) {
                     if (mode === "export") {
                         try {
-                            const KeyList = await StorageApiKeynamelist();
+                            const KeyList = await storageAPI.keynameList();
                             let JSONObject = new Object;
                             await Promise.all(KeyList.map(async (keyName) => {
-                                JSONObject[keyName] = await StorageApiRead(keyName);
+                                JSONObject[keyName] = await storageAPI.read(keyName);
                             }));
                             return JSON.stringify(JSONObject);
                         } catch (e) {
@@ -2603,12 +2607,12 @@
                                 alert("エラー：設定を読み込めませんでした。JSONファイル（テキスト）が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。");
                                 return undefined;
                             }
-                            const ExistKeyList = await StorageApiKeynamelist();
+                            const ExistKeyList = await storageAPI.keynameList();
                             await Promise.all(ExistKeyList.map(async (ExistKey) => {
-                                await StorageApiDelete(ExistKey);
+                                await storageAPI.delete(ExistKey);
                             }));
                             await Promise.all(Object.keys(importset).map(async (keyName) => {
-                                await StorageApiWrite(keyName, importset[keyName]);
+                                await storageAPI.write(keyName, importset[keyName]);
                             }));
                             StorageLoad();
                             return true;
@@ -2622,6 +2626,7 @@
                 }
 
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+                DashboardMain_div.scroll({ top: 0 });
                 const DB_exportAndImport_div = document.createElement("div");
                 DB_exportAndImport_div.innerHTML = `
 <style type="text/css">
@@ -2754,6 +2759,7 @@
                 RootShadow.getElementById("ExportAndImportConfig_BackButton").addEventListener("click", () => {
                     Dashboard_Window_Ele_stack.pop().remove();
                     ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                    DashboardMain_div.scroll({ top: 0 });
                 }, false);
 
             }
