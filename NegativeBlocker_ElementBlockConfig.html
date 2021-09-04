@@ -4,6 +4,12 @@
   }
   select.ElementBlock_Select {
     width: 100%;
+    overflow: scroll;
+  }
+  option.ElementBlock_Option {
+    display: table;
+    min-width: 100%;
+    box-sizing: border-box;
   }
 </style>
 
@@ -72,6 +78,11 @@
       </label>
     </form>
     <button id="ElementBlockConfig3_Button"></button>
+    <br />
+    <label>
+      <input id="ElementBlockConfig3_Input1" type="checkbox" />
+      <span id="ElementBlockConfig3_Input1_SpanText"></span>
+    </label>
     <div class="ItemFrame_Border">
       <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
         <label>
@@ -115,7 +126,7 @@
     <select
       id="ElementBlockConfig4_Select"
       class="ElementBlock_Select"
-      size="7"
+      size="8"
       multiple
     >
       <option value="">-----</option>
@@ -126,7 +137,7 @@
         <select
           id="ElementBlockConfig4-2_Select"
           class="ElementBlock_Select"
-          size="7"
+          size="8"
           multiple
         >
           <option value="">-----</option>
@@ -137,18 +148,36 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig5_Description"></p>
-    <form id="ElementBlockConfig5_Form">
+    <select
+      id="ElementBlockConfig5_Select"
+      class="ElementBlock_Select"
+      size="1"
+    >
+      <option id="ElementBlockConfig5_Select_Option1" value="urlonly"></option>
+      <option
+        id="ElementBlockConfig5_Select_Option2"
+        value="titleonly"
+      ></option>
+      <option id="ElementBlockConfig5_Select_Option3" value="all"></option>
+    </select>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlockConfig6_Description"></p>
+    <form id="ElementBlockConfig6_Form">
       <label>
         <input type="radio" name="resultShow" value="none" checked />
-        <span id="ElementBlockConfig5_Form_Input1_SpanText"></span>
+        <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
       </label>
+      <br />
       <label>
         <input type="radio" name="resultShow" value="number" />
-        <span id="ElementBlockConfig5_Form_Input2_SpanText"></span>
+        <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
       </label>
+      <br />
       <label>
         <input type="radio" name="resultShow" value="property" />
-        <span id="ElementBlockConfig5_Form_Input3_SpanText"></span>
+        <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
       </label>
     </form>
   </div>

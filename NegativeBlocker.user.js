@@ -376,9 +376,12 @@
                 if (textURLArray === null) textURLArray = new Array();
                 const resultArray = await Promise.all([(async () => {
                     const resultTextArray = await Promise.all(textURLArray.map(async (textURL) => {
-                        const resultBoolArray = await Promise.all([urlMatchPatterns(BLT_uBL_Obj.matchPatterns, textURL), regexpAsync(BLT_uBL_Obj.regexp, textURL)]);
+                        let sourceSearchURL = textURL;
+                        if (sourceSearchURL.slice(0, 4) === "ttp:") sourceSearchURL = "h" + sourceSearchURL;
+                        if (sourceSearchURL.slice(0, 5) === "ttps:") sourceSearchURL = "h" + sourceSearchURL;
+                        const resultBoolArray = await Promise.all([urlMatchPatterns(BLT_uBL_Obj.matchPatterns, sourceSearchURL), regexpAsync(BLT_uBL_Obj.regexp, sourceSearchURL)]);
                         if (resultBoolArray.some(bool => bool === true)) {
-                            return this.escapeRegExp(textURL);
+                            return textURL;
                         } else {
                             return undefined;
                         }
@@ -387,12 +390,20 @@
                         return str !== undefined;
                     })
                 })(), (async () => {
-                    return await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
+                    let regexpTitlefilter = await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
+                    return regexpTitlefilter.map((str) => {
+                        try {
+                            return new RegExp(str, "gi");
+                        } catch (e) {
+                            console.error(e);
+                            return new RegExp("(?!)", "gi");
+                        }
+                    });
                 })()]);
                 return resultArray.reduce((pre, current) => {
                     pre.push(...current);
                     return pre;
-                }, [])
+                }, []);
             } else if (mode === "href") {
                 const resultBoolArray = await Promise.all([urlMatchPatterns(BLT_uBL_Obj.matchPatterns, source), regexpAsync(BLT_uBL_Obj.regexp, source)]);
                 if (resultBoolArray.some(bool => bool === true)) {
@@ -401,7 +412,15 @@
                     return new Array();
                 }
             } else if (mode === "text") {
-                return await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
+                let regexpTitlefilter = await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
+                return regexpTitlefilter.map((str) => {
+                    try {
+                        return new RegExp(str, "gi");
+                    } catch (e) {
+                        console.error(e);
+                        return new RegExp("(?!)", "gi");
+                    }
+                });
             } else return new Array();
         }
 
@@ -443,10 +462,7 @@
                                 regexp: uBlacklist_regexp,
                                 titleRegexp: uBlacklist_titleRegexp
                             }
-                            this.BlockListText_loadObj[keyName] = BlockListText_Obj;
-                            return true;
-                        }
-                        if (BlockListText_Obj.regexp) {
+                        } else if (BlockListText_Obj.regexp) {
                             let regexpFlag = 'g';
                             if (!BlockListText_Obj.caseSensitive) {
                                 regexpFlag = regexpFlag + 'i';
@@ -479,13 +495,14 @@
         }
 
         async BlockListTextSearch(BLT_name, sourceText, uBlacklistMode) {
+            let hitTextReturn = new Array();
             if (this.BlockListText_loadObj[BLT_name]) {
                 if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
-                    return await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, uBlacklistMode);
+                    hitTextReturn = await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, uBlacklistMode);
                 } else if (this.BlockListText_loadObj[BLT_name].spaceIgnore) {
                     let spaceRemoveText = sourceText.replace(/\s+/g, "");
                     let hitArray = new Array();
-                    const hitArrayReturn = new Array();
+                    const rehitArray = new Array();
                     if (this.BlockListText_loadObj[BLT_name].regexp) {
                         this.BlockListText_loadObj[BLT_name].text.forEach((searchText) => {
                             const searchResult = spaceRemoveText.match(searchText);
@@ -500,7 +517,7 @@
                         }
                         if (this.BlockListText_loadObj[BLT_name].exact) {
                             hitArray = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                return spaceRemoveText === searchText;
+                                return spaceRemoveText == searchText;
                             });
                         } else {
                             hitArray = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
@@ -524,13 +541,13 @@
                                 if (this.BlockListText_loadObj[BLT_name].regexp) {
                                     reHittext = new RegExp(this.escapeRegExp(reHittext), regexpFlag);
                                 }
-                                hitArrayReturn.push(reHittext)
+                                rehitArray.push(reHittext)
                             });
                         });
                     }
-                    return hitArrayReturn;
+                    hitTextReturn = rehitArray;
                 } else if (this.BlockListText_loadObj[BLT_name].regexp) {
-                    return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                    hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                         return searchText.test(sourceText);
                     });
                 } else {
@@ -538,15 +555,27 @@
                         sourceText = sourceText.toLowerCase();
                     }
                     if (this.BlockListText_loadObj[BLT_name].exact) {
-                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                            return sourceText === searchText;
+                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                            return sourceText == searchText;
                         });
                     } else {
-                        return this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
                             return sourceText.includes(searchText);
                         });
                     }
                 }
+                if (this.BlockListText_loadObj[BLT_name].notSearch) {
+                    if (hitTextReturn.length) {
+                        return new Array();
+                    } else {
+                        if (this.BlockListText_loadObj[BLT_name].regexp || this.BlockListText_loadObj[BLT_name].uBlacklist) {
+                            return new Array(new RegExp(this.escapeRegExp(sourceText)));
+                        } else {
+                            return new Array(sourceText);
+                        }
+                    }
+                }
+                return hitTextReturn;
             } else return new Array();
         }
     }
@@ -641,8 +670,11 @@
                                 sentenceReplaceFlag = true;
                             } else if (SB_Obj.replace_mode === "word") {
                                 await Promise.all(SB_Obj.BlockListText_list.map(async (BLT_name, index) => {
-                                    if (this.BlockListText_loadObj[BLT_name].regexp) {
+                                    if (this.BlockListText_loadObj[BLT_name].regexp || this.BlockListText_loadObj[BLT_name].uBlacklist) {
                                         searchResultArray[index].forEach((searchText) => {
+                                            if (!(searchText instanceof RegExp)) {
+                                                searchText = new RegExp(this.escapeRegExp(searchText));
+                                            }
                                             EleObj[PropertyName] = EleObj[PropertyName].replace(searchText, SB_Obj.replace_string);
                                         });
                                     } else {
@@ -776,6 +808,9 @@
                         } else if (eleBlockSet.elementSearch_method === "xpath") {
                             SearchEleNode = XPathSelectorAll(eleBlockSet.elementSearch, elementObj);
                         }
+                        if (eleBlockSet.elementSearch_firstOnly && SearchEleNode.length) {
+                            SearchEleNode = new Array(SearchEleNode[0]);
+                        }
                     } catch (e) {
                         console.error(e);
                         return;
@@ -783,31 +818,65 @@
 
                     Promise.all(Array.from(SearchEleNode).map(async (SearchEleObj) => {
                         let searchProperty;
-                        switch (eleBlockSet.elementSearch_property) {
-                            case "text":
-                                searchProperty = SearchEleObj.textContent;
-                                break;
-                            case "href":
-                                searchProperty = SearchEleObj.href;
-                                break;
-                            case "style":
-                                searchProperty = window.getComputedStyle(SearchEleObj)[eleBlockSet.elementSearch_property_style];
-                                break;
-                            case "advanced":
-                                searchProperty = SearchEleObj[eleBlockSet.elementSearch_property_advanced];
-                                break;
+                        try {
+                            switch (eleBlockSet.elementSearch_property) {
+                                case "text":
+                                    searchProperty = SearchEleObj.textContent;
+                                    break;
+                                case "href":
+                                    searchProperty = SearchEleObj.href;
+                                    break;
+                                case "style":
+                                    if (eleBlockSet.elementSearch_property_style == "__proto__") {
+                                        searchProperty = undefined;
+                                        break;
+                                    }
+                                    searchProperty = window.getComputedStyle(SearchEleObj)[eleBlockSet.elementSearch_property_style];
+                                    break;
+                                case "advanced":
+                                    if (eleBlockSet.elementSearch_property_advanced == "__proto__") {
+                                        searchProperty = undefined;
+                                        break;
+                                    }
+                                    searchProperty = SearchEleObj[eleBlockSet.elementSearch_property_advanced];
+                                    break;
+                                default:
+                                    searchProperty = undefined;
+                                    break;
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            searchProperty = undefined;
                         }
                         if (searchProperty === undefined) {
                             return;
                         }
 
                         const searchResult = await Promise.all(eleBlockSet.BlockListText_list.map(async (BLT_name) => {
-                            return await this.BlockListTextSearch(BLT_name, searchProperty, "href");
+                            switch (eleBlockSet.uBlacklist_method) {
+                                case "urlonly":
+                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "href");
+                                case "titleonly":
+                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "text");
+                                case "all":
+                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                                default:
+                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                            }
                         }));
 
                         if (searchResult.some(arr => arr.length)) {
                             const searchExcludeResult = await Promise.all(eleBlockSet.BlockListText_exclude_list.map(async (BLT_name) => {
-                                return await this.BlockListTextSearch(BLT_name, searchProperty, "href");
+                                switch (eleBlockSet.uBlacklist_method) {
+                                    case "urlonly":
+                                        return await this.BlockListTextSearch(BLT_name, searchProperty, "href");
+                                    case "titleonly":
+                                        return await this.BlockListTextSearch(BLT_name, searchProperty, "text");
+                                    case "all":
+                                        return await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                                    default:
+                                        return await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                                }
                             }));
 
                             if (!searchExcludeResult.some(arr => arr.length)) {
@@ -1061,12 +1130,12 @@
 
         function DashboardFrameBackWidthLimit() {
             const DashboardFrameBack = RootShadow.getElementById("FrameBack");
-            if (window.innerWidth <= 400) {
+            if (window.innerWidth <= 407) {
                 DashboardFrameBack.style.width = "calc(100vw - 7px)";
             } else {
                 DashboardFrameBack.style.width = "400px";
             }
-            if (window.innerHeight <= 630) {
+            if (window.innerHeight <= 650) {
                 DashboardFrameBack.style.height = "calc(100vh - 20px)";
             } else {
                 DashboardFrameBack.style.height = "630px";
@@ -1579,6 +1648,7 @@
                     this.caseSensitive_Ele = null;
                     this.exact_Ele = null;
                     this.spaceIgnore_Ele = null;
+                    this.notSearch_Ele = null;
                     this.uBlacklist_Ele = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
@@ -1588,6 +1658,7 @@
                         this.caseSensitive_Ele.checked = applylist.caseSensitive;
                         this.exact_Ele.checked = applylist.exact;
                         this.spaceIgnore_Ele.checked = applylist.spaceIgnore;
+                        this.notSearch_Ele.checked = applylist.notSearch;
                         this.uBlacklist_Ele.checked = applylist.uBlacklist;
 
                         const BlockListText_Keyname = "BLT_" + applylist.name;
@@ -1695,6 +1766,11 @@
       <input id="BlockListText_Config5_Input" type="checkbox" />
       <span id="BlockListText_Config5_SpanText"></span>
     </label>
+    <br />
+    <label>
+      <input id="BlockListText_Config6_Input" type="checkbox" />
+      <span id="BlockListText_Config6_SpanText"></span>
+    </label>
   </div>
   <div>
     <button id="BlockListText_BackButton"></button>
@@ -1715,7 +1791,8 @@
                     RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = "大文字と小文字を区別する";
                     RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = "完全一致";
                     RootShadow.getElementById("BlockListText_Config4_SpanText").textContent = "空白スペースを無視する";
-                    RootShadow.getElementById("BlockListText_Config5_SpanText").textContent = "uBlacklist形式を使用する";
+                    RootShadow.getElementById("BlockListText_Config5_SpanText").textContent = "NOT検索をする";
+                    RootShadow.getElementById("BlockListText_Config6_SpanText").textContent = "uBlacklist形式を使用する";
 
                     this.textareaDisable_Ele = RootShadow.getElementById("BlockListText_Textarea_Disable");
 
@@ -1726,7 +1803,8 @@
                     this.caseSensitive_Ele = RootShadow.getElementById("BlockListText_Config2_Input");
                     this.exact_Ele = RootShadow.getElementById("BlockListText_Config3_Input");
                     this.spaceIgnore_Ele = RootShadow.getElementById("BlockListText_Config4_Input");
-                    this.uBlacklist_Ele = RootShadow.getElementById("BlockListText_Config5_Input");
+                    this.notSearch_Ele = RootShadow.getElementById("BlockListText_Config5_Input");
+                    this.uBlacklist_Ele = RootShadow.getElementById("BlockListText_Config6_Input");
 
                     RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", (evt) => {
                         if (evt.target.files[0]) {
@@ -1799,6 +1877,7 @@
                         }
                     });
                     await StorageApiWrite("ElementBlock", JSON.stringify(ElementBlockStorageTemp));
+                    StorageLoad();
                 }
 
                 async BlockListText_storageSave() {
@@ -1810,6 +1889,7 @@
                         caseSensitive: this.caseSensitive_Ele.checked,
                         exact: this.exact_Ele.checked,
                         spaceIgnore: this.spaceIgnore_Ele.checked,
+                        notSearch: this.notSearch_Ele.checked,
                         uBlacklist: this.uBlacklist_Ele.checked
                     }
                     const StoObj_Text = {
@@ -1847,6 +1927,7 @@
                         this.caseSensitive_Ele.checked = false;
                         this.exact_Ele.checked = false;
                         this.spaceIgnore_Ele.checked = false;
+                        this.notSearch_Ele.checked = false;
                         this.uBlacklist_Ele.checked = false;
 
                         this.textarea_Ele.style.display = "block";
@@ -2059,11 +2140,13 @@
                     this.elementHide_hideMethod_Ele = null;
                     this.elementSearch_Ele = null;
                     this.elementSearch_method_Ele = null;
+                    this.elementSearch_firstOnly_Ele = null;
                     this.elementSearch_property_Ele = null;
                     this.elementSearch_property_style_Ele = null;
                     this.elementSearch_property_advanced_Ele = null;
                     this.BlockListText_list_Ele = null;
                     this.BlockListText_exclude_list_Ele = null;
+                    this.uBlacklist_method_Ele = null;
                     this.resultShow_Ele = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
@@ -2075,9 +2158,11 @@
                         this.elementHide_hideMethod_Ele.hideMethod.value = applylist.elementHide_hideMethod;
                         this.elementSearch_Ele.value = applylist.elementSearch;
                         this.elementSearch_method_Ele.pickerMethod.value = applylist.elementSearch_method;
+                        this.elementSearch_firstOnly_Ele.checked = applylist.elementSearch_firstOnly;
                         this.elementSearch_property_Ele.propertyMode.value = applylist.elementSearch_property;
                         this.elementSearch_property_style_Ele.value = applylist.elementSearch_property_style;
                         this.elementSearch_property_advanced_Ele.value = applylist.elementSearch_property_advanced;
+                        this.uBlacklist_method_Ele.value = applylist.uBlacklist_method;
                         this.resultShow_Ele.resultShow.value = applylist.resultShow;
 
                         Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
@@ -2113,6 +2198,12 @@
   }
   select.ElementBlock_Select {
     width: 100%;
+    overflow: scroll;
+  }
+  option.ElementBlock_Option {
+    display: table;
+    min-width: 100%;
+    box-sizing: border-box;
   }
 </style>
 
@@ -2181,6 +2272,11 @@
       </label>
     </form>
     <button id="ElementBlockConfig3_Button"></button>
+    <br />
+    <label>
+      <input id="ElementBlockConfig3_Input1" type="checkbox" />
+      <span id="ElementBlockConfig3_Input1_SpanText"></span>
+    </label>
     <div class="ItemFrame_Border">
       <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
         <label>
@@ -2224,7 +2320,7 @@
     <select
       id="ElementBlockConfig4_Select"
       class="ElementBlock_Select"
-      size="7"
+      size="8"
       multiple
     >
       <option value="">-----</option>
@@ -2235,7 +2331,7 @@
         <select
           id="ElementBlockConfig4-2_Select"
           class="ElementBlock_Select"
-          size="7"
+          size="8"
           multiple
         >
           <option value="">-----</option>
@@ -2246,18 +2342,36 @@
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig5_Description"></p>
-    <form id="ElementBlockConfig5_Form">
+    <select
+      id="ElementBlockConfig5_Select"
+      class="ElementBlock_Select"
+      size="1"
+    >
+      <option id="ElementBlockConfig5_Select_Option1" value="urlonly"></option>
+      <option
+        id="ElementBlockConfig5_Select_Option2"
+        value="titleonly"
+      ></option>
+      <option id="ElementBlockConfig5_Select_Option3" value="all"></option>
+    </select>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlockConfig6_Description"></p>
+    <form id="ElementBlockConfig6_Form">
       <label>
         <input type="radio" name="resultShow" value="none" checked />
-        <span id="ElementBlockConfig5_Form_Input1_SpanText"></span>
+        <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
       </label>
+      <br />
       <label>
         <input type="radio" name="resultShow" value="number" />
-        <span id="ElementBlockConfig5_Form_Input2_SpanText"></span>
+        <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
       </label>
+      <br />
       <label>
         <input type="radio" name="resultShow" value="property" />
-        <span id="ElementBlockConfig5_Form_Input3_SpanText"></span>
+        <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
       </label>
     </form>
   </div>
@@ -2284,6 +2398,7 @@
                     RootShadow.getElementById("ElementBlockConfig3_Form_Input1_SpanText").textContent = "CSS";
                     RootShadow.getElementById("ElementBlockConfig3_Form_Input2_SpanText").textContent = "XPath";
                     RootShadow.getElementById("ElementBlockConfig3_Button").textContent = "要素を選択する";
+                    RootShadow.getElementById("ElementBlockConfig3_Input1_SpanText").textContent = "複数の要素が見つかった場合、最初に見つかった要素のみ検索する";
                     RootShadow.getElementById("ElementBlockConfig3-2_Form_Input1_SpanText").textContent = "要素のテキストを検索する";
                     RootShadow.getElementById("ElementBlockConfig3-2_Form_Input2_SpanText").textContent = "要素のリンクを検索する（検索要素に「a」要素が含まれている場合のみ）";
                     RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = "要素のスタイルシートを検索する（上級者向け）";
@@ -2291,11 +2406,16 @@
                     RootShadow.getElementById("ElementBlockConfig4_Title").textContent = "NGフィルタ";
                     RootShadow.getElementById("ElementBlockConfig4_Description").textContent = "要素検索に使用するNGフィルタを指定します。";
                     RootShadow.getElementById("ElementBlockConfig4-2_Description").textContent = "除外リストも使用する場合は下のリストから選択してください。";
-                    RootShadow.getElementById("ElementBlockConfig5_Title").textContent = "ブロック適用リストの表示";
-                    RootShadow.getElementById("ElementBlockConfig5_Description").textContent = "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。";
-                    RootShadow.getElementById("ElementBlockConfig5_Form_Input1_SpanText").textContent = "非表示";
-                    RootShadow.getElementById("ElementBlockConfig5_Form_Input2_SpanText").textContent = "番号で表示";
-                    RootShadow.getElementById("ElementBlockConfig5_Form_Input3_SpanText").textContent = "検索要素のプロパティの値を表示";
+                    RootShadow.getElementById("ElementBlockConfig5_Title").textContent = "uBlacklist使用時の有効にする種類";
+                    RootShadow.getElementById("ElementBlockConfig5_Description").textContent = "uBlacklist使用時に有効にする種類を指定します。";
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option1").textContent = "マッチパターンと正規表現（検索対象の値がURLだけのみ有効）";
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option2").textContent = "\"title/\" のテキストのみ";
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option3").textContent = "すべての種類を使用する";
+                    RootShadow.getElementById("ElementBlockConfig6_Title").textContent = "ブロック適用リストの表示";
+                    RootShadow.getElementById("ElementBlockConfig6_Description").textContent = "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。";
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input1_SpanText").textContent = "非表示";
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input2_SpanText").textContent = "番号で表示";
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input3_SpanText").textContent = "検索要素のプロパティの値を表示";
                     RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = "←戻る";
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
@@ -2305,15 +2425,18 @@
                     this.elementHide_hideMethod_Ele = RootShadow.getElementById("ElementBlockConfig2-2_From");
                     this.elementSearch_Ele = RootShadow.getElementById("ElementBlockConfig3_InputText");
                     this.elementSearch_method_Ele = RootShadow.getElementById("ElementBlockConfig3_Form");
+                    this.elementSearch_firstOnly_Ele = RootShadow.getElementById("ElementBlockConfig3_Input1");
                     this.elementSearch_property_Ele = RootShadow.getElementById("ElementBlockConfig3-2_From");
                     this.elementSearch_property_style_Ele = RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_InputText");
                     this.elementSearch_property_advanced_Ele = RootShadow.getElementById("ElementBlockConfig3-2_Form_Input4_InputText");
                     this.BlockListText_list_Ele = RootShadow.getElementById("ElementBlockConfig4_Select");
                     this.BlockListText_exclude_list_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Select");
-                    this.resultShow_Ele = RootShadow.getElementById("ElementBlockConfig5_Form");
+                    this.uBlacklist_method_Ele = RootShadow.getElementById("ElementBlockConfig5_Select");
+                    this.resultShow_Ele = RootShadow.getElementById("ElementBlockConfig6_Form");
 
                     for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
+                        option.className = "ElementBlock_Option";
                         option.setAttribute("value", BlockListTextStorage[i].name);
                         option.textContent = BlockListTextStorage[i].name;
                         this.BlockListText_list_Ele.append(option);
@@ -2343,11 +2466,13 @@
                         elementHide_hideMethod: this.elementHide_hideMethod_Ele.hideMethod.value,
                         elementSearch: this.elementSearch_Ele.value,
                         elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
+                        elementSearch_firstOnly: this.elementSearch_firstOnly_Ele.checked,
                         elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
                         elementSearch_property_style: this.elementSearch_property_style_Ele.value,
                         elementSearch_property_advanced: this.elementSearch_property_advanced_Ele.value,
                         BlockListText_list: BLT_list_map,
                         BlockListText_exclude_list: BLT_exclude_list_map,
+                        uBlacklist_method: this.uBlacklist_method_Ele.value,
                         resultShow: this.resultShow_Ele.resultShow.value
                     }
                     await this.ListStoSave("ElementBlock", StoObj);
@@ -2367,11 +2492,13 @@
                         this.elementHide_hideMethod_Ele.hideMethod.value = "displayNone";
                         this.elementSearch_Ele.value = "";
                         this.elementSearch_method_Ele.pickerMethod.value = "css";
+                        this.elementSearch_firstOnly_Ele.checked = false;
                         this.elementSearch_property_Ele.propertyMode.value = "text";
                         this.elementSearch_property_style_Ele.value = "";
                         this.elementSearch_property_advanced_Ele.value = "";
                         this.BlockListText_list_Ele.value = "";
                         this.BlockListText_exclude_list_Ele.value = "";
+                        this.uBlacklist_method_Ele.value = "urlonly";
                         this.resultShow_Ele.resultShow.value = "number";
 
                         this.enable_Ele.checked = true;
