@@ -26,16 +26,16 @@
     let divElement_RootShadow;
     let Dashboard_Element;
     let DashboardMain_div;
-    let Dashboard_Window_Ele_stack = new Array();
+    const Dashboard_Window_Ele_stack = new Array();
     let DashboardButtonEle;
     let BlockCounter = 0;
     let readyStateCheckInterval;
 
-    let SentenceBlock_ExecuteResultList = new Array();
-    let ElementBlock_executeResultList = new Object();
+    const SentenceBlock_ExecuteResultList = new Array();
+    const ElementBlock_executeResultList = new Object();
 
-    let SentenceBlock_TempDisableElementArray = new Array();
-    let SentenceBlock_DuplicateList = new Array();
+    const SentenceBlock_TempDisableElementArray = new Array();
+    const SentenceBlock_DuplicateList = new Array();
 
     let BlockListTextStorage;
     let SentenceBlockStorage;
@@ -169,7 +169,10 @@
         if (PreferenceSettingStorage) {
             PreferenceSettingStorage = JSON.parse(PreferenceSettingStorage);
         } else {
-            PreferenceSettingStorage = new Object();
+            PreferenceSettingStorage = {
+                hideButton: false,
+                dashboardColor: "#ffffb2"
+            };
             await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
         }
 
@@ -581,21 +584,6 @@
             });
             await this.BlockListText_StorageLoad(this.SentenceBlock_filter2);
         }
-        async initReadyElement() {
-            const nodeText = document.evaluate('//text()', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            const nodePre = document.evaluate('//pre', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            if (nodeText.snapshotLength === 1 && nodePre.snapshotLength === 1) {
-                const del = nodeText.snapshotItem(0);
-                const lines = del.nodeValue.split(/\r?\n/);
-                const ins = document.createElement('pre');
-                ins.style.whiteSpace = 'pre-wrap';
-                del.parentNode.replaceChild(ins, del);
-                for (let i = 0; i < lines.length; i++) {
-                    ins.append(document.createTextNode(lines[i]));
-                    ins.append(document.createElement('br'));
-                }
-            }
-        }
         async Start(node) {
             this.SentenceBlock_BackgroundExecute(node, this.SentenceBlock_filter1);
             this.SentenceBlock_BackgroundExecute(node, this.SentenceBlock_filter2);
@@ -935,14 +923,12 @@
 
     async function initInsertElement() {
         if (!divElement_RootShadow) {
-            await BG_sentenceBlock_obj.initReadyElement();
-
             divElement_RootShadow = document.createElement("div");
             divElement_RootShadow.style.all = "initial";
             divElement_RootShadow.attachShadow({ mode: "open" });
             document.body.append(divElement_RootShadow);
 
-            if (!PreferenceSettingStorage["hideButton"] || PreferenceSettingStorage["hideButton"] === false) {
+            if (!PreferenceSettingStorage.hideButton || PreferenceSettingStorage.hideButton === false) {
                 if (!inIframeDetect()) {
                     DashboardButtonEle = document.createElement("button");
                     DashboardButtonEle.style.position = "fixed";
@@ -999,6 +985,7 @@
         Dashboard_Element.innerHTML = `
 <style type="text/css">
   div#FrameBack {
+    --CustomBackgroundColor: #ffffb2;
     all: initial;
     position: fixed;
     top: 0;
@@ -1046,7 +1033,7 @@
     border-color: black;
     text-align: left;
     font-size: medium;
-    background-color: #ffffb2;
+    background-color: var(--CustomBackgroundColor);
   }
   div#DashboardMain div.ItemFrame_Border {
     position: relative;
@@ -1062,7 +1049,7 @@
     padding: 0 4px;
     margin: 0;
     transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
+    background-color: var(--CustomBackgroundColor);
     white-space: nowrap;
   }
   div#DashboardMain input[type="text"] {
@@ -1097,6 +1084,11 @@
 </div>
 `
         RootShadow.append(Dashboard_Element);
+        if (PreferenceSettingStorage.dashboardColor) {
+            RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", PreferenceSettingStorage.dashboardColor);
+        } else {
+            RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", "#ffffb2");
+        }
 
         function DashboardFrameBackWidthLimit() {
             const DashboardFrameBack = RootShadow.getElementById("FrameBack");
@@ -2527,16 +2519,28 @@
 </style>
 
 <div id="PreferencesPage">
-  <div id="ImportAndExport_Setting" class="PreferencesItem">
-    <p id="ImportAndExport_Setting_Title"></p>
-    <button id="ImportAndExport_Setting_Button"></button>
+  <div id="ImportAndExport" class="ItemFrame_Border">
+    <h1 id="ImportAndExport_Title" class="ItemFrame_Title"></h1>
+    <p id="ImportAndExport_Description"></p>
+    <button id="ImportAndExport_Button"></button>
   </div>
-  <div id="ButtonHide_Setting" class="PreferencesItem">
-    <p id="ButtonHide_Setting_Title"></p>
+  <div id="ButtonHide" class="ItemFrame_Border">
+    <h1 id="ButtonHide_Title" class="ItemFrame_Title"></h1>
+    <p id="ButtonHide_Description"></p>
     <label>
-      <input id="ButtonHide_Setting_Input" type="checkbox" />
-      <span id="ButtonHide_Setting_Input_SpanText"></span>
+      <input id="ButtonHide_Input" type="checkbox" />
+      <span id="ButtonHide_Input_SpanText"></span>
     </label>
+  </div>
+  <div id="DashboardColor" class="ItemFrame_Border">
+    <h1 id="DashboardColor_Title" class="ItemFrame_Title"></h1>
+    <p id="DashboardColor_Description"></p>
+    <select id="DashboardColor_Select" size="1">
+      <option id="DashboardColor_Select_Option1" value="#FFB2B2"></option>
+      <option id="DashboardColor_Select_Option2" value="#ffffb2"></option>
+      <option id="DashboardColor_Select_Option3" value="#B2FFB2"></option>
+      <option id="DashboardColor_Select_Option4" value="#B2B2FF"></option>
+    </select>
   </div>
   <div id="SettingMainPageBack" class="PreferencesItem">
     <button id="PreferencesPageBack_Button"></button>
@@ -2546,34 +2550,57 @@
             DashboardMain_div.append(DB_preference_div);
             Dashboard_Window_Ele_stack.push(DB_preference_div);
 
-            RootShadow.getElementById("ImportAndExport_Setting_Title").innerHTML = "エクスポート&インポート<br>設定内容をエクスポートまたはインポートします。";
-            RootShadow.getElementById("ImportAndExport_Setting_Button").textContent = "エクスポート&インポート";
-            RootShadow.getElementById("ButtonHide_Setting_Title").innerHTML = "右上のボタンを常時非表示にする<br>右上のボタンを常時非表示にします。<br>（注意：UserScriptマネージャーのメニュー画面から設定ウィンドウを呼び出せない場合、このオプションを使用すると再インストールしない限り二度と設定画面を表示することはできなくなります。（再インストールした場合設定内容はすべて消去されます。）";
-            RootShadow.getElementById("ButtonHide_Setting_Input_SpanText").textContent = "ボタンを非表示にする";
+            RootShadow.getElementById("ImportAndExport_Title").textContent = "エクスポート&インポート";
+            RootShadow.getElementById("ImportAndExport_Description").textContent = "設定内容をエクスポートまたはインポートします。";
+            RootShadow.getElementById("ImportAndExport_Button").textContent = "エクスポート&インポート";
+            RootShadow.getElementById("ButtonHide_Title").textContent = "右上のボタンを常時非表示にする";
+            RootShadow.getElementById("ButtonHide_Description").textContent = "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。";
+            RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = "ボタンを非表示にする";
+            RootShadow.getElementById("DashboardColor_Title").textContent = "ダッシュボード背景色";
+            RootShadow.getElementById("DashboardColor_Description").textContent = "ダッシュボード画面全体の背景色の色を指定します。";
+            RootShadow.getElementById("DashboardColor_Select_Option1").textContent = "赤色";
+            RootShadow.getElementById("DashboardColor_Select_Option2").textContent = "黄色";
+            RootShadow.getElementById("DashboardColor_Select_Option3").textContent = "緑色";
+            RootShadow.getElementById("DashboardColor_Select_Option4").textContent = "青色";
             RootShadow.getElementById("PreferencesPageBack_Button").textContent = "←戻る";
 
-            RootShadow.getElementById("ImportAndExport_Setting_Button").addEventListener("click", DB_ExportImport, false);
+            RootShadow.getElementById("ImportAndExport_Button").addEventListener("click", DB_ExportImport, false);
 
-            const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Setting_Input");
-            if (PreferenceSettingStorage["hideButton"]) {
+            const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Input");
+            if (PreferenceSettingStorage.hideButton) {
                 ButtonHide_Setting_Input.checked = true;
             } else {
                 ButtonHide_Setting_Input.checked = false;
             }
-            ButtonHide_Setting_Input.addEventListener("change", async function () {
-                if (this.checked) {
-                    this.checked = false;
-                    const res = confirm("UserScriptマネージャーのメニュー画面から設定ウィンドウを呼び出せない場合、再インストールしないと二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
-                    if (res) {
-                        this.checked = true;
-                        PreferenceSettingStorage["hideButton"] = true;
-                        await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+            ButtonHide_Setting_Input.addEventListener("change", async (evt) => {
+                if (evt.target.checked) {
+                    try {
+                        // eslint-disable-next-line no-undef
+                        GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
+                    } catch (e) {
+                        console.error(e);
+                        evt.target.checked = false;
+                        const res = confirm("メニューAPIが検出されませんでした。このまま非表示にすると、再インストールして設定をすべて消去しない限り二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
+                        if (res) {
+                            evt.target.checked = true;
+                        } else {
+                            return;
+                        }
                     }
+                    PreferenceSettingStorage.hideButton = true;
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                 } else {
-                    PreferenceSettingStorage["hideButton"] = false;
+                    PreferenceSettingStorage.hideButton = false;
                     await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                 }
             });
+
+            RootShadow.getElementById("DashboardColor_Select").value = PreferenceSettingStorage.dashboardColor;
+            RootShadow.getElementById("DashboardColor_Select").addEventListener("change", async (evt) => {
+                PreferenceSettingStorage.dashboardColor = evt.target.value;
+                RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", evt.target.value);
+                await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+            })
 
             RootShadow.getElementById("PreferencesPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
@@ -2583,7 +2610,7 @@
 
 
             async function DB_ExportImport() {
-                async function DB_ExportImport_JSONFormat(mode, importjson) {
+                const DB_ExportImport_JSONFormat = async (mode, importjson) => {
                     if (mode === "export") {
                         try {
                             const KeyList = await storageAPI.keynameList();

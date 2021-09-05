@@ -1,5 +1,6 @@
 <style type="text/css">
   div#FrameBack {
+    --CustomBackgroundColor: #ffffb2;
     all: initial;
     position: fixed;
     top: 0;
@@ -47,7 +48,7 @@
     border-color: black;
     text-align: left;
     font-size: medium;
-    background-color: #ffffb2;
+    background-color: var(--CustomBackgroundColor);
   }
   div#DashboardMain div.ItemFrame_Border {
     position: relative;
@@ -63,7 +64,7 @@
     padding: 0 4px;
     margin: 0;
     transform: translateY(-50%) translateX(6px);
-    background-color: #ffffb2;
+    background-color: var(--CustomBackgroundColor);
     white-space: nowrap;
   }
   div#DashboardMain input[type="text"] {

@@ -9,16 +9,28 @@
 </style>
 
 <div id="PreferencesPage">
-  <div id="ImportAndExport_Setting" class="PreferencesItem">
-    <p id="ImportAndExport_Setting_Title"></p>
-    <button id="ImportAndExport_Setting_Button"></button>
+  <div id="ImportAndExport" class="ItemFrame_Border">
+    <h1 id="ImportAndExport_Title" class="ItemFrame_Title"></h1>
+    <p id="ImportAndExport_Description"></p>
+    <button id="ImportAndExport_Button"></button>
   </div>
-  <div id="ButtonHide_Setting" class="PreferencesItem">
-    <p id="ButtonHide_Setting_Title"></p>
+  <div id="ButtonHide" class="ItemFrame_Border">
+    <h1 id="ButtonHide_Title" class="ItemFrame_Title"></h1>
+    <p id="ButtonHide_Description"></p>
     <label>
-      <input id="ButtonHide_Setting_Input" type="checkbox" />
-      <span id="ButtonHide_Setting_Input_SpanText"></span>
+      <input id="ButtonHide_Input" type="checkbox" />
+      <span id="ButtonHide_Input_SpanText"></span>
     </label>
+  </div>
+  <div id="DashboardColor" class="ItemFrame_Border">
+    <h1 id="DashboardColor_Title" class="ItemFrame_Title"></h1>
+    <p id="DashboardColor_Description"></p>
+    <select id="DashboardColor_Select" size="1">
+      <option id="DashboardColor_Select_Option1" value="#FFB2B2"></option>
+      <option id="DashboardColor_Select_Option2" value="#ffffb2"></option>
+      <option id="DashboardColor_Select_Option3" value="#B2FFB2"></option>
+      <option id="DashboardColor_Select_Option4" value="#B2B2FF"></option>
+    </select>
   </div>
   <div id="SettingMainPageBack" class="PreferencesItem">
     <button id="PreferencesPageBack_Button"></button>
