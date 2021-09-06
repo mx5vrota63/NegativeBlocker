@@ -18,11 +18,26 @@
     <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig1_Description"></p>
     <input id="ElementBlockConfig1_Input1" type="text" spellcheck="false" />
+    <select id="ElementBlockConfig1_Select" size="1" style="display: none">
+      <option value="">-----</option>
+    </select>
     <br />
-    <label>
-      <input id="ElementBlockConfig1_Input2" type="checkbox" />
-      <span id="ElementBlockConfig1_Input2_SpanText"></span>
-    </label>
+    <form id="ElementBlockConfig1_Form">
+      <label>
+        <input type="radio" name="url_mode" value="wildcard" checked />
+        <span id="ElementBlockConfig1_Form_Input1_SpanText"></span>
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="url_mode" value="regexp" />
+        <span id="ElementBlockConfig1_Form_Input2_SpanText"></span>
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="url_mode" value="blt" />
+        <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
+      </label>
+    </form>
   </div>
 
   <div class="ItemFrame_Border">
@@ -137,6 +152,7 @@
       </div>
     </div>
   </div>
+
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig5_Description"></p>
@@ -153,6 +169,7 @@
       <option id="ElementBlockConfig5_Select_Option3" value="all"></option>
     </select>
   </div>
+
   <div class="ItemFrame_Border">
     <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig6_Description"></p>
@@ -173,6 +190,7 @@
       </label>
     </form>
   </div>
+
   <div>
     <button id="ElementBlockConfig_BackButton"></button>
   </div>

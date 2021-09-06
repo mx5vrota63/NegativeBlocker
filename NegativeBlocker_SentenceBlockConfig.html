@@ -17,12 +17,28 @@
     <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig1_Description"></p>
     <input id="SentenceBlockConfig1_Input1" type="text" spellcheck="false" />
+    <select id="SentenceBlockConfig1_Select" size="1" style="display: none">
+      <option value="">-----</option>
+    </select>
     <br />
-    <label>
-      <input id="SentenceBlockConfig1_Input2" type="checkbox" />
-      <span id="SentenceBlockConfig1_Input2_SpanText"></span>
-    </label>
+    <form id="SentenceBlockConfig1_Form">
+      <label>
+        <input type="radio" name="url_mode" value="wildcard" checked />
+        <span id="SentenceBlockConfig1_Form_Input1_SpanText"></span>
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="url_mode" value="regexp" />
+        <span id="SentenceBlockConfig1_Form_Input2_SpanText"></span>
+      </label>
+      <br />
+      <label>
+        <input type="radio" name="url_mode" value="blt" />
+        <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
+      </label>
+    </form>
   </div>
+
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig2_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig2_Description"></p>
@@ -48,6 +64,7 @@
       </div>
     </div>
   </div>
+
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig3_Description"></p>
@@ -63,6 +80,7 @@
       </label>
     </form>
   </div>
+
   <div class="ItemFrame_Border">
     <h1 id="SentenceBlockConfig4_Title" class="ItemFrame_Title"></h1>
     <p id="SentenceBlockConfig4_Description"></p>
@@ -82,6 +100,7 @@
       <option id="SentenceBlockConfig4_Select_Option3" value="all"></option>
     </select>
   </div>
+
   <div>
     <button id="SentenceBlockConfig_BackButton"></button>
   </div>
