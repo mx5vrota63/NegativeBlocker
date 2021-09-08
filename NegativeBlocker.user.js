@@ -942,66 +942,18 @@
         }
     }
 
+    async function BlockCounterUpdate() {
+        if (DashboardButtonEle) {
+            if (BlockCounter > 0) {
+                DashboardButtonEle.style.backgroundColor = "#FFAFAF"
+            }
+            DashboardButtonEle.textContent = "NB:" + BlockCounter;
+        }
+    }
+
     await BG_sentenceBlock_obj.init();
     await BG_elementBlock_Obj.init();
     await perModeObj.init();
-
-    if (perModeObj.performanceMode === "balance") {
-        console.log("test");
-    }
-
-    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
-    if (!fetchtimeStampGlobalStorage) {
-        fetchtimeStampGlobalStorage = Date.now();
-        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
-    }
-    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
-        BlockListText_feathLoad();
-    }
-
-    if (document.body != null) {
-        await initInsertElement();
-        StartExecute();
-        observerregister();
-        //readyStateSetInterval();
-    } else {
-        const observer = new MutationObserver(async () => {
-            if (document.body != null) {
-                observer.disconnect();
-                await initInsertElement();
-                StartExecute();
-                observerregister();
-                //readyStateSetInterval();
-            }
-        });
-
-        observer.observe(document, {
-            attributes: false,
-            attributeOldValue: false,
-            characterData: false,
-            characterDataOldValue: false,
-            childList: true,
-            subtree: true
-        });
-    }
-
-    /*
-    document.addEventListener("readystatechange", async (evt) => {
-        switch (evt.target.readyState) {
-            case "interactive":
-                await initInsertElement();
-                StartExecute();
-                break;
-            case "complete":
-                StartExecute();
-                //clearInterval(readyStateCheckInterval);
-                observerregister();
-                break;
-        }
-    }, { capture: true });
-    */
-
-
 
 
     async function StartExecute() {
@@ -1015,26 +967,10 @@
         }, 10);
     }
 
-    async function BlockCounterUpdate() {
-        if (DashboardButtonEle) {
-            if (BlockCounter > 0) {
-                DashboardButtonEle.style.backgroundColor = "#FFAFAF"
-            }
-            DashboardButtonEle.textContent = "NB:" + BlockCounter;
-        }
-    }
-
     async function observerregister() {
         const observer = new MutationObserver(async () => {
-            if (!observerExecuteFlag) {
-                observerExecuteFlag = true;
-                BG_elementBlock_Obj.Start(document.body);
-                BG_sentenceBlock_obj.Start(document.body);
-                await pauseSleep(perModeObj.interval_performancePriority);
-                BG_elementBlock_Obj.Start(document.body);
-                BG_sentenceBlock_obj.Start(document.body);
-                observerExecuteFlag = false;
-            }
+            BG_elementBlock_Obj.Start(document.body);
+            BG_sentenceBlock_obj.Start(document.body);
         });
         observer.observe(document.body, {
             attributes: false,
@@ -1045,6 +981,55 @@
             subtree: true
         });
     }
+
+
+
+    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
+    if (!fetchtimeStampGlobalStorage) {
+        fetchtimeStampGlobalStorage = Date.now();
+        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
+    }
+    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
+        BlockListText_feathLoad();
+    }
+
+    if (document.body != null) {
+        await initInsertElement();
+        StartExecute();
+        readyStateSetInterval();
+    } else {
+        const observer = new MutationObserver(async () => {
+            if (document.body != null) {
+                observer.disconnect();
+                await initInsertElement();
+                StartExecute();
+                readyStateSetInterval();
+            }
+        });
+        observer.observe(document, {
+            attributes: false,
+            attributeOldValue: false,
+            characterData: false,
+            characterDataOldValue: false,
+            childList: true,
+            subtree: true
+        })
+    }
+
+    document.addEventListener("readystatechange", async (evt) => {
+        switch (evt.target.readyState) {
+            case "interactive":
+                await initInsertElement();
+                StartExecute();
+                break;
+            case "complete":
+                StartExecute();
+                clearInterval(readyStateCheckInterval);
+                observerregister();
+                break;
+        }
+    }, { capture: true });
+
 
 
     // BackGround Fuction End
