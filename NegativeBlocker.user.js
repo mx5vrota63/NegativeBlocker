@@ -30,6 +30,9 @@
     let DashboardButtonEle;
     let BlockCounter = 0;
     let readyStateCheckInterval;
+    let lastInterval = Date.now();
+    let observerExecuteFlag = false;
+    let observerExecuteFlag2 = false;
 
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
@@ -102,6 +105,10 @@
         return XPathNode;
     }
 
+    function pauseSleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     async function copyTextToClipboard(text) {
         const textArea = document.createElement("textarea");
 
@@ -170,6 +177,15 @@
             PreferenceSettingStorage = JSON.parse(PreferenceSettingStorage);
         } else {
             PreferenceSettingStorage = {
+                performanceConfig: {
+                    mode: "balance",
+                    interval_performancePriority: 100,
+                    interval_balance: 10,
+                    overRide_disable: "",
+                    overRide_performancePriority: "",
+                    overRide_blockPriority: "",
+                    overRide_balance: "",
+                },
                 hideButton: false,
                 dashboardColor: "#ffffb2"
             };
@@ -241,38 +257,30 @@
                     const [URLAll, URLProtocol, URLDomain, URLPath] = URLSplit;
                     if (URLAll === "") return false;
 
-                    blockurlarray = blockurlarray.filter((str) => {
-                        if (str.slice(0, 2) === "*:" && (URLProtocol === "http" || URLProtocol === "https")) return true;
-                        if (str.slice(0, 5) === "http:" && URLProtocol === "http") return true;
-                        if (str.slice(0, 6) === "https:" && URLProtocol === "https") return true;
-                        if (str.slice(0, 3) === "ws:" && URLProtocol === "ws") return true;
-                        if (str.slice(0, 4) === "wss:" && URLProtocol === "wss") return true;
-                        if (str.slice(0, 4) === "ftp:" && URLProtocol === "ftp") return true;
-                        if (str.slice(0, 5) === "ftps:" && URLProtocol === "ftps") return true;
-                        return false;
+                    blockurlarray = blockurlarray.map((str) => {
+                        if (str.slice(0, 4) === "*://" && (URLProtocol === "http" || URLProtocol === "https")) return str.slice(4);
+                        if (str.slice(0, 7) === "http://" && URLProtocol === "http") return str.slice(7);
+                        if (str.slice(0, 8) === "https://" && URLProtocol === "https") return str.slice(8);
+                        if (str.slice(0, 5) === "ws://" && URLProtocol === "ws") return str.slice(5);
+                        if (str.slice(0, 6) === "wss://" && URLProtocol === "wss") return str.slice(6);
+                        if (str.slice(0, 6) === "ftp://" && URLProtocol === "ftp") return str.slice(6);
+                        if (str.slice(0, 7) === "ftps://" && URLProtocol === "ftps") return str.slice(7);
+                        return undefined;
                     });
 
                     DomainSplit = URLDomain.split(".");
-                    DomainSplit.reverse();
-
                     let DomainLinking = "";
                     for (let i = 0; i < DomainSplit.length; i++) {
-                        const domainRegexp = "^.*://(?:\\." + DomainSplit[i] + "|\\*)" + DomainLinking + "/.*$";
-                        blockurlarray.filter(RegExp.prototype.test, new RegExp(domainRegexp)).forEach((filterResult) => {
-                            urlhitarray.push(filterResult);
-                        });
                         if (i + 1 < DomainSplit.length) {
-                            DomainLinking = "\\." + DomainSplit[i] + DomainLinking;
+                            DomainLinking = DomainLinking + "(?:" + DomainSplit[i] + "\\.|(?=\\*)(?:^\\*\\.)?)";
                         } else {
-                            const domainRegexpLast = "^.*://(?:" + DomainSplit[i] + "|\\*\\." + DomainSplit[i] + ")" + DomainLinking + "/.*$";
-                            blockurlarray.filter(RegExp.prototype.test, new RegExp(domainRegexpLast)).forEach((filterResult) => {
-                                urlhitarray.push(filterResult);
-                            });
+                            DomainLinking = "^((?:\\*\\.)?)" + DomainLinking + "(?:" + DomainSplit[i] + "|(?=\\*)(?:^\\*)?)(?:$|/.*$)";
                         }
                     }
+                    urlhitarray = blockurlarray.filter(RegExp.prototype.test, new RegExp(DomainLinking));
 
                     if (urlhitarray.length) {
-                        if (urlhitarray.some(RegExp.prototype.test, new RegExp(/^.*:\/\/[^/]*\/\*$/))) return true;
+                        if (urlhitarray.some(RegExp.prototype.test, new RegExp(/^[^/]*\/\*$/))) return true;
 
                         pathSplit = URLPath.split("/");
                         pathSplit.splice(0, 1);
@@ -281,7 +289,7 @@
                             return this.escapeRegExp(str);
                         });
 
-                        let pathSimpleSeatch_regexp = "^.*://[^/]*/";
+                        let pathSimpleSeatch_regexp = "^[^/]*/";
                         for (let i = 0; i < pathSplit.length; i++) {
                             if (i + 1 < pathSplit.length) {
                                 pathSimpleSeatch_regexp = pathSimpleSeatch_regexp + "(?:" + pathSplit[i] + "/|(?=\\*)(?:\\*/)?)";
@@ -295,10 +303,10 @@
                         }
                         if (urlhitarray.some(RegExp.prototype.test, new RegExp(pathSimpleSeatch_regexp))) return true;
 
-                        const pathWildcardSearch_regexp = "^.*://[^/]*/.*(?=[^/]*\\*[^/]+(/|$)|[^/]+\\*[^/]*(/|$)).*"
+                        const pathWildcardSearch_regexp = "^[^/]*/.*(?=[^/]*\\*[^/]+(/|$)|[^/]+\\*[^/]*(/|$)).*"
                         const pathWildcardSearch_Result = urlhitarray.filter(RegExp.prototype.test, new RegExp(pathWildcardSearch_regexp));
                         return pathWildcardSearch_Result.some((str) => {
-                            str = str.replace(/^.*:\/\/[^/]*(\/.*)$/g, "$1");
+                            str = str.replace(/^[^/]*(\/.*)$/g, "$1");
                             str = new RegExp(this.escapeRegExpExcludewildcard(str).replace(/(.*)/, "^$&$"));
                             return str.test(URLPath);
                         });
@@ -480,13 +488,9 @@
                             spaceRemoveText = spaceRemoveText.toLowerCase();
                         }
                         if (this.BlockListText_loadObj[BLT_name].exact) {
-                            hitArray = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                return spaceRemoveText == searchText;
-                            });
+                            hitArray = this.BlockListText_loadObj[BLT_name].text.filter(searchText => spaceRemoveText == searchText);
                         } else {
-                            hitArray = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                                return spaceRemoveText.includes(searchText);
-                            });
+                            hitArray = this.BlockListText_loadObj[BLT_name].text.filter(String.prototype.includes, spaceRemoveText);
                         }
                     }
                     if (hitArray.length) {
@@ -519,13 +523,9 @@
                         sourceText = sourceText.toLowerCase();
                     }
                     if (this.BlockListText_loadObj[BLT_name].exact) {
-                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                            return sourceText == searchText;
-                        });
+                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter(searchText => sourceText == searchText);
                     } else {
-                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
-                            return sourceText.includes(searchText);
-                        });
+                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter(String.prototype.includes, sourceText);
                     }
                 }
                 if (this.BlockListText_loadObj[BLT_name].notSearch) {
@@ -878,78 +878,34 @@
         }
     }
 
-    await BG_sentenceBlock_obj.init();
-    await BG_elementBlock_Obj.init();
-
-    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
-    if (!fetchtimeStampGlobalStorage) {
-        fetchtimeStampGlobalStorage = Date.now();
-        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
-    }
-    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
-        BlockListText_feathLoad();
-    }
-
-    if (document.body != null) {
-        await initInsertElement();
-        StartExecute();
-        readyStateSetInterval();
-    } else {
-        const observer = new MutationObserver(async () => {
-            if (document.body != null) {
-                observer.disconnect();
-                await initInsertElement();
-                StartExecute();
-                readyStateSetInterval();
-            }
-        });
-
-        const config = {
-            attributes: false,
-            attributeOldValue: false,
-            characterData: false,
-            characterDataOldValue: false,
-            childList: true,
-            subtree: true
+    const perModeObj = new class extends BackGround_Func {
+        constructor() {
+            super();
+            this.performanceMode;
+            this.Config_Obj = PreferenceSettingStorage.performanceConfig;
+            this.interval_performancePriority = PreferenceSettingStorage.performanceConfig.interval_performancePriority;
+            this.interval_balance = PreferenceSettingStorage.performanceConfig.interval_balance;
         }
-
-        observer.observe(document, config)
-    }
-
-    document.addEventListener("readystatechange", async (evt) => {
-        switch (evt.target.readyState) {
-            case "interactive":
-                await initInsertElement();
-                StartExecute();
-                break;
-            case "complete":
-                StartExecute();
-                clearInterval(readyStateCheckInterval);
-                observerregister();
-                break;
+        async BLTCheck(BLT_name) {
+            if (BLT_name === "") return false;
+            const CurrentURL = location.href;
+            await this.BLT_loadFunction(BLT_name);
+            const result = await this.BlockListTextSearch(BLT_name, CurrentURL, "href");
+            if (result.length) return true;
+            else return false;
         }
-    }, { capture: true });
-
-
-
-
-    async function StartExecute() {
-        await BG_elementBlock_Obj.Start(document);
-        await BG_sentenceBlock_obj.Start(document);
-    }
-
-    async function readyStateSetInterval() {
-        readyStateCheckInterval = setInterval(async () => {
-            StartExecute();
-        }, 10);
-    }
-
-    async function BlockCounterUpdate() {
-        if (DashboardButtonEle) {
-            if (BlockCounter > 0) {
-                DashboardButtonEle.style.backgroundColor = "#FFAFAF"
+        async init() {
+            if (await this.BLTCheck(this.Config_Obj.overRide_disable)) {
+                this.performanceMode = "disable";
+            } else if (await this.BLTCheck(this.Config_Obj.overRide_performancePriority)) {
+                this.performanceMode = "performancePriority";
+            } else if (await this.BLTCheck(this.Config_Obj.overRide_blockPriority)) {
+                this.performanceMode = "blockPriority";
+            } else if (await this.BLTCheck(this.Config_Obj.overRide_balance)) {
+                this.performanceMode = "balance";
+            } else {
+                this.performanceMode = this.Config_Obj.mode;
             }
-            DashboardButtonEle.textContent = "NB:" + BlockCounter;
         }
     }
 
@@ -986,20 +942,108 @@
         }
     }
 
-    async function observerregister() {
+    await BG_sentenceBlock_obj.init();
+    await BG_elementBlock_Obj.init();
+    await perModeObj.init();
+
+    if (perModeObj.performanceMode === "balance") {
+        console.log("test");
+    }
+
+    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
+    if (!fetchtimeStampGlobalStorage) {
+        fetchtimeStampGlobalStorage = Date.now();
+        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
+    }
+    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
+        BlockListText_feathLoad();
+    }
+
+    if (document.body != null) {
+        await initInsertElement();
+        StartExecute();
+        observerregister();
+        //readyStateSetInterval();
+    } else {
         const observer = new MutationObserver(async () => {
-            BG_elementBlock_Obj.Start(document.body);
-            BG_sentenceBlock_obj.Start(document.body);
+            if (document.body != null) {
+                observer.disconnect();
+                await initInsertElement();
+                StartExecute();
+                observerregister();
+                //readyStateSetInterval();
+            }
         });
-        const config = {
+
+        observer.observe(document, {
             attributes: false,
             attributeOldValue: false,
             characterData: false,
             characterDataOldValue: false,
             childList: true,
             subtree: true
-        };
-        observer.observe(document.body, config);
+        });
+    }
+
+    /*
+    document.addEventListener("readystatechange", async (evt) => {
+        switch (evt.target.readyState) {
+            case "interactive":
+                await initInsertElement();
+                StartExecute();
+                break;
+            case "complete":
+                StartExecute();
+                //clearInterval(readyStateCheckInterval);
+                observerregister();
+                break;
+        }
+    }, { capture: true });
+    */
+
+
+
+
+    async function StartExecute() {
+        await BG_elementBlock_Obj.Start(document);
+        await BG_sentenceBlock_obj.Start(document);
+    }
+
+    async function readyStateSetInterval() {
+        readyStateCheckInterval = setInterval(async () => {
+            StartExecute();
+        }, 10);
+    }
+
+    async function BlockCounterUpdate() {
+        if (DashboardButtonEle) {
+            if (BlockCounter > 0) {
+                DashboardButtonEle.style.backgroundColor = "#FFAFAF"
+            }
+            DashboardButtonEle.textContent = "NB:" + BlockCounter;
+        }
+    }
+
+    async function observerregister() {
+        const observer = new MutationObserver(async () => {
+            if (!observerExecuteFlag) {
+                observerExecuteFlag = true;
+                BG_elementBlock_Obj.Start(document.body);
+                BG_sentenceBlock_obj.Start(document.body);
+                await pauseSleep(perModeObj.interval_performancePriority);
+                BG_elementBlock_Obj.Start(document.body);
+                BG_sentenceBlock_obj.Start(document.body);
+                observerExecuteFlag = false;
+            }
+        });
+        observer.observe(document.body, {
+            attributes: false,
+            attributeOldValue: false,
+            characterData: true,
+            characterDataOldValue: false,
+            childList: true,
+            subtree: true
+        });
     }
 
 
@@ -2653,6 +2697,11 @@
     <p id="ImportAndExport_Description"></p>
     <button id="ImportAndExport_Button"></button>
   </div>
+  <div id="PerformanceConfig" class="ItemFrame_Border">
+    <h1 id="PerformanceConfig_Title" class="ItemFrame_Title"></h1>
+    <p id="PerformanceConfig_Description"></p>
+    <button id="PerformanceConfig_Button"></button>
+  </div>
   <div id="ButtonHide" class="ItemFrame_Border">
     <h1 id="ButtonHide_Title" class="ItemFrame_Title"></h1>
     <p id="ButtonHide_Description"></p>
@@ -2682,6 +2731,9 @@
             RootShadow.getElementById("ImportAndExport_Title").textContent = "エクスポート&インポート";
             RootShadow.getElementById("ImportAndExport_Description").textContent = "設定内容をエクスポートまたはインポートします。";
             RootShadow.getElementById("ImportAndExport_Button").textContent = "エクスポート&インポート";
+            RootShadow.getElementById("PerformanceConfig_Title").textContent = "パフォーマンス設定";
+            RootShadow.getElementById("PerformanceConfig_Description").textContent = "拡張機能の動作頻度などのパフォーマンス関係の設定をします。";
+            RootShadow.getElementById("PerformanceConfig_Button").textContent = "パフォーマンス設定";
             RootShadow.getElementById("ButtonHide_Title").textContent = "右上のボタンを常時非表示にする";
             RootShadow.getElementById("ButtonHide_Description").textContent = "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。";
             RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = "ボタンを非表示にする";
@@ -2694,6 +2746,7 @@
             RootShadow.getElementById("PreferencesPageBack_Button").textContent = "←戻る";
 
             RootShadow.getElementById("ImportAndExport_Button").addEventListener("click", DB_ExportImport, false);
+            RootShadow.getElementById("PerformanceConfig_Button").addEventListener("click", DB_performanceConfig, false);
 
             const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Input");
             if (PreferenceSettingStorage.hideButton) {
@@ -2919,6 +2972,203 @@
                 }, false);
 
             }
+
+
+            async function DB_performanceConfig() {
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+                DashboardMain_div.scroll({ top: 0 });
+                const DB_performanceConfig_div = document.createElement("div");
+                DB_performanceConfig_div.innerHTML = `
+<style type="text/css">
+  div.PreferencesItem {
+    display: block;
+    margin: 0 0 20px 0;
+  }
+  #PerformanceConfig p {
+    margin: 0;
+  }
+</style>
+
+<div id="PerformanceConfig">
+  <div class="ItemFrame_Border">
+    <h1 id="PerformanceConfig1_Title" class="ItemFrame_Title"></h1>
+    <p id="PerformanceConfig1_Description1"></p>
+    <p id="PerformanceConfig1_Description2"></p>
+    <p id="PerformanceConfig1_Description3"></p>
+    <p id="PerformanceConfig1_Description4"></p>
+    <select id="PerformanceConfig1_Select">
+      <option id="PerformanceConfig1_Select_Option1" value="block"></option>
+      <option id="PerformanceConfig1_Select_Option2" value="balance"></option>
+      <option
+        id="PerformanceConfig1_Select_Option3"
+        value="performance"
+      ></option>
+    </select>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="PerformanceConfig2_Title" class="ItemFrame_Title"></h1>
+    <p id="PerformanceConfig2_Description1"></p>
+    <p id="PerformanceConfig2_Description2"></p>
+    <p id="PerformanceConfig2_Description3"></p>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig2_input1_SpanText"></span>
+      <input id="PerformanceConfig2_input1" type="number" value="100" />
+    </div>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig2_input2_SpanText"></span>
+      <input id="PerformanceConfig2_input2" type="number" value="10" />
+    </div>
+  </div>
+  <div class="ItemFrame_Border">
+    <h1 id="PerformanceConfig3_Title" class="ItemFrame_Title"></h1>
+    <p id="PerformanceConfig3_Description1"></p>
+    <p id="PerformanceConfig3_Description2"></p>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig3_Select1_SpanText"></span>
+      <select id="PerformanceConfig3_Select1" size="1">
+        <option value="">-----</option>
+      </select>
+    </div>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig3_Select2_SpanText"></span>
+      <select id="PerformanceConfig3_Select2" size="1">
+        <option value="">-----</option>
+      </select>
+    </div>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig3_Select3_SpanText"></span>
+      <select id="PerformanceConfig3_Select3" size="1">
+        <option value="">-----</option>
+      </select>
+    </div>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig3_Select4_SpanText"></span>
+      <select id="PerformanceConfig3_Select4" size="1">
+        <option value="">-----</option>
+      </select>
+    </div>
+  </div>
+  <div>
+    <button id="PerformanceConfig_BackButton"></button>
+    <button id="PerformanceConfig_SaveButton"></button>
+    <span id="PerformanceConfig_SaveInfoText" style="display: none"></span>
+  </div>
+</div>
+                `
+                DashboardMain_div.append(DB_performanceConfig_div);
+                Dashboard_Window_Ele_stack.push(DB_performanceConfig_div);
+
+                RootShadow.getElementById("PerformanceConfig1_Title").textContent = "モード設定";
+                RootShadow.getElementById("PerformanceConfig1_Description1").textContent = "パフォーマンスのモード設定をします。";
+                RootShadow.getElementById("PerformanceConfig1_Description2").textContent = "ブロック優先にするとページに変更があった場合、すぐにブロック動作をしますが、ページが重たくなる可能性があります。";
+                RootShadow.getElementById("PerformanceConfig1_Description3").textContent = "パフォーマンス優先にすると一定間隔でブロック動作をすることで処理を軽くしますが、一瞬ブロックする要素が表示される可能性があります。";
+                RootShadow.getElementById("PerformanceConfig1_Description4").textContent = "バランスにするとページを表示して読み込みが終わるまで、パフォーマンス優先で動作をし、読み込み完了後はブロック優先で動作します。";
+                RootShadow.getElementById("PerformanceConfig1_Select_Option1").textContent = "ブロック優先";
+                RootShadow.getElementById("PerformanceConfig1_Select_Option2").textContent = "バランス";
+                RootShadow.getElementById("PerformanceConfig1_Select_Option3").textContent = "パフォーマンス優先";
+
+                RootShadow.getElementById("PerformanceConfig2_Title").textContent = "動作間隔";
+                RootShadow.getElementById("PerformanceConfig2_Description1").textContent = "パフォーマンス優先モードまたはバランスモードを選択時の動作間隔の設定をします。";
+                RootShadow.getElementById("PerformanceConfig2_Description2").textContent = "ミリ単位で動作間隔の設定ができます。（1秒=1000ミリ）";
+                RootShadow.getElementById("PerformanceConfig2_Description3").textContent = "数値を大きくするほど動作が軽くなりますが、ブロック処理がその分遅れます。";
+                RootShadow.getElementById("PerformanceConfig2_input1_SpanText").textContent = "パフォーマンス優先モード";
+                RootShadow.getElementById("PerformanceConfig2_input2_SpanText").textContent = "バランスモード";
+
+                RootShadow.getElementById("PerformanceConfig3_Title").textContent = "サイト別設定";
+                RootShadow.getElementById("PerformanceConfig3_Description1").textContent = "ブロックリストテキストのマッチするサイトで動作モードを上書きすることができます。";
+                RootShadow.getElementById("PerformanceConfig3_Description2").textContent = "複数の設定でURLがマッチした場合、この設定項目に表示されている項目の一番上が優先されます。";
+                RootShadow.getElementById("PerformanceConfig3_Select1_SpanText").textContent = "無効化";
+                RootShadow.getElementById("PerformanceConfig3_Select2_SpanText").textContent = "パフォーマンス優先";
+                RootShadow.getElementById("PerformanceConfig3_Select3_SpanText").textContent = "ブロック優先";
+                RootShadow.getElementById("PerformanceConfig3_Select4_SpanText").textContent = "バランス";
+
+                RootShadow.getElementById("PerformanceConfig_BackButton").textContent = "←戻る";
+                RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = "保存";
+                RootShadow.getElementById("PerformanceConfig_SaveInfoText").textContent = "保存しました。"
+
+
+                const mode_ELe = RootShadow.getElementById("PerformanceConfig1_Select");
+                const interval_performancePriority_ELe = RootShadow.getElementById("PerformanceConfig2_input1");
+                const interval_balance_ELe = RootShadow.getElementById("PerformanceConfig2_input2");
+                const overRide_disable_Ele = RootShadow.getElementById("PerformanceConfig3_Select1");
+                const overRide_performancePriority_Ele = RootShadow.getElementById("PerformanceConfig3_Select2");
+                const overRide_blockPriority_Ele = RootShadow.getElementById("PerformanceConfig3_Select3");
+                const overRide_balance_Ele = RootShadow.getElementById("PerformanceConfig3_Select4");
+
+
+                ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach((eventName) => {
+                    [RootShadow.getElementById("PerformanceConfig2_input1"), RootShadow.getElementById("PerformanceConfig2_input2")].forEach((elemnetObj) => {
+                        elemnetObj.addEventListener(eventName, (evt) => {
+                            if (["-", "+", "e", "."].includes(evt.key)) {
+                                evt.preventDefault();
+                                return;
+                            }
+                            if (/^(?:(?!^0+)\d*\.?\d*|0)$/.test(evt.target.value)) {
+                                evt.target.oldValue = evt.target.value;
+                            } else if ("oldValue" in evt.target) {
+                                evt.target.value = evt.target.oldValue;
+                            } else {
+                                evt.target.value = "";
+                            }
+                        });
+                    })
+                });
+
+                for (let i = 0; i < BlockListTextStorage.length; i++) {
+                    const option = document.createElement("option");
+                    option.className = "PerformanceConfig_Option";
+                    option.setAttribute("value", BlockListTextStorage[i].name);
+                    option.textContent = BlockListTextStorage[i].name;
+                    overRide_disable_Ele.append(option);
+                    overRide_performancePriority_Ele.append(option.cloneNode(true));
+                    overRide_blockPriority_Ele.append(option.cloneNode(true));
+                    overRide_balance_Ele.append(option.cloneNode(true));
+                }
+
+                const Config_Obj = PreferenceSettingStorage.performanceConfig
+                if (Config_Obj) {
+                    mode_ELe.value = Config_Obj.mode;
+                    interval_performancePriority_ELe.value = Config_Obj.interval_performancePriority;
+                    interval_balance_ELe.value = Config_Obj.interval_balance;
+                    overRide_disable_Ele.value = Config_Obj.overRide_disable;
+                    overRide_performancePriority_Ele.value = Config_Obj.overRide_performancePriority;
+                    overRide_blockPriority_Ele.value = Config_Obj.overRide_blockPriority;
+                    overRide_balance_Ele.value = Config_Obj.overRide_balance;
+                } else {
+                    mode_ELe.value = "balance";
+                    interval_performancePriority_ELe.value = 100;
+                    interval_balance_ELe.value = 10;
+                    overRide_disable_Ele.value = "";
+                    overRide_performancePriority_Ele.value = "";
+                    overRide_blockPriority_Ele.value = "";
+                    overRide_balance_Ele.value = "";
+                }
+
+                RootShadow.getElementById("PerformanceConfig_SaveButton").addEventListener("click", async () => {
+                    const performanceConfig_setObj = {
+                        mode: mode_ELe.value,
+                        interval_performancePriority: interval_performancePriority_ELe.value,
+                        interval_balance: interval_balance_ELe.value,
+                        overRide_disable: overRide_disable_Ele.value,
+                        overRide_performancePriority: overRide_performancePriority_Ele.value,
+                        overRide_blockPriority: overRide_blockPriority_Ele.value,
+                        overRide_balance: overRide_balance_Ele.value
+                    }
+                    PreferenceSettingStorage.performanceConfig = performanceConfig_setObj;
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                    RootShadow.getElementById("PerformanceConfig_SaveInfoText").style.display = "";
+                    await pauseSleep(3000);
+                    RootShadow.getElementById("PerformanceConfig_SaveInfoText").style.display = "none";
+                }, false);
+
+                RootShadow.getElementById("PerformanceConfig_BackButton").addEventListener("click", () => {
+                    Dashboard_Window_Ele_stack.pop().remove();
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                    DashboardMain_div.scroll({ top: 0 });
+                }, false);
+            }
+
+
         }
     }
 
