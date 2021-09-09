@@ -29,8 +29,9 @@
     const Dashboard_Window_Ele_stack = new Array();
     let DashboardButtonEle;
     let BlockCounter = 0;
-    let readyStateCheckInterval;
-    let lastInterval = Date.now();
+
+    let observerInterval = 0;
+    let abc = Date.now();
     let observerExecuteFlag = false;
     let observerExecuteFlag2 = false;
 
@@ -98,9 +99,9 @@
 
     function XPathSelectorAll(expression, parentElement) {
         const XPathNode = new Array();
-        const evaluateobj = document.evaluate(expression, parentElement || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        for (let i = 0; i < evaluateobj.snapshotLength; i++) {
-            XPathNode.push(evaluateobj.snapshotItem(i));
+        const evaluateObj = document.evaluate(expression, parentElement || document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+        for (let i = 0; i < evaluateObj.snapshotLength; i++) {
+            XPathNode.push(evaluateObj.snapshotItem(i));
         }
         return XPathNode;
     }
@@ -490,7 +491,9 @@
                         if (this.BlockListText_loadObj[BLT_name].exact) {
                             hitArray = this.BlockListText_loadObj[BLT_name].text.filter(searchText => spaceRemoveText == searchText);
                         } else {
-                            hitArray = this.BlockListText_loadObj[BLT_name].text.filter(String.prototype.includes, spaceRemoveText);
+                            hitArray = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                                return spaceRemoveText.includes(searchText)
+                            });
                         }
                     }
                     if (hitArray.length) {
@@ -525,7 +528,9 @@
                     if (this.BlockListText_loadObj[BLT_name].exact) {
                         hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter(searchText => sourceText == searchText);
                     } else {
-                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter(String.prototype.includes, sourceText);
+                        hitTextReturn = this.BlockListText_loadObj[BLT_name].text.filter((searchText) => {
+                            return sourceText.includes(searchText)
+                        });
                     }
                 }
                 if (this.BlockListText_loadObj[BLT_name].notSearch) {
@@ -675,13 +680,18 @@
             if (!node) return;
 
             const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            const candidatesNode1 = new Array();
             for (let i = 0; i < candidates1.snapshotLength; i++) {
+                candidatesNode1.push(candidates1.snapshotItem(i));
                 textReplaceExecute(candidates1.snapshotItem(i), "nodeValue");
             }
             const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+            const candidatesNode2 = new Array();
             for (let i = 0; i < candidates2.snapshotLength; i++) {
-                textReplaceExecute(candidates2.snapshotItem(i), "value");
+                candidatesNode2.push(candidates2.snapshotItem(i));
+                // textReplaceExecute(candidates2.snapshotItem(i), "value");
             }
+            await Promise.all(candidatesNode1.map(async (arrNode) => { textReplaceExecute(arrNode, "nodeValue") }), candidatesNode2.map(async (arrNode) => { textReplaceExecute(arrNode, "value") }));
         }
     }
 
@@ -898,9 +908,9 @@
             if (await this.BLTCheck(this.Config_Obj.overRide_disable)) {
                 this.performanceMode = "disable";
             } else if (await this.BLTCheck(this.Config_Obj.overRide_performancePriority)) {
-                this.performanceMode = "performancePriority";
+                this.performanceMode = "performance";
             } else if (await this.BLTCheck(this.Config_Obj.overRide_blockPriority)) {
-                this.performanceMode = "blockPriority";
+                this.performanceMode = "block";
             } else if (await this.BLTCheck(this.Config_Obj.overRide_balance)) {
                 this.performanceMode = "balance";
             } else {
@@ -955,28 +965,39 @@
     await BG_elementBlock_Obj.init();
     await perModeObj.init();
 
-
-    async function StartExecute() {
-        await BG_elementBlock_Obj.Start(document);
-        await BG_sentenceBlock_obj.Start(document);
-    }
-
-    async function readyStateSetInterval() {
-        readyStateCheckInterval = setInterval(async () => {
-            StartExecute();
-        }, 10);
-    }
-
     async function observerregister() {
         const observer = new MutationObserver(async () => {
-            BG_elementBlock_Obj.Start(document.body);
-            BG_sentenceBlock_obj.Start(document.body);
+            /*
+            if (Date.now() - abc > 1000) {
+                // observerExecuteFlag = true;
+                BG_elementBlock_Obj.Start(document.body);
+                BG_sentenceBlock_obj.Start(document.body);
+                abc = Date.now();
+            }
+            */
+            if (!observerExecuteFlag) {
+                observerExecuteFlag = true;
+                await BG_elementBlock_Obj.Start(document.body);
+                await BG_sentenceBlock_obj.Start(document.body);
+                if (observerInterval != 0) {
+                    await pauseSleep(observerInterval);
+                }
+                await pauseSleep(1);
+                if (observerExecuteFlag2) {
+                    await BG_elementBlock_Obj.Start(document.body);
+                    await BG_sentenceBlock_obj.Start(document.body);
+                }
+                observerExecuteFlag2 = false;
+                observerExecuteFlag = false;
+            } else {
+                observerExecuteFlag2 = true;
+            }
         });
         observer.observe(document.body, {
-            attributes: false,
-            attributeOldValue: false,
+            attributes: true,
+            attributeOldValue: true,
             characterData: true,
-            characterDataOldValue: false,
+            characterDataOldValue: true,
             childList: true,
             subtree: true
         });
@@ -994,16 +1015,18 @@
     }
 
     if (document.body != null) {
-        await initInsertElement();
-        StartExecute();
-        readyStateSetInterval();
+        await observerregister();
+        initInsertElement();
+        BG_elementBlock_Obj.Start(document.body);
+        BG_sentenceBlock_obj.Start(document.body);
     } else {
         const observer = new MutationObserver(async () => {
             if (document.body != null) {
                 observer.disconnect();
-                await initInsertElement();
-                StartExecute();
-                readyStateSetInterval();
+                await observerregister();
+                initInsertElement();
+                BG_elementBlock_Obj.Start(document.body);
+                BG_sentenceBlock_obj.Start(document.body);
             }
         });
         observer.observe(document, {
@@ -1016,19 +1039,53 @@
         })
     }
 
-    document.addEventListener("readystatechange", async (evt) => {
-        switch (evt.target.readyState) {
-            case "interactive":
-                await initInsertElement();
-                StartExecute();
+    if (document.readyState == "complete") {
+        switch (perModeObj.performanceMode) {
+            case "balance":
+            case "block":
+                observerInterval = 0;
                 break;
-            case "complete":
-                StartExecute();
-                clearInterval(readyStateCheckInterval);
-                observerregister();
+            case "performance":
+                observerInterval = perModeObj.interval_performancePriority;
+                break;
+            default:
+                observerInterval = 0;
                 break;
         }
-    }, { capture: true });
+    } else {
+        switch (perModeObj.performanceMode) {
+            case "block":
+                observerInterval = 0;
+                break;
+            case "balance":
+                observerInterval = perModeObj.interval_balance;
+                break;
+            case "performance":
+                observerInterval = perModeObj.interval_performancePriority;
+                break;
+            default:
+                observerInterval = 0;
+                break;
+        }
+        document.addEventListener("readystatechange", async (evt) => {
+            switch (evt.target.readyState) {
+                case "complete":
+                    switch (perModeObj.performanceMode) {
+                        case "balance":
+                        case "block":
+                            observerInterval = 0;
+                            break;
+                        case "performance":
+                            observerInterval = perModeObj.interval_performancePriority;
+                            break;
+                        default:
+                            observerInterval = 0;
+                            break;
+                    }
+                    break;
+            }
+        }, { capture: true });
+    }
 
 
 
