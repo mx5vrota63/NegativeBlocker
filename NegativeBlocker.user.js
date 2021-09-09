@@ -31,7 +31,6 @@
     let BlockCounter = 0;
 
     let observerInterval = 0;
-    let abc = Date.now();
     let observerExecuteFlag = false;
     let observerExecuteFlag2 = false;
 
@@ -203,7 +202,6 @@
     }
     await StorageLoad();
 
-
     async function BlockListText_feathLoad() {
         await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
             if (BlockListText_Obj.fetch_enable) {
@@ -232,6 +230,16 @@
         await storageAPI.write("fetchLastTime", Date.now());
         console.log("fetch update");
     }
+
+    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
+    if (!fetchtimeStampGlobalStorage) {
+        fetchtimeStampGlobalStorage = Date.now();
+        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
+    }
+    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
+        BlockListText_feathLoad();
+    }
+
 
     // BackGround Fuction Start
     class BackGround_Func {
@@ -683,7 +691,7 @@
             const candidatesNode1 = new Array();
             for (let i = 0; i < candidates1.snapshotLength; i++) {
                 candidatesNode1.push(candidates1.snapshotItem(i));
-                textReplaceExecute(candidates1.snapshotItem(i), "nodeValue");
+                // textReplaceExecute(candidates1.snapshotItem(i), "nodeValue");
             }
             const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
             const candidatesNode2 = new Array();
@@ -961,31 +969,19 @@
         }
     }
 
-    await BG_sentenceBlock_obj.init();
-    await BG_elementBlock_Obj.init();
-    await perModeObj.init();
+    async function StartExecute() {
+        await BG_elementBlock_Obj.Start(document);
+        await BG_sentenceBlock_obj.Start(document);
+    }
 
     async function observerregister() {
         const observer = new MutationObserver(async () => {
-            /*
-            if (Date.now() - abc > 1000) {
-                // observerExecuteFlag = true;
-                BG_elementBlock_Obj.Start(document.body);
-                BG_sentenceBlock_obj.Start(document.body);
-                abc = Date.now();
-            }
-            */
             if (!observerExecuteFlag) {
                 observerExecuteFlag = true;
-                await BG_elementBlock_Obj.Start(document.body);
-                await BG_sentenceBlock_obj.Start(document.body);
-                if (observerInterval != 0) {
-                    await pauseSleep(observerInterval);
-                }
-                await pauseSleep(1);
+                StartExecute();
+                await pauseSleep(observerInterval);
                 if (observerExecuteFlag2) {
-                    await BG_elementBlock_Obj.Start(document.body);
-                    await BG_sentenceBlock_obj.Start(document.body);
+                    StartExecute();
                 }
                 observerExecuteFlag2 = false;
                 observerExecuteFlag = false;
@@ -994,104 +990,114 @@
             }
         });
         observer.observe(document.body, {
-            attributes: true,
-            attributeOldValue: true,
-            characterData: true,
-            characterDataOldValue: true,
-            childList: true,
-            subtree: true
-        });
-    }
-
-
-
-    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
-    if (!fetchtimeStampGlobalStorage) {
-        fetchtimeStampGlobalStorage = Date.now();
-        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
-    }
-    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
-        BlockListText_feathLoad();
-    }
-
-    if (document.body != null) {
-        await observerregister();
-        initInsertElement();
-        BG_elementBlock_Obj.Start(document.body);
-        BG_sentenceBlock_obj.Start(document.body);
-    } else {
-        const observer = new MutationObserver(async () => {
-            if (document.body != null) {
-                observer.disconnect();
-                await observerregister();
-                initInsertElement();
-                BG_elementBlock_Obj.Start(document.body);
-                BG_sentenceBlock_obj.Start(document.body);
-            }
-        });
-        observer.observe(document, {
             attributes: false,
             attributeOldValue: false,
-            characterData: false,
+            characterData: true,
             characterDataOldValue: false,
             childList: true,
             subtree: true
-        })
+        });
     }
 
-    if (document.readyState == "complete") {
-        switch (perModeObj.performanceMode) {
-            case "balance":
-            case "block":
-                observerInterval = 0;
-                break;
-            case "performance":
-                observerInterval = perModeObj.interval_performancePriority;
-                break;
-            default:
-                observerInterval = 0;
-                break;
+    await perModeObj.init();
+
+    if (perModeObj.performanceMode !== "disable") {
+        await BG_sentenceBlock_obj.init();
+        await BG_elementBlock_Obj.init();
+
+        if (document.body != null) {
+            await observerregister();
+            initInsertElement();
+        } else {
+            const observer = new MutationObserver(async () => {
+                if (document.body != null) {
+                    observer.disconnect();
+                    await observerregister();
+                    initInsertElement();
+                }
+            });
+            observer.observe(document, {
+                attributes: false,
+                attributeOldValue: false,
+                characterData: false,
+                characterDataOldValue: false,
+                childList: true,
+                subtree: true
+            })
         }
-    } else {
-        switch (perModeObj.performanceMode) {
-            case "block":
-                observerInterval = 0;
-                break;
-            case "balance":
-                observerInterval = perModeObj.interval_balance;
-                break;
-            case "performance":
-                observerInterval = perModeObj.interval_performancePriority;
-                break;
-            default:
-                observerInterval = 0;
-                break;
-        }
-        document.addEventListener("readystatechange", async (evt) => {
-            switch (evt.target.readyState) {
-                case "complete":
-                    switch (perModeObj.performanceMode) {
-                        case "balance":
-                        case "block":
-                            observerInterval = 0;
-                            break;
-                        case "performance":
-                            observerInterval = perModeObj.interval_performancePriority;
-                            break;
-                        default:
-                            observerInterval = 0;
-                            break;
-                    }
+
+        if (document.readyState == "complete") {
+            switch (perModeObj.performanceMode) {
+                case "balance":
+                case "block":
+                    observerInterval = 0;
+                    break;
+                case "performance":
+                    observerInterval = perModeObj.interval_performancePriority;
+                    break;
+                default:
+                    observerInterval = 0;
                     break;
             }
-        }, { capture: true });
+        } else {
+            switch (perModeObj.performanceMode) {
+                case "block":
+                    observerInterval = 0;
+                    break;
+                case "balance":
+                    observerInterval = perModeObj.interval_balance;
+                    break;
+                case "performance":
+                    observerInterval = perModeObj.interval_performancePriority;
+                    break;
+                default:
+                    observerInterval = 0;
+                    break;
+            }
+            document.addEventListener("readystatechange", async (evt) => {
+                switch (evt.target.readyState) {
+                    case "interactive":
+                        StartExecute();
+                        break;
+                    case "complete":
+                        switch (perModeObj.performanceMode) {
+                            case "balance":
+                            case "block":
+                                observerInterval = 0;
+                                break;
+                            case "performance":
+                                observerInterval = perModeObj.interval_performancePriority;
+                                break;
+                            default:
+                                observerInterval = 0;
+                                break;
+                        }
+                        break;
+                }
+            }, { capture: true });
+        }
+    } else {
+        if (document.body != null) {
+            initInsertElement();
+        } else {
+            const observer = new MutationObserver(async () => {
+                if (document.body != null) {
+                    observer.disconnect();
+                    initInsertElement();
+                }
+            });
+            observer.observe(document, {
+                attributes: false,
+                attributeOldValue: false,
+                characterData: false,
+                characterDataOldValue: false,
+                childList: true,
+                subtree: true
+            })
+        }
     }
 
-
-
     // BackGround Fuction End
-
-
 
 
     async function DashboardWindow() {
