@@ -2091,6 +2091,7 @@
   }
   textarea#BlockListText_Textarea {
     font-size: 16px;
+    font-family: Arial;
     resize: none;
     margin-left: -10px;
     width: calc(100% + 20px);
@@ -3192,6 +3193,8 @@
     margin: 0;
   }
   textarea#ExportAndImportConfig3_Textarea {
+    font-size: 16px;
+    font-family: Arial;
     resize: none;
     width: 100%;
     height: 300px;
