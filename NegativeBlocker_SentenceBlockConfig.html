@@ -10,6 +10,10 @@
     min-width: 100%;
     box-sizing: border-box;
   }
+  label.SentenceBlock_Label {
+    display: block;
+    margin: 5px 0 0 0;
+  }
 </style>
 
 <div id="SentenceBlockConfig" class="EditConfigObjectPage">
@@ -22,17 +26,15 @@
     </select>
     <br />
     <form id="SentenceBlockConfig1_Form">
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="url_mode" value="wildcard" checked />
         <span id="SentenceBlockConfig1_Form_Input1_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="url_mode" value="regexp" />
         <span id="SentenceBlockConfig1_Form_Input2_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="url_mode" value="blt" />
         <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
       </label>

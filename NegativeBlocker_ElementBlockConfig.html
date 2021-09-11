@@ -11,6 +11,16 @@
     min-width: 100%;
     box-sizing: border-box;
   }
+  label.ElementBlock_Label {
+    display: block;
+    margin: 5px 0 0 0;
+  }
+  form#ElementBlockConfig2_Form {
+    margin: 5px 0 5px 0;
+  }
+  form#ElementBlockConfig3_Form {
+    margin: 5px 0 5px 0;
+  }
 </style>
 
 <div id="ElementBlockConfig" class="EditConfigObjectPage">
@@ -21,19 +31,16 @@
     <select id="ElementBlockConfig1_Select" size="1" style="display: none">
       <option value="">-----</option>
     </select>
-    <br />
     <form id="ElementBlockConfig1_Form">
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="url_mode" value="wildcard" checked />
         <span id="ElementBlockConfig1_Form_Input1_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="url_mode" value="regexp" />
         <span id="ElementBlockConfig1_Form_Input2_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="url_mode" value="blt" />
         <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
       </label>
@@ -57,12 +64,11 @@
     <button id="ElementBlockConfig2_Button"></button>
     <div class="ItemFrame_Border">
       <form id="ElementBlockConfig2-2_From">
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="hideMethod" value="displayNone" checked />
           <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="hideMethod" value="remove" />
           <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
         </label>
@@ -85,24 +91,21 @@
       </label>
     </form>
     <button id="ElementBlockConfig3_Button"></button>
-    <br />
-    <label>
+    <label class="ElementBlock_Label">
       <input id="ElementBlockConfig3_Input1" type="checkbox" />
       <span id="ElementBlockConfig3_Input1_SpanText"></span>
     </label>
     <div class="ItemFrame_Border">
       <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="text" checked />
           <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="href" />
           <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="style" />
           <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
           <br />
@@ -112,8 +115,7 @@
             spellcheck="false"
           />
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="advanced" />
           <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
           <br />
@@ -174,17 +176,15 @@
     <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig6_Description"></p>
     <form id="ElementBlockConfig6_Form">
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="resultShow" value="none" checked />
         <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="resultShow" value="number" />
         <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="resultShow" value="property" />
         <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
       </label>

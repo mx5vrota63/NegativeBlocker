@@ -6,11 +6,16 @@
     height: calc(100% - 110px);
   }
   textarea#BlockListText_Textarea {
+    font-size: 16px;
     resize: none;
     margin-left: -10px;
     width: calc(100% + 20px);
     height: 100%;
     box-sizing: border-box;
+  }
+  label.BlockListText_Label {
+    display: block;
+    margin: 5px 0 0 0;
   }
 </style>
 
@@ -33,41 +38,35 @@
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_Fetch_Title" class="ItemFrame_Title"></h1>
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Fetch_InputCheckbox" type="checkbox" />
       <span id="BlockListText_Fetch_InputCheckbox_SpanText"></span>
     </label>
-    <br />
     <input id="BlockListText_Fetch_InputText" type="text" spellcheck="false" />
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config1_Input" type="checkbox" />
       <span id="BlockListText_Config1_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config2_Input" type="checkbox" />
       <span id="BlockListText_Config2_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config3_Input" type="checkbox" />
       <span id="BlockListText_Config3_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config4_Input" type="checkbox" />
       <span id="BlockListText_Config4_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config5_Input" type="checkbox" />
       <span id="BlockListText_Config5_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config6_Input" type="checkbox" />
       <span id="BlockListText_Config6_SpanText"></span>
     </label>

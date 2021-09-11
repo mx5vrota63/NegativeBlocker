@@ -32,10 +32,6 @@
 
     let observerInterval = 0;
     let dateInterval = Date.now();
-    /*
-    let observerExecuteFlag = false;
-    let observerExecuteFlag2 = false;
-    */
 
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
@@ -49,6 +45,175 @@
     let PreferenceSettingStorage;
     let SentenceBlockTempDisableArray;
     let fetchtimeStampGlobalStorage;
+
+    const lang = {
+        OKButton: "OK",
+        cancelButton: "キャンセル",
+        backButton: "←戻る",
+        DB_blockResult: {
+            sentenceBlock: "文章ブロック 適用リスト",
+            sentenceBlock_tempDisableButton: "一時無効を適用してリロード",
+            elementBlock: "要素ブロック 適用リスト",
+            elementBlock_Countcase: "件目",
+            settingPageButton: "設定画面",
+            reDisplay: "再表示する",
+            copy: "プロパティをコピー"
+        },
+        DB_settingsTop: {
+            blockListText_title: "ブロックリストテキスト設定",
+            blockListText_description: "グループ単位でブロックするテキストやURLなどを設定できます。",
+            blockListText_button: "ブロックリストテキストを設定する",
+            sentenceBlock_title: "文章ブロック機能",
+            sentenceBlock_description: "Webの文章内にブロックリストテキストが含まれる場合、その一文章または単語を別の文字に置換します。",
+            sentenceBlock_button: "文章ブロック機能を設定する",
+            elementBlock_title: "要素ブロック機能",
+            elementBlock_description: "要素の文字またはプロパティにブロックリストテキストが含まれる場合、要素ごとブロックします。",
+            elementBlock_button: "要素ブロック機能を設定する",
+            preferences_title: "環境設定",
+            preferences_description: "拡張機能全体の設定をします。",
+            preferences_button: "環境設定"
+        },
+        listEdit_Func: {
+            name: "名前：",
+            sort: "並び替え：",
+            enable: "有効：",
+            config: "設定編集：",
+            config_button: "設定編集",
+            new: "新規追加",
+            delete: "削除",
+            save: "保存",
+            editFlag_back: "トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？",
+            editFlag_new: "新規作成しますか？現在入力されている内容は失われます。",
+            editFlag_change: "設定フィールドを変更しますか？現在入力されている内容は失われます。",
+            deleteConfirm: "設定を削除してよろしいですか？",
+            error_nameEmpty: "エラー：名前を入力してください。",
+            error_nameDuplication: "エラー：すでに同じ名前が存在します。"
+        },
+        DB_blockListText: {
+            blockListText_title: "ブロックリストテキスト",
+            blockListText_URLoverWrite: "URLから取得する設定になっているため自動的にブロックリストテキストは上書きされます。",
+            blockListText_show: "テキストを表示",
+            textFile_title: "テキストファイルを読み込む",
+            textFile_overWrite: "現在入力されているテキストはファイルのテキストで上書きされます。よろしいですか？",
+            URLget_title: "URLから取得する",
+            URLget_enable: "有効",
+            option_title: "オプション",
+            option_regexp: "正規表現",
+            option_caseSensitive: "大文字と小文字を区別する",
+            option_exact: "完全一致",
+            option_spaceIgnore: "空白スペースを無視する",
+            option_notSearch: "NOT検索をする",
+            option_uBlacklist: "uBlacklist形式を使用する"
+        },
+        DB_sentenceBlock: {
+            URL_title: "URL",
+            URL_description: "このルールを有効にするサイトを指定します。何も入力せず空欄にするとすべてのサイトが対象になります。",
+            URL_wildcard: "ワイルドカード(*)",
+            URL_regexp: "正規表現",
+            URL_BLT: "ブロックリストテキスト",
+            BLT_title: "ブロックリストテキスト",
+            BLT_description: "使用するブロックリストテキストを指定します。Ctrlキー(MacはCommandキー）を押しながらクリックすると複数指定ができます。",
+            BLT_exclude: "除外設定を使用する場合は下のリストから選択してください。(複数可)",
+            replace_title: "置換文字",
+            replace_description: "置換する文字列を入力します。",
+            replace_sentence: "一文章で置換える",
+            replace_word: "単語で置換える",
+            aTag_title: "aタグのリンク置換",
+            aTag_description: "aタグのリンクを置換をするかどうか設定します。(aタグのリンクを置換するとリンクが正常に機能しなくなります。)",
+            aTag_hrefExclude: "aタグのリンクは置換えない",
+            aTag_hrefOnly: "aタグのリンクのみ置換える",
+            aTag_all: "すべて置換する"
+        },
+        DB_elementBlock: {
+            URL_title: "URL",
+            URL_description: "このルールを有効にするサイトを指定します。何も入力せず空欄にするとすべてのサイトが対象になります。",
+            URL_wildcard: "ワイルドカード(*)",
+            URL_regexp: "正規表現",
+            URL_BLT: "ブロックリストテキスト",
+            css: "CSS",
+            XPath: "XPath",
+            elementSelector: "要素を選択する",
+            eleHide_title: "非表示要素",
+            eleHide_description: "非表示する要素をCSS方式[querySelectorAll]かXPath方式[document.evaluate]で指定します。",
+            eleHide_displayNone: "非表示要素をCSSで非表示にする",
+            eleHide_remove: "非表示要素を削除する",
+            eleSearch_title: "検索要素",
+            eleSearch_description: "非表示するために検索する要素をCSS方式[querySelectorAll]かXPath方式[document.evaluate]で指定します。何も入力せず空欄にすると無条件で非表示要素を隠します。",
+            eleSearch_firstOnly: "複数の要素が見つかった場合、最初に見つかった要素のみ検索する",
+            eleSearch_methodText: "要素のテキストを検索する",
+            eleSearch_methodHref: "要素のリンクを検索する(検索要素が[a]要素の場合のみ)",
+            eleSearch_methodStyle: "要素のスタイルシートを検索する(上級者向け)",
+            eleSearch_methodAdvanced: "要素の要素のプロパティを直接指定する(上級者向け)",
+            BLT_title: "ブロックリストテキスト",
+            BLT_description: "使用するブロックリストテキストを指定します。Ctrlキー(MacはCommandキー）を押しながらクリックすると複数指定ができます。",
+            BLT_exclude: "除外設定を使用する場合は下のリストから選択してください。(複数可)",
+            uBlacklist_title: "uBlacklist使用時の有効にする種類",
+            uBlacklist_description: "uBlacklist使用時に有効にする種類を指定します。",
+            uBlacklist_urlOnly: "URLマッチパターンとURL正規表現(検索対象の値がURLだけのみ有効)",
+            uBlacklist_titleOnly: "\"title/\" のテキストのみ",
+            uBlacklist_all: "すべての種類を使用する",
+            resultShow_title: "ブロック適用リストの表示",
+            resultShow_description: "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。",
+            resultShow_none: "非表示",
+            resultShow_number: "番号で表示",
+            resultShow_property: "検索要素のプロパティの値を表示"
+        },
+        DB_preference: {
+            importAndExport_title: "エクスポート&インポート",
+            importAndExport_description: "設定内容をエクスポートまたはインポートします。",
+            importAndExport_button: "エクスポート&インポート",
+            performanceConfig_title: "パフォーマンス設定",
+            performanceConfig_description: "拡張機能の動作頻度などのパフォーマンス関係の設定をします。",
+            performanceConfig_button: "パフォーマンス設定",
+            buttonHide_title: "右上のボタンを常時非表示にする",
+            buttonHide_description: "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。",
+            buttonHide_boxText: "ボタンを非表示にする",
+            buttonHide_warning: "メニューAPIが検出されませんでした。このまま非表示にすると、再インストールして設定をすべて消去しない限り二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？",
+            dashboardColor_title: "ダッシュボード背景色",
+            dashboardColor_Description: "ダッシュボード画面全体の背景色の色を指定します。",
+            dashboardColor_red: "赤色",
+            dashboardColor_yellow: "黄色",
+            dashboardColor_green: "緑色",
+            dashboardColor_blue: "青色"
+        },
+        DB_exportImport: {
+            export_title: "エクスポート",
+            export_file: "JSONファイルでエクスポート",
+            export_copy: "JSON形式でクリップボードにコピー",
+            export_textArea: "テキストエリアにエクスポート(JSON形式)",
+            export_success: "エクスポートしました。",
+            import_title: "インポート",
+            import_file: "JSONファイルからインポート",
+            import_textArea: "テキストエリアからインポート(JSON形式)",
+            import_success: "インポートしました。",
+            import_overWrite: "現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？",
+            textArea_title: "テキストエリア",
+            error_export: "エラー：エクスポートに失敗しました。詳細はコンソールログを参照してください。",
+            error_import: "エラー：設定を読み込めませんでした。JSONファイル(テキスト)が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。"
+        },
+        DB_performanceConfig: {
+            disable: "無効化",
+            blockPriority: "ブロック優先",
+            balance: "バランス",
+            performancePriority1: "パフォーマンス優先(設定1)",
+            performancePriority2: "パフォーマンス優先(設定2)",
+            mode_title: "モード設定",
+            mode_description1: "パフォーマンスのモード設定をします。",
+            mode_description2: "ブロック優先にするとページに変更があった場合、すぐにブロック動作をしますが、ページが重たくなる可能性があります。",
+            mode_description3: "パフォーマンス優先にすると一定間隔でブロック動作をすることで処理を軽くしますが、一瞬ブロックする要素が表示される可能性があります。",
+            mode_description4: "バランスにするとページを表示して読み込みが終わるまで、パフォーマンス優先で動作をし、読み込み完了後はブロック優先で動作します。",
+            interval_title: "動作間隔",
+            interval_description1: "パフォーマンス優先モードまたはバランスモードを選択時の動作間隔の設定をします。",
+            interval_description2: "ミリ単位で動作間隔の設定ができます。(1秒=1000ミリ)",
+            interval_description3: "数値を大きくするほど動作が軽くなりますが、ブロック処理がその分遅れます。",
+            overRide_title: "サイト別設定",
+            overRide_description1: "ブロックリストテキストのマッチするサイトで動作モードを上書きすることができます。",
+            overRide_description2: "複数の設定でURLがマッチした場合、この設定項目に表示されている項目の一番上が優先されます。",
+            save: "保存",
+            saveInfo: "保存しました。"
+        }
+    }
+
 
     class storageAPI {
         constructor() { }
@@ -703,13 +868,11 @@
             const candidatesNode1 = new Array();
             for (let i = 0; i < candidates1.snapshotLength; i++) {
                 candidatesNode1.push(candidates1.snapshotItem(i));
-                // textReplaceExecute(candidates1.snapshotItem(i), "nodeValue");
             }
             const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
             const candidatesNode2 = new Array();
             for (let i = 0; i < candidates2.snapshotLength; i++) {
                 candidatesNode2.push(candidates2.snapshotItem(i));
-                // textReplaceExecute(candidates2.snapshotItem(i), "value");
             }
             await Promise.all(candidatesNode1.map(async (arrNode) => { textReplaceExecute(arrNode, "nodeValue") }), candidatesNode2.map(async (arrNode) => { textReplaceExecute(arrNode, "value") }));
         }
@@ -1236,7 +1399,7 @@
   </div>
   <div id="DashboardMain"></div>
 </div>
-`
+        `;
         RootShadow.append(Dashboard_Element);
         if (PreferenceSettingStorage.dashboardColor) {
             RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", PreferenceSettingStorage.dashboardColor);
@@ -1313,7 +1476,7 @@
     <button id="PopupMessageBox_OK"></button>
   </div>
 </div>
-        `;
+                `;
                 this.popup_Element.style.display = "none";
                 DashboardMain_div.append(this.popup_Element);
 
@@ -1321,8 +1484,8 @@
                 this.buttonOK_Ele = RootShadow.getElementById("PopupMessageBox_OK");
                 this.buttonCancel_Ele = RootShadow.getElementById("PopupMessageBox_Cancel");
 
-                this.buttonOK_Ele.textContent = "OK";
-                this.buttonCancel_Ele.textContent = "キャンセル";
+                this.buttonOK_Ele.textContent = lang.OKButton;
+                this.buttonCancel_Ele.textContent = lang.cancelButton;
             }
 
             async alert(message) {
@@ -1389,30 +1552,34 @@
 <div>
   <button id="ItemFrame-SettingPageButton"></button>
 </div>
-`
+            `;
             Dashboard_Window_Ele_stack.push(DB_blockResult_div);
             DashboardMain_div.append(DB_blockResult_div);
 
-            RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = "Webあぼーん 適用リスト";
-            RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = "一時無効を適用してリロード";
-            RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = "要素ブロック 適用リスト";
-            RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = "設定画面";
+            RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = lang.DB_blockResult.sentenceBlock;
+            RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = lang.DB_blockResult.sentenceBlock_tempDisableButton;
+            RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = lang.DB_blockResult.elementBlock;
+            RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = lang.DB_blockResult.settingPageButton;
 
             {
                 const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
 
                 for (let i = 0; i < SentenceBlock_ExecuteResultList.length; i++) {
-                    const span = document.createElement("span");
-                    span.textContent = SentenceBlock_ExecuteResultList[i].name + "(" + SentenceBlock_ExecuteResultList[i].count + ")";
-                    SentenceBlock_div.append(span);
+                    const label = document.createElement("label");
+                    label.style.display = "block";
+                    label.style.margin = "0 0 5px 0";
+                    {
+                        const input = document.createElement("input");
+                        input.setAttribute("type", "checkbox");
+                        input.setAttribute("name", SentenceBlock_ExecuteResultList[i].name);
+                        SentenceBlock_TempDisableElementArray.push(input);
+                        label.append(input);
 
-                    const input = document.createElement("input");
-                    input.setAttribute("type", "checkbox");
-                    input.setAttribute("name", SentenceBlock_ExecuteResultList[i].name);
-                    SentenceBlock_TempDisableElementArray.push(input);
-                    SentenceBlock_div.append(input);
-
-                    SentenceBlock_div.append(document.createElement("br"));
+                        const span = document.createElement("span");
+                        span.textContent = SentenceBlock_ExecuteResultList[i].name + "(" + SentenceBlock_ExecuteResultList[i].count + ")";
+                        label.append(span);
+                    }
+                    SentenceBlock_div.append(label);
                 }
             }
 
@@ -1434,28 +1601,28 @@
                     let resultEnable = false;
 
                     const div = document.createElement("div");
-                    div.style.border = "1px solid black"
+                    div.style.border = "1px solid black";
                     ElementBlock_executeResultList[keyName].forEach((arr, index) => {
                         if (arr.settingobj.resultShow === "none") return;
 
                         if (arr.settingobj.resultShow === "number") {
-                            const div_p = document.createElement("p")
+                            const div_p = document.createElement("p");
                             const indexNumShow = index + 1;
-                            div_p.textContent = indexNumShow + "件目";
+                            div_p.textContent = indexNumShow + lang.DB_blockResult.elementBlock_Countcase;
                             div.append(div_p);
                         } else if (arr.settingobj.resultShow === "property") {
-                            const div_p = document.createElement("p")
+                            const div_p = document.createElement("p");
                             div_p.textContent = arr.searchProperty;
                             div.append(div_p);
                         } else {
-                            const div_p = document.createElement("p")
+                            const div_p = document.createElement("p");
                             div_p.textContent = "";
                             div.append(div_p);
                         }
 
                         if (arr.element) {
                             const div_button1 = document.createElement("button");
-                            div_button1.textContent = "再表示する"
+                            div_button1.textContent = lang.DB_blockResult.reDisplay;
                             div_button1.addEventListener("click", () => {
                                 arr.element.style.display = "";
                             })
@@ -1463,8 +1630,9 @@
                         }
 
                         const div_button2 = document.createElement("button");
-                        div_button2.textContent = "コピー"
+                        div_button2.textContent = lang.DB_blockResult.copy;
                         div_button2.addEventListener("click", () => {
+                            if (arr.searchProperty === "") return;
                             copyTextToClipboard(arr.searchProperty);
                         })
                         div.append(div_button2);
@@ -1474,7 +1642,7 @@
 
                     if (resultEnable) {
                         const span = document.createElement("span");
-                        span.textContent = keyName
+                        span.textContent = keyName;
                         ElementBlock_div.append(span);
                         ElementBlock_div.append(div);
                     }
@@ -1522,31 +1690,31 @@
     <button id="SettingMainPageBack_Button"></button>
   </div>
 </div>
-            `
+            `;
             DashboardMain_div.append(DB_settingTop_div);
 
 
-            RootShadow.getElementById("BlockListText_Setting_Title").textContent = "ブロックリストテキスト設定";
-            RootShadow.getElementById("BlockListText_Setting_Description").textContent = "グループ単位でブロックするテキストやURLなどを設定できます。";
-            RootShadow.getElementById("BlockListText_Setting_Button").textContent = "NGフィルタを設定する";
+            RootShadow.getElementById("BlockListText_Setting_Title").textContent = lang.DB_settingsTop.blockListText_title;
+            RootShadow.getElementById("BlockListText_Setting_Description").textContent = lang.DB_settingsTop.blockListText_description;
+            RootShadow.getElementById("BlockListText_Setting_Button").textContent = lang.DB_settingsTop.blockListText_button;
             RootShadow.getElementById("BlockListText_Setting_Button").addEventListener("click", Dashboard_BlockListText, false);
 
-            RootShadow.getElementById("SentenceBlock_Setting_Title").textContent = "文章ブロック機能";
-            RootShadow.getElementById("SentenceBlock_Setting_Description").textContent = "Webの文章内にブロックリストテキストが含まれる場合、その一文章または単語を別の文字に置換します。";
-            RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = "Webあぼーん機能を設定する";
+            RootShadow.getElementById("SentenceBlock_Setting_Title").textContent = lang.DB_settingsTop.sentenceBlock_title;
+            RootShadow.getElementById("SentenceBlock_Setting_Description").textContent = lang.DB_settingsTop.sentenceBlock_description;
+            RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = lang.DB_settingsTop.sentenceBlock_button;
             RootShadow.getElementById("SentenceBlock_Setting_Button").addEventListener("click", Dashboard_SentenceBlock, false);
 
-            RootShadow.getElementById("ElementBlock_Setting_Title").textContent = "要素ブロック機能";
-            RootShadow.getElementById("ElementBlock_Setting_Description").textContent = "要素の文字またはプロパティにブロックリストテキストが含まれる場合、要素ごとブロックします。";
-            RootShadow.getElementById("ElementBlock_Setting_Button").textContent = "要素ブロック機能を設定する";
+            RootShadow.getElementById("ElementBlock_Setting_Title").textContent = lang.DB_settingsTop.elementBlock_title;
+            RootShadow.getElementById("ElementBlock_Setting_Description").textContent = lang.DB_settingsTop.elementBlock_description;
+            RootShadow.getElementById("ElementBlock_Setting_Button").textContent = lang.DB_settingsTop.elementBlock_button;
             RootShadow.getElementById("ElementBlock_Setting_Button").addEventListener("click", Dashboard_ElementBlock, false);
 
-            RootShadow.getElementById("Preferences_Setting_Title").textContent = "環境設定";
-            RootShadow.getElementById("Preferences_Setting_Description").textContent = "拡張機能全体の設定をします。";
-            RootShadow.getElementById("Preferences_Setting_Button").textContent = "環境設定";
+            RootShadow.getElementById("Preferences_Setting_Title").textContent = lang.DB_settingsTop.preferences_title;
+            RootShadow.getElementById("Preferences_Setting_Description").textContent = lang.DB_settingsTop.preferences_description;
+            RootShadow.getElementById("Preferences_Setting_Button").textContent = lang.DB_settingsTop.preferences_button;
             RootShadow.getElementById("Preferences_Setting_Button").addEventListener("click", Dashboard_PreferencePage, false);
 
-            RootShadow.getElementById("SettingMainPageBack_Button").textContent = "←戻る";
+            RootShadow.getElementById("SettingMainPageBack_Button").textContent = lang.backButton;
             RootShadow.getElementById("SettingMainPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
@@ -1658,18 +1826,18 @@
     <button id="SettingsObject_ActionButton_SaveObject"></button>
   </div>
 </div>
-                `
+                `;
                 DashboardMain_div.append(this.ListEditPage_Ele);
 
-                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = "名前：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = "並び替え：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Span").textContent = "有効：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Span").textContent = "設定編集：";
-                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").textContent = "設定編集";
-                RootShadow.getElementById("SettingsObject_ActionButton_Back").textContent = "←戻る";
-                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").textContent = "新規追加";
-                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").textContent = "削除";
-                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").textContent = "保存";
+                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = lang.listEdit_Func.name;
+                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = lang.listEdit_Func.sort;
+                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Span").textContent = lang.listEdit_Func.enable;
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Span").textContent = lang.listEdit_Func.config;
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").textContent = lang.listEdit_Func.config_button;
+                RootShadow.getElementById("SettingsObject_ActionButton_Back").textContent = lang.backButton;
+                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").textContent = lang.listEdit_Func.new;
+                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").textContent = lang.listEdit_Func.delete;
+                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").textContent = lang.listEdit_Func.save;
 
                 this.ulol_Ele = RootShadow.getElementById("ObjectLists_ol");
                 this.editarea_Ele = RootShadow.getElementById("SettingsObject_ConfigItems");
@@ -1705,7 +1873,7 @@
 
                 RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", async () => {
                     if (this.Editflag) {
-                        const res = await popup.confirm("トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？");
+                        const res = await popup.confirm(lang.listEdit_Func.editFlag_back);
                         if (!res) {
                             return false;
                         }
@@ -1722,7 +1890,7 @@
 
             async ListStoSave(StoKey, StoObj) {
                 if (StoObj.name === "") {
-                    await popup.alert("エラー：名前を入力してください。");
+                    await popup.alert(lang.listEdit_Func.error_nameEmpty);
                     return false;
                 }
                 const fiindex = this.ListStorage.findIndex(({ name }) => name === this.currentName);
@@ -1734,7 +1902,7 @@
                 }
                 const dupcheck2 = dupcheck1.filter((v) => v.name === StoObj.name);
                 if (dupcheck2.length) {
-                    await popup.alert("エラー：すでに同じ名前が存在します。");
+                    await popup.alert(lang.listEdit_Func.error_nameDuplication);
                     return false;
                 }
                 if (fiindex !== -1) {
@@ -1759,7 +1927,7 @@
             async ListStoDel(StoKey) {
                 const fiindex = this.ListStorage.findIndex(({ name }) => name === this.currentName);
                 if (fiindex !== -1) {
-                    const res = await popup.confirm("[" + this.currentName + "]設定を削除してよろしいですか？");
+                    const res = await popup.confirm("[" + this.currentName + "]" + lang.listEdit_Func.deleteConfirm);
                     if (!res) {
                         return false;
                     }
@@ -1777,7 +1945,7 @@
 
             async NewEditButton(NewbuttonEle) {
                 if (this.Editflag) {
-                    const res = await popup.confirm("新規作成しますか？現在入力されている内容は失われます。");
+                    const res = await popup.confirm(lang.listEdit_Func.editFlag_new);
                     if (!res) {
                         return false;
                     }
@@ -1794,7 +1962,7 @@
             async li_cfunc(cfunchandlersIndex, cfuncinfunction_arg) {
                 return this.li_cfunchandlers[cfunchandlersIndex] || (this.li_cfunchandlers[cfunchandlersIndex] = async () => {
                     if (this.Editflag) {
-                        const res = await popup.confirm("設定フィールドを変更しますか？現在入力されている内容は失われます。");
+                        const res = await popup.confirm(lang.listEdit_Func.editFlag_change);
                         if (!res) {
                             return false;
                         }
@@ -1922,11 +2090,16 @@
     height: calc(100% - 110px);
   }
   textarea#BlockListText_Textarea {
+    font-size: 16px;
     resize: none;
     margin-left: -10px;
     width: calc(100% + 20px);
     height: 100%;
     box-sizing: border-box;
+  }
+  label.BlockListText_Label {
+    display: block;
+    margin: 5px 0 0 0;
   }
 </style>
 
@@ -1949,41 +2122,35 @@
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_Fetch_Title" class="ItemFrame_Title"></h1>
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Fetch_InputCheckbox" type="checkbox" />
       <span id="BlockListText_Fetch_InputCheckbox_SpanText"></span>
     </label>
-    <br />
     <input id="BlockListText_Fetch_InputText" type="text" spellcheck="false" />
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config1_Input" type="checkbox" />
       <span id="BlockListText_Config1_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config2_Input" type="checkbox" />
       <span id="BlockListText_Config2_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config3_Input" type="checkbox" />
       <span id="BlockListText_Config3_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config4_Input" type="checkbox" />
       <span id="BlockListText_Config4_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config5_Input" type="checkbox" />
       <span id="BlockListText_Config5_SpanText"></span>
     </label>
-    <br />
-    <label>
+    <label class="BlockListText_Label">
       <input id="BlockListText_Config6_Input" type="checkbox" />
       <span id="BlockListText_Config6_SpanText"></span>
     </label>
@@ -1992,24 +2159,24 @@
     <button id="BlockListText_BackButton"></button>
   </div>
 </div>
-            `
+            `;
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
-                    RootShadow.getElementById("BlockListText_Textarea_Title").textContent = "ブロックリストテキスト";
-                    RootShadow.getElementById("BlockListText_Textarea_Disable_SpanText").textContent = "URLから取得する設定になっているため自動的にブロックリストテキストは上書きされます。";
-                    RootShadow.getElementById("BlockListText_Textarea_Disable_ShowButton").textContent = "テキストを表示";
-                    RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = "テキストファイルを読み込む";
-                    RootShadow.getElementById("BlockListText_Fetch_Title").textContent = "URLから取得する";
-                    RootShadow.getElementById("BlockListText_Fetch_InputCheckbox_SpanText").textContent = "有効";
-                    RootShadow.getElementById("BlockListText_Config_Title").textContent = "オプション";
-                    RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = "正規表現";
-                    RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = "大文字と小文字を区別する";
-                    RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = "完全一致";
-                    RootShadow.getElementById("BlockListText_Config4_SpanText").textContent = "空白スペースを無視する";
-                    RootShadow.getElementById("BlockListText_Config5_SpanText").textContent = "NOT検索をする";
-                    RootShadow.getElementById("BlockListText_Config6_SpanText").textContent = "uBlacklist形式を使用する";
-                    RootShadow.getElementById("BlockListText_BackButton").textContent = "←戻る"
+                    RootShadow.getElementById("BlockListText_Textarea_Title").textContent = lang.DB_blockListText.blockListText_title;
+                    RootShadow.getElementById("BlockListText_Textarea_Disable_SpanText").textContent = lang.DB_blockListText.blockListText_URLoverWrite;
+                    RootShadow.getElementById("BlockListText_Textarea_Disable_ShowButton").textContent = lang.DB_blockListText.blockListText_show;
+                    RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = lang.DB_blockListText.textFile_title;
+                    RootShadow.getElementById("BlockListText_Fetch_Title").textContent = lang.DB_blockListText.URLget_title;
+                    RootShadow.getElementById("BlockListText_Fetch_InputCheckbox_SpanText").textContent = lang.DB_blockListText.URLget_enable;
+                    RootShadow.getElementById("BlockListText_Config_Title").textContent = lang.DB_blockListText.option_title;
+                    RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = lang.DB_blockListText.option_regexp;
+                    RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = lang.DB_blockListText.option_caseSensitive;
+                    RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = lang.DB_blockListText.option_exact;
+                    RootShadow.getElementById("BlockListText_Config4_SpanText").textContent = lang.DB_blockListText.option_spaceIgnore;
+                    RootShadow.getElementById("BlockListText_Config5_SpanText").textContent = lang.DB_blockListText.option_notSearch;
+                    RootShadow.getElementById("BlockListText_Config6_SpanText").textContent = lang.DB_blockListText.option_uBlacklist;
+                    RootShadow.getElementById("BlockListText_BackButton").textContent = lang.backButton;
 
                     this.textareaDisable_Ele = RootShadow.getElementById("BlockListText_Textarea_Disable");
 
@@ -2026,7 +2193,7 @@
                     RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", async (evt) => {
                         const targetElement = evt.target;
                         if (targetElement.files[0]) {
-                            const res = await popup.confirm("現在入力されているテキストはファイルのテキストで上書きされます。よろしいですか？");
+                            const res = await popup.confirm(lang.DB_blockListText.textFile_overWrite);
                             if (!res) {
                                 targetElement.value = "";
                                 return false;
@@ -2227,6 +2394,10 @@
     min-width: 100%;
     box-sizing: border-box;
   }
+  label.SentenceBlock_Label {
+    display: block;
+    margin: 5px 0 0 0;
+  }
 </style>
 
 <div id="SentenceBlockConfig" class="EditConfigObjectPage">
@@ -2239,17 +2410,15 @@
     </select>
     <br />
     <form id="SentenceBlockConfig1_Form">
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="url_mode" value="wildcard" checked />
         <span id="SentenceBlockConfig1_Form_Input1_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="url_mode" value="regexp" />
         <span id="SentenceBlockConfig1_Form_Input2_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="url_mode" value="blt" />
         <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
       </label>
@@ -2322,28 +2491,28 @@
     <button id="SentenceBlockConfig_BackButton"></button>
   </div>
 </div>
-                    `
+                    `;
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
-                    RootShadow.getElementById("SentenceBlockConfig1_Title").textContent = "URL";
-                    RootShadow.getElementById("SentenceBlockConfig1_Description").textContent = "このルールを有効にするサイトを指定します。何も入力せず空欄にするとすべてのサイトが対象になります。";
-                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input1_SpanText").textContent = "ワイルドカード";
-                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input2_SpanText").textContent = "正規表現";
-                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input3_SpanText").textContent = "ブロックリストテキスト";
-                    RootShadow.getElementById("SentenceBlockConfig2_Title").textContent = "NGフィルタ";
-                    RootShadow.getElementById("SentenceBlockConfig2_Description").textContent = "使用するNGフィルタを指定します。";
-                    RootShadow.getElementById("SentenceBlockConfig2-2_Description").textContent = "除外リストも使用する場合は下のリストから選択してください。";
-                    RootShadow.getElementById("SentenceBlockConfig3_Title").textContent = "置換文字";
-                    RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = "置換する文字列を入力します。";
-                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = "一文章で置換える";
-                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input2_SpanText").textContent = "単語で置換える";
-                    RootShadow.getElementById("SentenceBlockConfig4_Title").textContent = "aタグのリンク置換";
-                    RootShadow.getElementById("SentenceBlockConfig4_Description").textContent = "aタグのリンクを置換をするかどうか設定します。（aタグのリンクを置換するとリンクが正常に機能しなくなります。）";
-                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option1").textContent = "aタグのリンクは置換えない";
-                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option2").textContent = "aタグのリンクのみ置換える";
-                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option3").textContent = "すべて置換する";
-                    RootShadow.getElementById("SentenceBlockConfig_BackButton").textContent = "←戻る";
+                    RootShadow.getElementById("SentenceBlockConfig1_Title").textContent = lang.DB_sentenceBlock.URL_title;
+                    RootShadow.getElementById("SentenceBlockConfig1_Description").textContent = lang.DB_sentenceBlock.URL_description;
+                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input1_SpanText").textContent = lang.DB_sentenceBlock.URL_wildcard;
+                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input2_SpanText").textContent = lang.DB_sentenceBlock.URL_regexp;
+                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input3_SpanText").textContent = lang.DB_sentenceBlock.URL_BLT;
+                    RootShadow.getElementById("SentenceBlockConfig2_Title").textContent = lang.DB_sentenceBlock.BLT_title;
+                    RootShadow.getElementById("SentenceBlockConfig2_Description").textContent = lang.DB_sentenceBlock.BLT_description;
+                    RootShadow.getElementById("SentenceBlockConfig2-2_Description").textContent = lang.DB_sentenceBlock.BLT_exclude;
+                    RootShadow.getElementById("SentenceBlockConfig3_Title").textContent = lang.DB_sentenceBlock.replace_title;
+                    RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = lang.DB_sentenceBlock.replace_description;
+                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = lang.DB_sentenceBlock.replace_sentence;
+                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input2_SpanText").textContent = lang.DB_sentenceBlock.replace_word;
+                    RootShadow.getElementById("SentenceBlockConfig4_Title").textContent = lang.DB_sentenceBlock.aTag_title;
+                    RootShadow.getElementById("SentenceBlockConfig4_Description").textContent = lang.DB_sentenceBlock.aTag_description;
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option1").textContent = lang.DB_sentenceBlock.aTag_hrefExclude;
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option2").textContent = lang.DB_sentenceBlock.aTag_hrefOnly;
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option3").textContent = lang.DB_sentenceBlock.aTag_all;
+                    RootShadow.getElementById("SentenceBlockConfig_BackButton").textContent = lang.backButton;
 
                     this.url_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input1");
                     this.url_BLT_Ele = RootShadow.getElementById("SentenceBlockConfig1_Select");
@@ -2513,6 +2682,16 @@
     min-width: 100%;
     box-sizing: border-box;
   }
+  label.ElementBlock_Label {
+    display: block;
+    margin: 5px 0 0 0;
+  }
+  form#ElementBlockConfig2_Form {
+    margin: 5px 0 5px 0;
+  }
+  form#ElementBlockConfig3_Form {
+    margin: 5px 0 5px 0;
+  }
 </style>
 
 <div id="ElementBlockConfig" class="EditConfigObjectPage">
@@ -2523,19 +2702,16 @@
     <select id="ElementBlockConfig1_Select" size="1" style="display: none">
       <option value="">-----</option>
     </select>
-    <br />
     <form id="ElementBlockConfig1_Form">
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="url_mode" value="wildcard" checked />
         <span id="ElementBlockConfig1_Form_Input1_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="url_mode" value="regexp" />
         <span id="ElementBlockConfig1_Form_Input2_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="url_mode" value="blt" />
         <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
       </label>
@@ -2559,12 +2735,11 @@
     <button id="ElementBlockConfig2_Button"></button>
     <div class="ItemFrame_Border">
       <form id="ElementBlockConfig2-2_From">
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="hideMethod" value="displayNone" checked />
           <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="hideMethod" value="remove" />
           <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
         </label>
@@ -2587,24 +2762,21 @@
       </label>
     </form>
     <button id="ElementBlockConfig3_Button"></button>
-    <br />
-    <label>
+    <label class="ElementBlock_Label">
       <input id="ElementBlockConfig3_Input1" type="checkbox" />
       <span id="ElementBlockConfig3_Input1_SpanText"></span>
     </label>
     <div class="ItemFrame_Border">
       <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="text" checked />
           <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="href" />
           <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="style" />
           <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
           <br />
@@ -2614,8 +2786,7 @@
             spellcheck="false"
           />
         </label>
-        <br />
-        <label>
+        <label class="ElementBlock_Label">
           <input type="radio" name="propertyMode" value="advanced" />
           <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
           <br />
@@ -2676,17 +2847,15 @@
     <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
     <p id="ElementBlockConfig6_Description"></p>
     <form id="ElementBlockConfig6_Form">
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="resultShow" value="none" checked />
         <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="resultShow" value="number" />
         <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
       </label>
-      <br />
-      <label>
+      <label class="ElementBlock_Label">
         <input type="radio" name="resultShow" value="property" />
         <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
       </label>
@@ -2697,45 +2866,45 @@
     <button id="ElementBlockConfig_BackButton"></button>
   </div>
 </div>
-                    `
+                    `;
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
-                    RootShadow.getElementById("ElementBlockConfig1_Title").textContent = "URL";
-                    RootShadow.getElementById("ElementBlockConfig1_Description").innerHTML = "このルールを有効にするサイトを指定します。 <br>正規表現がOFFの時「*」でワイルドカードを使用できます。";
-                    RootShadow.getElementById("ElementBlockConfig1_Form_Input1_SpanText").textContent = "ワイルドカード";
-                    RootShadow.getElementById("ElementBlockConfig1_Form_Input2_SpanText").textContent = "正規表現";
-                    RootShadow.getElementById("ElementBlockConfig1_Form_Input3_SpanText").textContent = "ブロックリストテキスト";
-                    RootShadow.getElementById("ElementBlockConfig2_Title").textContent = "非表示要素";
-                    RootShadow.getElementById("ElementBlockConfig2_Description").textContent = "非表示する要素をCSS方式「querySelectorAll」かXPath方式「document.evaluate」で指定します。";
-                    RootShadow.getElementById("ElementBlockConfig2_Form_Input1_SpanText").textContent = "CSS";
-                    RootShadow.getElementById("ElementBlockConfig2_Form_Input2_SpanText").textContent = "XPath";
-                    RootShadow.getElementById("ElementBlockConfig2_Button").textContent = "要素を選択する";
-                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input1_SpanText").textContent = "非表示要素をCSSで非表示にする";
-                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input2_SpanText").textContent = "非表示要素を削除する";
-                    RootShadow.getElementById("ElementBlockConfig3_Title").textContent = "検索要素";
-                    RootShadow.getElementById("ElementBlockConfig3_Description").textContent = "非表示するために検索する要素をCSS方式「querySelectorAll」かXPath方式「document.evaluate」で指定します。何も入力せず空欄にすると無条件で非表示要素を隠します。";
-                    RootShadow.getElementById("ElementBlockConfig3_Form_Input1_SpanText").textContent = "CSS";
-                    RootShadow.getElementById("ElementBlockConfig3_Form_Input2_SpanText").textContent = "XPath";
-                    RootShadow.getElementById("ElementBlockConfig3_Button").textContent = "要素を選択する";
-                    RootShadow.getElementById("ElementBlockConfig3_Input1_SpanText").textContent = "複数の要素が見つかった場合、最初に見つかった要素のみ検索する";
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input1_SpanText").textContent = "要素のテキストを検索する";
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input2_SpanText").textContent = "要素のリンクを検索する（検索要素に「a」要素が含まれている場合のみ）";
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = "要素のスタイルシートを検索する（上級者向け）";
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input4_SpanText").textContent = "要素の要素のプロパティを直接指定する（上級者向け）";
-                    RootShadow.getElementById("ElementBlockConfig4_Title").textContent = "NGフィルタ";
-                    RootShadow.getElementById("ElementBlockConfig4_Description").textContent = "要素検索に使用するNGフィルタを指定します。";
-                    RootShadow.getElementById("ElementBlockConfig4-2_Description").textContent = "除外リストも使用する場合は下のリストから選択してください。";
-                    RootShadow.getElementById("ElementBlockConfig5_Title").textContent = "uBlacklist使用時の有効にする種類";
-                    RootShadow.getElementById("ElementBlockConfig5_Description").textContent = "uBlacklist使用時に有効にする種類を指定します。";
-                    RootShadow.getElementById("ElementBlockConfig5_Select_Option1").textContent = "マッチパターンと正規表現（検索対象の値がURLだけのみ有効）";
-                    RootShadow.getElementById("ElementBlockConfig5_Select_Option2").textContent = "\"title/\" のテキストのみ";
-                    RootShadow.getElementById("ElementBlockConfig5_Select_Option3").textContent = "すべての種類を使用する";
-                    RootShadow.getElementById("ElementBlockConfig6_Title").textContent = "ブロック適用リストの表示";
-                    RootShadow.getElementById("ElementBlockConfig6_Description").textContent = "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。";
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input1_SpanText").textContent = "非表示";
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input2_SpanText").textContent = "番号で表示";
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input3_SpanText").textContent = "検索要素のプロパティの値を表示";
+                    RootShadow.getElementById("ElementBlockConfig1_Title").textContent = lang.DB_elementBlock.URL_title;
+                    RootShadow.getElementById("ElementBlockConfig1_Description").innerHTML = lang.DB_elementBlock.URL_description;
+                    RootShadow.getElementById("ElementBlockConfig1_Form_Input1_SpanText").textContent = lang.DB_elementBlock.URL_wildcard;
+                    RootShadow.getElementById("ElementBlockConfig1_Form_Input2_SpanText").textContent = lang.DB_elementBlock.URL_regexp;
+                    RootShadow.getElementById("ElementBlockConfig1_Form_Input3_SpanText").textContent = lang.DB_elementBlock.URL_BLT;
+                    RootShadow.getElementById("ElementBlockConfig2_Title").textContent = lang.DB_elementBlock.eleHide_title;
+                    RootShadow.getElementById("ElementBlockConfig2_Description").textContent = lang.DB_elementBlock.eleHide_description;
+                    RootShadow.getElementById("ElementBlockConfig2_Form_Input1_SpanText").textContent = lang.DB_elementBlock.css;
+                    RootShadow.getElementById("ElementBlockConfig2_Form_Input2_SpanText").textContent = lang.DB_elementBlock.XPath;
+                    RootShadow.getElementById("ElementBlockConfig2_Button").textContent = lang.DB_elementBlock.elementSelector;
+                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input1_SpanText").textContent = lang.DB_elementBlock.eleHide_displayNone;
+                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input2_SpanText").textContent = lang.DB_elementBlock.eleHide_remove;
+                    RootShadow.getElementById("ElementBlockConfig3_Title").textContent = lang.DB_elementBlock.eleSearch_title;
+                    RootShadow.getElementById("ElementBlockConfig3_Description").textContent = lang.DB_elementBlock.eleSearch_description;
+                    RootShadow.getElementById("ElementBlockConfig3_Form_Input1_SpanText").textContent = lang.DB_elementBlock.css;
+                    RootShadow.getElementById("ElementBlockConfig3_Form_Input2_SpanText").textContent = lang.DB_elementBlock.XPath;
+                    RootShadow.getElementById("ElementBlockConfig3_Button").textContent = lang.DB_elementBlock.elementSelector;
+                    RootShadow.getElementById("ElementBlockConfig3_Input1_SpanText").textContent = lang.DB_elementBlock.eleSearch_firstOnly;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input1_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodText;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input2_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodHref;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodStyle;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input4_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodAdvanced;
+                    RootShadow.getElementById("ElementBlockConfig4_Title").textContent = lang.DB_elementBlock.BLT_title;
+                    RootShadow.getElementById("ElementBlockConfig4_Description").textContent = lang.DB_elementBlock.BLT_description;
+                    RootShadow.getElementById("ElementBlockConfig4-2_Description").textContent = lang.DB_elementBlock.BLT_exclude;
+                    RootShadow.getElementById("ElementBlockConfig5_Title").textContent = lang.DB_elementBlock.uBlacklist_title;
+                    RootShadow.getElementById("ElementBlockConfig5_Description").textContent = lang.DB_elementBlock.uBlacklist_description;
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option1").textContent = lang.DB_elementBlock.uBlacklist_urlOnly;
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option2").textContent = lang.DB_elementBlock.uBlacklist_titleOnly;
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option3").textContent = lang.DB_elementBlock.uBlacklist_all;
+                    RootShadow.getElementById("ElementBlockConfig6_Title").textContent = lang.DB_elementBlock.resultShow_title;
+                    RootShadow.getElementById("ElementBlockConfig6_Description").textContent = lang.DB_elementBlock.resultShow_description;
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input1_SpanText").textContent = lang.DB_elementBlock.resultShow_none;
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input2_SpanText").textContent = lang.DB_elementBlock.resultShow_number;
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input3_SpanText").textContent = lang.DB_elementBlock.resultShow_property;
                     RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = "←戻る";
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
@@ -2899,26 +3068,26 @@
     <button id="PreferencesPageBack_Button"></button>
   </div>
 </div>
-            `
+            `;
             DashboardMain_div.append(DB_preference_div);
             Dashboard_Window_Ele_stack.push(DB_preference_div);
 
-            RootShadow.getElementById("ImportAndExport_Title").textContent = "エクスポート&インポート";
-            RootShadow.getElementById("ImportAndExport_Description").textContent = "設定内容をエクスポートまたはインポートします。";
-            RootShadow.getElementById("ImportAndExport_Button").textContent = "エクスポート&インポート";
-            RootShadow.getElementById("PerformanceConfig_Title").textContent = "パフォーマンス設定";
-            RootShadow.getElementById("PerformanceConfig_Description").textContent = "拡張機能の動作頻度などのパフォーマンス関係の設定をします。";
-            RootShadow.getElementById("PerformanceConfig_Button").textContent = "パフォーマンス設定";
-            RootShadow.getElementById("ButtonHide_Title").textContent = "右上のボタンを常時非表示にする";
-            RootShadow.getElementById("ButtonHide_Description").textContent = "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。";
-            RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = "ボタンを非表示にする";
-            RootShadow.getElementById("DashboardColor_Title").textContent = "ダッシュボード背景色";
-            RootShadow.getElementById("DashboardColor_Description").textContent = "ダッシュボード画面全体の背景色の色を指定します。";
-            RootShadow.getElementById("DashboardColor_Select_Option1").textContent = "赤色";
-            RootShadow.getElementById("DashboardColor_Select_Option2").textContent = "黄色";
-            RootShadow.getElementById("DashboardColor_Select_Option3").textContent = "緑色";
-            RootShadow.getElementById("DashboardColor_Select_Option4").textContent = "青色";
-            RootShadow.getElementById("PreferencesPageBack_Button").textContent = "←戻る";
+            RootShadow.getElementById("ImportAndExport_Title").textContent = lang.DB_preference.importAndExport_title;
+            RootShadow.getElementById("ImportAndExport_Description").textContent = lang.DB_preference.importAndExport_description;
+            RootShadow.getElementById("ImportAndExport_Button").textContent = lang.DB_preference.importAndExport_button;
+            RootShadow.getElementById("PerformanceConfig_Title").textContent = lang.DB_preference.performanceConfig_title;
+            RootShadow.getElementById("PerformanceConfig_Description").textContent = lang.DB_preference.performanceConfig_description;
+            RootShadow.getElementById("PerformanceConfig_Button").textContent = lang.DB_preference.performanceConfig_button;
+            RootShadow.getElementById("ButtonHide_Title").textContent = lang.DB_preference.buttonHide_title;
+            RootShadow.getElementById("ButtonHide_Description").textContent = lang.DB_preference.buttonHide_description;
+            RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = lang.DB_preference.buttonHide_boxText;
+            RootShadow.getElementById("DashboardColor_Title").textContent = lang.DB_preference.dashboardColor_title;
+            RootShadow.getElementById("DashboardColor_Description").textContent = lang.DB_preference.dashboardColor_Description;
+            RootShadow.getElementById("DashboardColor_Select_Option1").textContent = lang.DB_preference.dashboardColor_red;
+            RootShadow.getElementById("DashboardColor_Select_Option2").textContent = lang.DB_preference.dashboardColor_yellow;
+            RootShadow.getElementById("DashboardColor_Select_Option3").textContent = lang.DB_preference.dashboardColor_green;
+            RootShadow.getElementById("DashboardColor_Select_Option4").textContent = lang.DB_preference.dashboardColor_blue;
+            RootShadow.getElementById("PreferencesPageBack_Button").textContent = lang.backButton;
 
             RootShadow.getElementById("ImportAndExport_Button").addEventListener("click", DB_ExportImport, false);
             RootShadow.getElementById("PerformanceConfig_Button").addEventListener("click", DB_performanceConfig, false);
@@ -2938,7 +3107,7 @@
                     } catch (e) {
                         console.error(e);
                         targetElement.checked = false;
-                        const res = await popup.confirm("メニューAPIが検出されませんでした。このまま非表示にすると、再インストールして設定をすべて消去しない限り二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
+                        const res = await popup.confirm(lang.DB_preference.buttonHide_warning);
                         if (res) {
                             targetElement.checked = true;
                         } else {
@@ -2979,7 +3148,7 @@
                             return JSON.stringify(JSONObject);
                         } catch (e) {
                             console.error(e);
-                            await popup.alert("エラー：エクスポートに失敗しました。詳細はコンソールログを参照してください。")
+                            await popup.alert(lang.DB_exportImport.error_export);
                             return undefined;
                         }
                     } else if (mode === "import") {
@@ -2989,7 +3158,7 @@
                                 importset = JSON.parse(importjson);
                             } catch (e) {
                                 console.error(e);
-                                await popup.alert("エラー：設定を読み込めませんでした。JSONファイル（テキスト）が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。");
+                                await popup.alert(lang.DB_exportImport.error_import);
                                 return undefined;
                             }
                             const ExistKeyList = await storageAPI.keynameList();
@@ -3058,21 +3227,21 @@
   </div>
   <button id="ExportAndImportConfig_BackButton"></button>
 </div>
-                `
+                `;
                 DashboardMain_div.append(DB_exportAndImport_div);
                 Dashboard_Window_Ele_stack.push(DB_exportAndImport_div);
 
-                RootShadow.getElementById("ExportAndImportConfig1_Title").textContent = "エクスポート";
-                RootShadow.getElementById("ExportAndImportConfig1_Button1").textContent = "JSONファイルでエクスポート";
-                RootShadow.getElementById("ExportAndImportConfig1_Button2").textContent = "JSON形式でクリップボードにコピー";
-                RootShadow.getElementById("ExportAndImportConfig1_Button3").textContent = "テキストエリアにエクスポート（JSON形式）";
-                RootShadow.getElementById("ExportAndImportConfig1_SpanText").textContent = "エクスポートしました。";
-                RootShadow.getElementById("ExportAndImportConfig2_Title").textContent = "インポート";
-                RootShadow.getElementById("ExportAndImportConfig2-1_SpanText").textContent = "JSONファイルからインポート";
-                RootShadow.getElementById("ExportAndImportConfig2-2_Button").textContent = "テキストエリアからインポート（JSON形式）";
-                RootShadow.getElementById("ExportAndImportConfig2_SpanText").textContent = "インポートしました。";
-                RootShadow.getElementById("ExportAndImportConfig3_Title").textContent = "テキストエリア";
-                RootShadow.getElementById("ExportAndImportConfig_BackButton").textContent = "←戻る";
+                RootShadow.getElementById("ExportAndImportConfig1_Title").textContent = lang.DB_exportImport.export_title;
+                RootShadow.getElementById("ExportAndImportConfig1_Button1").textContent = lang.DB_exportImport.export_file;
+                RootShadow.getElementById("ExportAndImportConfig1_Button2").textContent = lang.DB_exportImport.export_copy;
+                RootShadow.getElementById("ExportAndImportConfig1_Button3").textContent = lang.DB_exportImport.export_textArea;
+                RootShadow.getElementById("ExportAndImportConfig1_SpanText").textContent = lang.DB_exportImport.export_success;
+                RootShadow.getElementById("ExportAndImportConfig2_Title").textContent = lang.DB_exportImport.import_title;
+                RootShadow.getElementById("ExportAndImportConfig2-1_SpanText").textContent = lang.DB_exportImport.import_file;
+                RootShadow.getElementById("ExportAndImportConfig2-2_Button").textContent = lang.DB_exportImport.import_textArea;
+                RootShadow.getElementById("ExportAndImportConfig2_SpanText").textContent = lang.DB_exportImport.import_success;
+                RootShadow.getElementById("ExportAndImportConfig3_Title").textContent = lang.DB_exportImport.textArea_title;
+                RootShadow.getElementById("ExportAndImportConfig_BackButton").textContent = lang.backButton;
 
 
                 const ExportSuccessTextEle = RootShadow.getElementById("ExportAndImportConfig1_SpanText");
@@ -3115,7 +3284,7 @@
                 RootShadow.getElementById("ExportAndImportConfig2-1_Input").addEventListener("change", async (evt) => {
                     const targetElement = evt.target;
                     if (targetElement.files[0]) {
-                        const res = await popup.confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
+                        const res = await popup.confirm(lang.DB_exportImport.import_overWrite);
                         if (!res) {
                             targetElement.value = "";
                             return false;
@@ -3134,7 +3303,7 @@
                 });
 
                 RootShadow.getElementById("ExportAndImportConfig2-2_Button").addEventListener("click", async () => {
-                    const res = await popup.confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
+                    const res = await popup.confirm(lang.DB_exportImport.import_overWrite);
                     if (!res) {
                         return false;
                     }
@@ -3247,40 +3416,40 @@
     <span id="PerformanceConfig_SaveInfoText" style="display: none"></span>
   </div>
 </div>
-                `
+                `;
                 DashboardMain_div.append(DB_performanceConfig_div);
                 Dashboard_Window_Ele_stack.push(DB_performanceConfig_div);
 
-                RootShadow.getElementById("PerformanceConfig1_Title").textContent = "モード設定";
-                RootShadow.getElementById("PerformanceConfig1_Description1").textContent = "パフォーマンスのモード設定をします。";
-                RootShadow.getElementById("PerformanceConfig1_Description2").textContent = "ブロック優先にするとページに変更があった場合、すぐにブロック動作をしますが、ページが重たくなる可能性があります。";
-                RootShadow.getElementById("PerformanceConfig1_Description3").textContent = "パフォーマンス優先にすると一定間隔でブロック動作をすることで処理を軽くしますが、一瞬ブロックする要素が表示される可能性があります。";
-                RootShadow.getElementById("PerformanceConfig1_Description4").textContent = "バランスにするとページを表示して読み込みが終わるまで、パフォーマンス優先で動作をし、読み込み完了後はブロック優先で動作します。";
-                RootShadow.getElementById("PerformanceConfig1_Select_Option1").textContent = "ブロック優先";
-                RootShadow.getElementById("PerformanceConfig1_Select_Option2").textContent = "バランス";
-                RootShadow.getElementById("PerformanceConfig1_Select_Option3").textContent = "パフォーマンス優先（設定1）";
-                RootShadow.getElementById("PerformanceConfig1_Select_Option4").textContent = "パフォーマンス優先（設定2）";
+                RootShadow.getElementById("PerformanceConfig1_Title").textContent = lang.DB_performanceConfig.mode_title;
+                RootShadow.getElementById("PerformanceConfig1_Description1").textContent = lang.DB_performanceConfig.mode_description1;
+                RootShadow.getElementById("PerformanceConfig1_Description2").textContent = lang.DB_performanceConfig.mode_description2;
+                RootShadow.getElementById("PerformanceConfig1_Description3").textContent = lang.DB_performanceConfig.mode_description3;
+                RootShadow.getElementById("PerformanceConfig1_Description4").textContent = lang.DB_performanceConfig.mode_description4;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option1").textContent = lang.DB_performanceConfig.blockPriority;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option2").textContent = lang.DB_performanceConfig.balance;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option3").textContent = lang.DB_performanceConfig.performancePriority1;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option4").textContent = lang.DB_performanceConfig.performancePriority2;
 
-                RootShadow.getElementById("PerformanceConfig2_Title").textContent = "動作間隔";
-                RootShadow.getElementById("PerformanceConfig2_Description1").textContent = "パフォーマンス優先モードまたはバランスモードを選択時の動作間隔の設定をします。";
-                RootShadow.getElementById("PerformanceConfig2_Description2").textContent = "ミリ単位で動作間隔の設定ができます。（1秒=1000ミリ）";
-                RootShadow.getElementById("PerformanceConfig2_Description3").textContent = "数値を大きくするほど動作が軽くなりますが、ブロック処理がその分遅れます。";
-                RootShadow.getElementById("PerformanceConfig2_input1_SpanText").textContent = "バランス";
-                RootShadow.getElementById("PerformanceConfig2_input2_SpanText").textContent = "パフォーマンス優先（設定1）";
-                RootShadow.getElementById("PerformanceConfig2_input3_SpanText").textContent = "パフォーマンス優先（設定2）";
+                RootShadow.getElementById("PerformanceConfig2_Title").textContent = lang.DB_performanceConfig.interval_title;
+                RootShadow.getElementById("PerformanceConfig2_Description1").textContent = lang.DB_performanceConfig.interval_description1;
+                RootShadow.getElementById("PerformanceConfig2_Description2").textContent = lang.DB_performanceConfig.interval_description2;
+                RootShadow.getElementById("PerformanceConfig2_Description3").textContent = lang.DB_performanceConfig.interval_description3;
+                RootShadow.getElementById("PerformanceConfig2_input1_SpanText").textContent = lang.DB_performanceConfig.balance;
+                RootShadow.getElementById("PerformanceConfig2_input2_SpanText").textContent = lang.DB_performanceConfig.performancePriority1;
+                RootShadow.getElementById("PerformanceConfig2_input3_SpanText").textContent = lang.DB_performanceConfig.performancePriority2;
 
-                RootShadow.getElementById("PerformanceConfig3_Title").textContent = "サイト別設定";
-                RootShadow.getElementById("PerformanceConfig3_Description1").textContent = "ブロックリストテキストのマッチするサイトで動作モードを上書きすることができます。";
-                RootShadow.getElementById("PerformanceConfig3_Description2").textContent = "複数の設定でURLがマッチした場合、この設定項目に表示されている項目の一番上が優先されます。";
-                RootShadow.getElementById("PerformanceConfig3_Select1_SpanText").textContent = "無効化";
-                RootShadow.getElementById("PerformanceConfig3_Select2_SpanText").textContent = "パフォーマンス優先（設定1）";
-                RootShadow.getElementById("PerformanceConfig3_Select3_SpanText").textContent = "パフォーマンス優先（設定2）";
-                RootShadow.getElementById("PerformanceConfig3_Select4_SpanText").textContent = "ブロック優先";
-                RootShadow.getElementById("PerformanceConfig3_Select5_SpanText").textContent = "バランス";
+                RootShadow.getElementById("PerformanceConfig3_Title").textContent = lang.DB_performanceConfig.overRide_title;
+                RootShadow.getElementById("PerformanceConfig3_Description1").textContent = lang.DB_performanceConfig.overRide_description1;
+                RootShadow.getElementById("PerformanceConfig3_Description2").textContent = lang.DB_performanceConfig.overRide_description2;
+                RootShadow.getElementById("PerformanceConfig3_Select1_SpanText").textContent = lang.DB_performanceConfig.disable;
+                RootShadow.getElementById("PerformanceConfig3_Select2_SpanText").textContent = lang.DB_performanceConfig.performancePriority1;
+                RootShadow.getElementById("PerformanceConfig3_Select3_SpanText").textContent = lang.DB_performanceConfig.performancePriority2;
+                RootShadow.getElementById("PerformanceConfig3_Select4_SpanText").textContent = lang.DB_performanceConfig.blockPriority;
+                RootShadow.getElementById("PerformanceConfig3_Select5_SpanText").textContent = lang.DB_performanceConfig.balance;
 
-                RootShadow.getElementById("PerformanceConfig_BackButton").textContent = "←戻る";
-                RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = "保存";
-                RootShadow.getElementById("PerformanceConfig_SaveInfoText").textContent = "保存しました。"
+                RootShadow.getElementById("PerformanceConfig_BackButton").textContent = lang.backButton;
+                RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = lang.DB_performanceConfig.save;
+                RootShadow.getElementById("PerformanceConfig_SaveInfoText").textContent = lang.DB_performanceConfig.saveInfo;
 
 
                 const mode_ELe = RootShadow.getElementById("PerformanceConfig1_Select");
