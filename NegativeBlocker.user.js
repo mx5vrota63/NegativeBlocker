@@ -31,8 +31,11 @@
     let BlockCounter = 0;
 
     let observerInterval = 0;
+    let dateInterval = Date.now();
+    /*
     let observerExecuteFlag = false;
     let observerExecuteFlag2 = false;
+    */
 
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
@@ -145,6 +148,13 @@
         }
     }
 
+    function typeDecision(obj, type) {
+        if (!obj) return false;
+        const result = {}.toString.call(obj).slice(8, -1).toLowerCase();
+        if (result === type.toLowerCase()) return true;
+        else return false;
+    }
+
 
 
     async function StorageLoad() {
@@ -179,10 +189,12 @@
             PreferenceSettingStorage = {
                 performanceConfig: {
                     mode: "balance",
-                    interval_performancePriority: 100,
                     interval_balance: 10,
+                    interval_performancePriority1: 100,
+                    interval_performancePriority2: 100,
                     overRide_disable: "",
-                    overRide_performancePriority: "",
+                    overRide_performancePriority1: "",
+                    overRide_performancePriority2: "",
                     overRide_blockPriority: "",
                     overRide_balance: "",
                 },
@@ -651,7 +663,7 @@
                                 await Promise.all(SB_Obj.BlockListText_list.map(async (BLT_name, index) => {
                                     if (this.BlockListText_loadObj[BLT_name].regexp || this.BlockListText_loadObj[BLT_name].uBlacklist) {
                                         searchResultArray[index].forEach((searchText) => {
-                                            if (!(searchText instanceof RegExp)) {
+                                            if (!typeDecision(searchText, "RegExp")) {
                                                 searchText = new RegExp(this.escapeRegExp(searchText));
                                             }
                                             EleObj[PropertyName] = EleObj[PropertyName].replace(searchText, SB_Obj.replace_string);
@@ -901,8 +913,9 @@
             super();
             this.performanceMode;
             this.Config_Obj = PreferenceSettingStorage.performanceConfig;
-            this.interval_performancePriority = PreferenceSettingStorage.performanceConfig.interval_performancePriority;
-            this.interval_balance = PreferenceSettingStorage.performanceConfig.interval_balance;
+            this.interval_balance = parseInt(PreferenceSettingStorage.performanceConfig.interval_balance);
+            this.interval_performancePriority1 = parseInt(PreferenceSettingStorage.performanceConfig.interval_performancePriority1);
+            this.interval_performancePriority2 = parseInt(PreferenceSettingStorage.performanceConfig.interval_performancePriority2);
         }
         async BLTCheck(BLT_name) {
             if (BLT_name === "") return false;
@@ -915,8 +928,10 @@
         async init() {
             if (await this.BLTCheck(this.Config_Obj.overRide_disable)) {
                 this.performanceMode = "disable";
-            } else if (await this.BLTCheck(this.Config_Obj.overRide_performancePriority)) {
-                this.performanceMode = "performance";
+            } else if (await this.BLTCheck(this.Config_Obj.overRide_performancePriority1)) {
+                this.performanceMode = "performance1";
+            } else if (await this.BLTCheck(this.Config_Obj.overRide_performancePriority2)) {
+                this.performanceMode = "performance2";
             } else if (await this.BLTCheck(this.Config_Obj.overRide_blockPriority)) {
                 this.performanceMode = "block";
             } else if (await this.BLTCheck(this.Config_Obj.overRide_balance)) {
@@ -940,7 +955,7 @@
                     DashboardButtonEle.style.position = "fixed";
                     DashboardButtonEle.style.top = 0;
                     DashboardButtonEle.style.right = 0;
-                    DashboardButtonEle.style.zIndex = 9998;
+                    DashboardButtonEle.style.zIndex = 2147483647;
                     DashboardButtonEle.style.width = "60px";
                     DashboardButtonEle.style.height = "40px";
                     DashboardButtonEle.style.backgroundColor = "#AFFFAF";
@@ -975,28 +990,28 @@
     }
 
     async function observerregister() {
-        const observer = new MutationObserver(async () => {
-            if (!observerExecuteFlag) {
-                observerExecuteFlag = true;
-                StartExecute();
-                await pauseSleep(observerInterval);
-                if (observerExecuteFlag2) {
-                    StartExecute();
-                }
-                observerExecuteFlag2 = false;
-                observerExecuteFlag = false;
-            } else {
-                observerExecuteFlag2 = true;
-            }
-        });
-        observer.observe(document.body, {
+        const observerConfig = {
             attributes: false,
             attributeOldValue: false,
             characterData: true,
             characterDataOldValue: false,
             childList: true,
             subtree: true
+        }
+        const observer = new MutationObserver(async () => {
+            const interval = Date.now() - dateInterval
+            if (interval > observerInterval) {
+                StartExecute();
+                dateInterval = Date.now();
+            } else {
+                observer.disconnect();
+                await pauseSleep(interval);
+                StartExecute();
+                observer.observe(document.body, observerConfig);
+                dateInterval = Date.now();
+            }
         });
+        observer.observe(document.body, observerConfig);
     }
 
     await perModeObj.init();
@@ -1004,6 +1019,67 @@
     if (perModeObj.performanceMode !== "disable") {
         await BG_sentenceBlock_obj.init();
         await BG_elementBlock_Obj.init();
+
+        if (document.readyState == "complete") {
+            StartExecute();
+            switch (perModeObj.performanceMode) {
+                case "balance":
+                case "block":
+                    observerInterval = 0;
+                    break;
+                case "performance1":
+                    observerInterval = perModeObj.interval_performancePriority1;
+                    break;
+                case "performance2":
+                    observerInterval = perModeObj.interval_performancePriority2;
+                    break;
+                default:
+                    observerInterval = 0;
+                    break;
+            }
+        } else {
+            switch (perModeObj.performanceMode) {
+                case "block":
+                    observerInterval = 0;
+                    break;
+                case "balance":
+                    observerInterval = perModeObj.interval_balance;
+                    break;
+                case "performance1":
+                    observerInterval = perModeObj.interval_performancePriority1;
+                    break;
+                case "performance2":
+                    observerInterval = perModeObj.interval_performancePriority2;
+                    break;
+                default:
+                    observerInterval = 0;
+                    break;
+            }
+            document.addEventListener("readystatechange", async (evt) => {
+                switch (evt.target.readyState) {
+                    case "interactive":
+                        StartExecute();
+                        break;
+                    case "complete":
+                        switch (perModeObj.performanceMode) {
+                            case "balance":
+                            case "block":
+                                observerInterval = 0;
+                                break;
+                            case "performance1":
+                                observerInterval = perModeObj.interval_performancePriority1;
+                                break;
+                            case "performance2":
+                                observerInterval = perModeObj.interval_performancePriority2;
+                                break;
+                            default:
+                                observerInterval = 0;
+                                break;
+                        }
+                        break;
+                }
+            }, { capture: true });
+        }
 
         if (document.body != null) {
             await observerregister();
@@ -1026,56 +1102,6 @@
             })
         }
 
-        if (document.readyState == "complete") {
-            switch (perModeObj.performanceMode) {
-                case "balance":
-                case "block":
-                    observerInterval = 0;
-                    break;
-                case "performance":
-                    observerInterval = perModeObj.interval_performancePriority;
-                    break;
-                default:
-                    observerInterval = 0;
-                    break;
-            }
-        } else {
-            switch (perModeObj.performanceMode) {
-                case "block":
-                    observerInterval = 0;
-                    break;
-                case "balance":
-                    observerInterval = perModeObj.interval_balance;
-                    break;
-                case "performance":
-                    observerInterval = perModeObj.interval_performancePriority;
-                    break;
-                default:
-                    observerInterval = 0;
-                    break;
-            }
-            document.addEventListener("readystatechange", async (evt) => {
-                switch (evt.target.readyState) {
-                    case "interactive":
-                        StartExecute();
-                        break;
-                    case "complete":
-                        switch (perModeObj.performanceMode) {
-                            case "balance":
-                            case "block":
-                                observerInterval = 0;
-                                break;
-                            case "performance":
-                                observerInterval = perModeObj.interval_performancePriority;
-                                break;
-                            default:
-                                observerInterval = 0;
-                                break;
-                        }
-                        break;
-                }
-            }, { capture: true });
-        }
     } else {
         if (document.body != null) {
             initInsertElement();
@@ -1117,7 +1143,7 @@
     z-index: 2147483647;
     padding: 1px 2px;
     background-color: #ffffff;
-    border: solid 1px #888888;
+    border: 1px solid #888888;
     border-radius: 10px;
     text-align: center;
     margin: 0em auto;
@@ -1145,18 +1171,17 @@
   }
   div#DashboardMain {
     overflow: auto;
-    width: 97%;
+    width: 100%;
     height: calc(100% - 60px);
     margin: 0em auto;
     margin-top: 2px;
     margin-bottom: 0px;
     word-wrap: break-word;
     padding: 5px;
-    border-width: 1px;
-    border-style: solid;
-    border-color: black;
+    border: 1px solid black;
     text-align: left;
     font-size: medium;
+    box-sizing: border-box;
     background-color: var(--CustomBackgroundColor);
   }
   div#DashboardMain div.ItemFrame_Border {
@@ -1177,6 +1202,11 @@
     white-space: nowrap;
   }
   div#DashboardMain input[type="text"] {
+    width: 100%;
+    height: 26px;
+    box-sizing: border-box;
+  }
+  div#DashboardMain input[type="number"] {
     width: 100%;
     height: 26px;
     box-sizing: border-box;
@@ -1246,6 +1276,97 @@
 
 
         DashboardMain_div = RootShadow.getElementById("DashboardMain");
+
+        const popup = new class popup {
+            constructor() {
+                this.popup_Element = document.createElement("div");
+                this.popup_Element.innerHTML = `
+<style type="text/css">
+  div#PopupBack {
+    width: calc(100% - 5px);
+    height: calc(100% - 63px);
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+    position: absolute;
+    top: 43px;
+    left: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  div#PopupMessageBox {
+    background-color: white;
+    margin: 10px;
+    border: 1px solid black;
+    box-shadow: 0 0 10px;
+  }
+  div#PopupBack button {
+    float: right;
+    margin: 5px;
+  }
+</style>
+
+<div id="PopupBack">
+  <div id="PopupMessageBox">
+    <p id="PopupMessage"></p>
+    <button id="PopupMessageBox_Cancel"></button>
+    <button id="PopupMessageBox_OK"></button>
+  </div>
+</div>
+        `;
+                this.popup_Element.style.display = "none";
+                DashboardMain_div.append(this.popup_Element);
+
+                this.message_Ele = RootShadow.getElementById("PopupMessage");
+                this.buttonOK_Ele = RootShadow.getElementById("PopupMessageBox_OK");
+                this.buttonCancel_Ele = RootShadow.getElementById("PopupMessageBox_Cancel");
+
+                this.buttonOK_Ele.textContent = "OK";
+                this.buttonCancel_Ele.textContent = "キャンセル";
+            }
+
+            async alert(message) {
+                this.message_Ele.textContent = message;
+                this.popup_Element.style.display = "";
+                RootShadow.getElementById("PopupMessageBox_Cancel").style.display = "none";
+
+                return new Promise((resolve) => {
+                    const okClick = () => {
+                        this.popup_Element.style.display = "none";
+                        this.buttonOK_Ele.removeEventListener("click", okClick);
+                        return resolve(true);
+                    }
+
+                    RootShadow.getElementById("PopupMessageBox_OK").addEventListener("click", okClick, false);
+                });
+            }
+
+            async confirm(message) {
+                this.message_Ele.textContent = message;
+                this.popup_Element.style.display = "";
+                RootShadow.getElementById("PopupMessageBox_Cancel").style.display = "";
+
+                return new Promise((resolve) => {
+                    const okClick = () => {
+                        this.popup_Element.style.display = "none";
+                        this.buttonOK_Ele.removeEventListener("click", okClick);
+                        this.buttonCancel_Ele.removeEventListener("click", cancelClick);
+                        return resolve(true);
+                    }
+
+                    const cancelClick = () => {
+                        this.popup_Element.style.display = "none";
+                        this.buttonOK_Ele.removeEventListener("click", okClick);
+                        this.buttonCancel_Ele.removeEventListener("click", cancelClick);
+                        return resolve(false);
+                    }
+
+                    RootShadow.getElementById("PopupMessageBox_OK").addEventListener("click", okClick, false);
+                    RootShadow.getElementById("PopupMessageBox_Cancel").addEventListener("click", cancelClick, false);
+                });
+            }
+        }
+
 
 
         {
@@ -1371,33 +1492,33 @@
             Dashboard_Window_Ele_stack.push(DB_settingTop_div);
             DB_settingTop_div.innerHTML = `
 <style type="text/css">
-  div.SettingsItem {
-    display: block;
-    margin: 0 0 20px 0;
-  }
   #SettingMainPage p {
     margin: 0;
   }
 </style>
 
 <div id="SettingMainPage">
-  <div id="BlockListText_Setting" class="SettingsItem">
-    <p id="BlockListText_Setting_Title"></p>
+  <div id="BlockListText_Setting" class="ItemFrame_Border">
+    <h1 id="BlockListText_Setting_Title" class="ItemFrame_Title"></h1>
+    <p id="BlockListText_Setting_Description"></p>
     <button id="BlockListText_Setting_Button"></button>
   </div>
-  <div id="SentenceBlock_Setting" class="SettingsItem">
-    <p id="SentenceBlock_Setting_Title"></p>
+  <div id="SentenceBlock_Setting" class="ItemFrame_Border">
+    <h1 id="SentenceBlock_Setting_Title" class="ItemFrame_Title"></h1>
+    <p id="SentenceBlock_Setting_Description"></p>
     <button id="SentenceBlock_Setting_Button"></button>
   </div>
-  <div id="ElementBlock_Setting" class="SettingsItem">
-    <p id="ElementBlock_Setting_Title"></p>
+  <div id="ElementBlock_Setting" class="ItemFrame_Border">
+    <h1 id="ElementBlock_Setting_Title" class="ItemFrame_Title"></h1>
+    <p id="ElementBlock_Setting_Description"></p>
     <button id="ElementBlock_Setting_Button"></button>
   </div>
-  <div id="Other_Setting" class="SettingsItem">
-    <p id="Other_Setting_Title"></p>
-    <button id="Other_Setting_Button"></button>
+  <div id="Preferences_Setting" class="ItemFrame_Border">
+    <h1 id="Preferences_Setting_Title" class="ItemFrame_Title"></h1>
+    <p id="Preferences_Setting_Description"></p>
+    <button id="Preferences_Setting_Button"></button>
   </div>
-  <div id="SettingMainPageBack" class="SettingsItem">
+  <div id="SettingMainPageBack">
     <button id="SettingMainPageBack_Button"></button>
   </div>
 </div>
@@ -1405,22 +1526,25 @@
             DashboardMain_div.append(DB_settingTop_div);
 
 
-            RootShadow.getElementById("BlockListText_Setting_Title").innerHTML = "NGフィルタ設定<br>グループ単位でNGワードリストまたはNGURLリストを設定できます。";
+            RootShadow.getElementById("BlockListText_Setting_Title").textContent = "ブロックリストテキスト設定";
+            RootShadow.getElementById("BlockListText_Setting_Description").textContent = "グループ単位でブロックするテキストやURLなどを設定できます。";
             RootShadow.getElementById("BlockListText_Setting_Button").textContent = "NGフィルタを設定する";
             RootShadow.getElementById("BlockListText_Setting_Button").addEventListener("click", Dashboard_BlockListText, false);
 
-            RootShadow.getElementById("SentenceBlock_Setting_Title").innerHTML = "Webあぼーん機能<br>Webの文章内にNGフィルタのリストが含まれる場合、その一文章または単語を別の文字に置換します。";
+            RootShadow.getElementById("SentenceBlock_Setting_Title").textContent = "文章ブロック機能";
+            RootShadow.getElementById("SentenceBlock_Setting_Description").textContent = "Webの文章内にブロックリストテキストが含まれる場合、その一文章または単語を別の文字に置換します。";
             RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = "Webあぼーん機能を設定する";
             RootShadow.getElementById("SentenceBlock_Setting_Button").addEventListener("click", Dashboard_SentenceBlock, false);
 
-            RootShadow.getElementById("ElementBlock_Setting_Title").innerHTML = "要素ブロック機能<br>要素の文字またはプロパティにNGフィルタのリストが含まれる場合、要素ごとブロックします。";
+            RootShadow.getElementById("ElementBlock_Setting_Title").textContent = "要素ブロック機能";
+            RootShadow.getElementById("ElementBlock_Setting_Description").textContent = "要素の文字またはプロパティにブロックリストテキストが含まれる場合、要素ごとブロックします。";
             RootShadow.getElementById("ElementBlock_Setting_Button").textContent = "要素ブロック機能を設定する";
             RootShadow.getElementById("ElementBlock_Setting_Button").addEventListener("click", Dashboard_ElementBlock, false);
 
-            RootShadow.getElementById("Other_Setting_Title").innerHTML = "その他設定<br>拡張機能全体の設定をします。";
-            RootShadow.getElementById("Other_Setting_Button").textContent = "その他設定";
-            RootShadow.getElementById("Other_Setting_Button").addEventListener("click", Dashboard_PreferencePage, false);
-
+            RootShadow.getElementById("Preferences_Setting_Title").textContent = "環境設定";
+            RootShadow.getElementById("Preferences_Setting_Description").textContent = "拡張機能全体の設定をします。";
+            RootShadow.getElementById("Preferences_Setting_Button").textContent = "環境設定";
+            RootShadow.getElementById("Preferences_Setting_Button").addEventListener("click", Dashboard_PreferencePage, false);
 
             RootShadow.getElementById("SettingMainPageBack_Button").textContent = "←戻る";
             RootShadow.getElementById("SettingMainPageBack_Button").addEventListener("click", () => {
@@ -1579,9 +1703,9 @@
                     DashboardMain_div.scroll({ top: 0 });
                 }, false);
 
-                RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", () => {
+                RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", async () => {
                     if (this.Editflag) {
-                        const res = confirm("トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？");
+                        const res = await popup.confirm("トップ設定ページに戻ります。現在入力されている内容は失われますがよろしいですか？");
                         if (!res) {
                             return false;
                         }
@@ -1598,7 +1722,7 @@
 
             async ListStoSave(StoKey, StoObj) {
                 if (StoObj.name === "") {
-                    alert("エラー：名前を入力してください。");
+                    await popup.alert("エラー：名前を入力してください。");
                     return false;
                 }
                 const fiindex = this.ListStorage.findIndex(({ name }) => name === this.currentName);
@@ -1610,7 +1734,7 @@
                 }
                 const dupcheck2 = dupcheck1.filter((v) => v.name === StoObj.name);
                 if (dupcheck2.length) {
-                    alert("エラー：すでに同じ名前が存在します。");
+                    await popup.alert("エラー：すでに同じ名前が存在します。");
                     return false;
                 }
                 if (fiindex !== -1) {
@@ -1635,7 +1759,7 @@
             async ListStoDel(StoKey) {
                 const fiindex = this.ListStorage.findIndex(({ name }) => name === this.currentName);
                 if (fiindex !== -1) {
-                    const res = confirm("[" + this.currentName + "]設定を削除してよろしいですか？");
+                    const res = await popup.confirm("[" + this.currentName + "]設定を削除してよろしいですか？");
                     if (!res) {
                         return false;
                     }
@@ -1653,7 +1777,7 @@
 
             async NewEditButton(NewbuttonEle) {
                 if (this.Editflag) {
-                    const res = confirm("新規作成しますか？現在入力されている内容は失われます。");
+                    const res = await popup.confirm("新規作成しますか？現在入力されている内容は失われます。");
                     if (!res) {
                         return false;
                     }
@@ -1670,7 +1794,7 @@
             async li_cfunc(cfunchandlersIndex, cfuncinfunction_arg) {
                 return this.li_cfunchandlers[cfunchandlersIndex] || (this.li_cfunchandlers[cfunchandlersIndex] = async () => {
                     if (this.Editflag) {
-                        const res = confirm("設定フィールドを変更しますか？現在入力されている内容は失われます。");
+                        const res = await popup.confirm("設定フィールドを変更しますか？現在入力されている内容は失われます。");
                         if (!res) {
                             return false;
                         }
@@ -1899,18 +2023,21 @@
                     this.notSearch_Ele = RootShadow.getElementById("BlockListText_Config5_Input");
                     this.uBlacklist_Ele = RootShadow.getElementById("BlockListText_Config6_Input");
 
-                    RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", (evt) => {
-                        if (evt.target.files[0]) {
-                            const res = confirm("現在入力されているテキストはファイルのテキストで上書きされます。よろしいですか？");
+                    RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", async (evt) => {
+                        const targetElement = evt.target;
+                        if (targetElement.files[0]) {
+                            const res = await popup.confirm("現在入力されているテキストはファイルのテキストで上書きされます。よろしいですか？");
                             if (!res) {
+                                targetElement.value = "";
                                 return false;
                             }
-                            const file = evt.target.files[0];
+                            const file = targetElement.files[0];
                             const reader = new FileReader();
                             reader.onload = (evt) => {
                                 this.textarea_Ele.value = evt.target.result;
                             }
                             reader.readAsText(file);
+                            targetElement.value = "";
                         }
                     });
 
@@ -2803,16 +2930,17 @@
                 ButtonHide_Setting_Input.checked = false;
             }
             ButtonHide_Setting_Input.addEventListener("change", async (evt) => {
-                if (evt.target.checked) {
+                const targetElement = evt.target;
+                if (targetElement.checked) {
                     try {
                         // eslint-disable-next-line no-undef
                         GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
                     } catch (e) {
                         console.error(e);
-                        evt.target.checked = false;
-                        const res = confirm("メニューAPIが検出されませんでした。このまま非表示にすると、再インストールして設定をすべて消去しない限り二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
+                        targetElement.checked = false;
+                        const res = await popup.confirm("メニューAPIが検出されませんでした。このまま非表示にすると、再インストールして設定をすべて消去しない限り二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？");
                         if (res) {
-                            evt.target.checked = true;
+                            targetElement.checked = true;
                         } else {
                             return;
                         }
@@ -2851,7 +2979,7 @@
                             return JSON.stringify(JSONObject);
                         } catch (e) {
                             console.error(e);
-                            alert("エラー：エクスポートに失敗しました。詳細はコンソールログを参照してください。")
+                            await popup.alert("エラー：エクスポートに失敗しました。詳細はコンソールログを参照してください。")
                             return undefined;
                         }
                     } else if (mode === "import") {
@@ -2861,7 +2989,7 @@
                                 importset = JSON.parse(importjson);
                             } catch (e) {
                                 console.error(e);
-                                alert("エラー：設定を読み込めませんでした。JSONファイル（テキスト）が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。");
+                                await popup.alert("エラー：設定を読み込めませんでした。JSONファイル（テキスト）が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。");
                                 return undefined;
                             }
                             const ExistKeyList = await storageAPI.keynameList();
@@ -2985,12 +3113,14 @@
                 }, false);
 
                 RootShadow.getElementById("ExportAndImportConfig2-1_Input").addEventListener("change", async (evt) => {
-                    if (evt.target.files[0]) {
-                        const res = confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
+                    const targetElement = evt.target;
+                    if (targetElement.files[0]) {
+                        const res = await popup.confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
                         if (!res) {
+                            targetElement.value = "";
                             return false;
                         }
-                        const file = evt.target.files[0];
+                        const file = targetElement.files[0];
                         const reader = new FileReader();
                         reader.onload = async (evt) => {
                             const result = await DB_ExportImport_JSONFormat("import", evt.target.result);
@@ -2999,11 +3129,12 @@
                             }
                         }
                         reader.readAsText(file);
+                        targetElement.value = "";
                     }
                 });
 
                 RootShadow.getElementById("ExportAndImportConfig2-2_Button").addEventListener("click", async () => {
-                    const res = confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
+                    const res = await popup.confirm("現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？");
                     if (!res) {
                         return false;
                     }
@@ -3049,7 +3180,11 @@
       <option id="PerformanceConfig1_Select_Option2" value="balance"></option>
       <option
         id="PerformanceConfig1_Select_Option3"
-        value="performance"
+        value="performance1"
+      ></option>
+      <option
+        id="PerformanceConfig1_Select_Option4"
+        value="performance2"
       ></option>
     </select>
   </div>
@@ -3065,6 +3200,10 @@
     <div class="ItemFrame_Border">
       <span id="PerformanceConfig2_input2_SpanText"></span>
       <input id="PerformanceConfig2_input2" type="number" value="10" />
+    </div>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig2_input3_SpanText"></span>
+      <input id="PerformanceConfig2_input3" type="number" value="10" />
     </div>
   </div>
   <div class="ItemFrame_Border">
@@ -3095,6 +3234,12 @@
         <option value="">-----</option>
       </select>
     </div>
+    <div class="ItemFrame_Border">
+      <span id="PerformanceConfig3_Select5_SpanText"></span>
+      <select id="PerformanceConfig3_Select5" size="1">
+        <option value="">-----</option>
+      </select>
+    </div>
   </div>
   <div>
     <button id="PerformanceConfig_BackButton"></button>
@@ -3113,22 +3258,25 @@
                 RootShadow.getElementById("PerformanceConfig1_Description4").textContent = "バランスにするとページを表示して読み込みが終わるまで、パフォーマンス優先で動作をし、読み込み完了後はブロック優先で動作します。";
                 RootShadow.getElementById("PerformanceConfig1_Select_Option1").textContent = "ブロック優先";
                 RootShadow.getElementById("PerformanceConfig1_Select_Option2").textContent = "バランス";
-                RootShadow.getElementById("PerformanceConfig1_Select_Option3").textContent = "パフォーマンス優先";
+                RootShadow.getElementById("PerformanceConfig1_Select_Option3").textContent = "パフォーマンス優先（設定1）";
+                RootShadow.getElementById("PerformanceConfig1_Select_Option4").textContent = "パフォーマンス優先（設定2）";
 
                 RootShadow.getElementById("PerformanceConfig2_Title").textContent = "動作間隔";
                 RootShadow.getElementById("PerformanceConfig2_Description1").textContent = "パフォーマンス優先モードまたはバランスモードを選択時の動作間隔の設定をします。";
                 RootShadow.getElementById("PerformanceConfig2_Description2").textContent = "ミリ単位で動作間隔の設定ができます。（1秒=1000ミリ）";
                 RootShadow.getElementById("PerformanceConfig2_Description3").textContent = "数値を大きくするほど動作が軽くなりますが、ブロック処理がその分遅れます。";
-                RootShadow.getElementById("PerformanceConfig2_input1_SpanText").textContent = "パフォーマンス優先モード";
-                RootShadow.getElementById("PerformanceConfig2_input2_SpanText").textContent = "バランスモード";
+                RootShadow.getElementById("PerformanceConfig2_input1_SpanText").textContent = "バランス";
+                RootShadow.getElementById("PerformanceConfig2_input2_SpanText").textContent = "パフォーマンス優先（設定1）";
+                RootShadow.getElementById("PerformanceConfig2_input3_SpanText").textContent = "パフォーマンス優先（設定2）";
 
                 RootShadow.getElementById("PerformanceConfig3_Title").textContent = "サイト別設定";
                 RootShadow.getElementById("PerformanceConfig3_Description1").textContent = "ブロックリストテキストのマッチするサイトで動作モードを上書きすることができます。";
                 RootShadow.getElementById("PerformanceConfig3_Description2").textContent = "複数の設定でURLがマッチした場合、この設定項目に表示されている項目の一番上が優先されます。";
                 RootShadow.getElementById("PerformanceConfig3_Select1_SpanText").textContent = "無効化";
-                RootShadow.getElementById("PerformanceConfig3_Select2_SpanText").textContent = "パフォーマンス優先";
-                RootShadow.getElementById("PerformanceConfig3_Select3_SpanText").textContent = "ブロック優先";
-                RootShadow.getElementById("PerformanceConfig3_Select4_SpanText").textContent = "バランス";
+                RootShadow.getElementById("PerformanceConfig3_Select2_SpanText").textContent = "パフォーマンス優先（設定1）";
+                RootShadow.getElementById("PerformanceConfig3_Select3_SpanText").textContent = "パフォーマンス優先（設定2）";
+                RootShadow.getElementById("PerformanceConfig3_Select4_SpanText").textContent = "ブロック優先";
+                RootShadow.getElementById("PerformanceConfig3_Select5_SpanText").textContent = "バランス";
 
                 RootShadow.getElementById("PerformanceConfig_BackButton").textContent = "←戻る";
                 RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = "保存";
@@ -3136,12 +3284,14 @@
 
 
                 const mode_ELe = RootShadow.getElementById("PerformanceConfig1_Select");
-                const interval_performancePriority_ELe = RootShadow.getElementById("PerformanceConfig2_input1");
-                const interval_balance_ELe = RootShadow.getElementById("PerformanceConfig2_input2");
+                const interval_balance_ELe = RootShadow.getElementById("PerformanceConfig2_input1");
+                const interval_performancePriority1_ELe = RootShadow.getElementById("PerformanceConfig2_input2");
+                const interval_performancePriority2_ELe = RootShadow.getElementById("PerformanceConfig2_input3");
                 const overRide_disable_Ele = RootShadow.getElementById("PerformanceConfig3_Select1");
-                const overRide_performancePriority_Ele = RootShadow.getElementById("PerformanceConfig3_Select2");
-                const overRide_blockPriority_Ele = RootShadow.getElementById("PerformanceConfig3_Select3");
-                const overRide_balance_Ele = RootShadow.getElementById("PerformanceConfig3_Select4");
+                const overRide_performancePriority1_Ele = RootShadow.getElementById("PerformanceConfig3_Select2");
+                const overRide_performancePriority2_Ele = RootShadow.getElementById("PerformanceConfig3_Select3");
+                const overRide_blockPriority_Ele = RootShadow.getElementById("PerformanceConfig3_Select4");
+                const overRide_balance_Ele = RootShadow.getElementById("PerformanceConfig3_Select5");
 
 
                 ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach((eventName) => {
@@ -3151,7 +3301,7 @@
                                 evt.preventDefault();
                                 return;
                             }
-                            if (/^(?:(?!^0+)\d*\.?\d*|0)$/.test(evt.target.value)) {
+                            if (/^(?:\d*\.?\d*|0)$/.test(evt.target.value)) {
                                 evt.target.oldValue = evt.target.value;
                             } else if ("oldValue" in evt.target) {
                                 evt.target.value = evt.target.oldValue;
@@ -3168,7 +3318,8 @@
                     option.setAttribute("value", BlockListTextStorage[i].name);
                     option.textContent = BlockListTextStorage[i].name;
                     overRide_disable_Ele.append(option);
-                    overRide_performancePriority_Ele.append(option.cloneNode(true));
+                    overRide_performancePriority1_Ele.append(option.cloneNode(true));
+                    overRide_performancePriority2_Ele.append(option.cloneNode(true));
                     overRide_blockPriority_Ele.append(option.cloneNode(true));
                     overRide_balance_Ele.append(option.cloneNode(true));
                 }
@@ -3176,18 +3327,22 @@
                 const Config_Obj = PreferenceSettingStorage.performanceConfig
                 if (Config_Obj) {
                     mode_ELe.value = Config_Obj.mode;
-                    interval_performancePriority_ELe.value = Config_Obj.interval_performancePriority;
                     interval_balance_ELe.value = Config_Obj.interval_balance;
+                    interval_performancePriority1_ELe.value = Config_Obj.interval_performancePriority1;
+                    interval_performancePriority2_ELe.value = Config_Obj.interval_performancePriority2;
                     overRide_disable_Ele.value = Config_Obj.overRide_disable;
-                    overRide_performancePriority_Ele.value = Config_Obj.overRide_performancePriority;
+                    overRide_performancePriority1_Ele.value = Config_Obj.overRide_performancePriority1;
+                    overRide_performancePriority2_Ele.value = Config_Obj.overRide_performancePriority2;
                     overRide_blockPriority_Ele.value = Config_Obj.overRide_blockPriority;
                     overRide_balance_Ele.value = Config_Obj.overRide_balance;
                 } else {
                     mode_ELe.value = "balance";
-                    interval_performancePriority_ELe.value = 100;
                     interval_balance_ELe.value = 10;
+                    interval_performancePriority1_ELe.value = 100;
+                    interval_performancePriority2_ELe.value = 100;
                     overRide_disable_Ele.value = "";
-                    overRide_performancePriority_Ele.value = "";
+                    overRide_performancePriority1_Ele.value = "";
+                    overRide_performancePriority2_Ele.value = "";
                     overRide_blockPriority_Ele.value = "";
                     overRide_balance_Ele.value = "";
                 }
@@ -3195,18 +3350,21 @@
                 RootShadow.getElementById("PerformanceConfig_SaveButton").addEventListener("click", async () => {
                     const performanceConfig_setObj = {
                         mode: mode_ELe.value,
-                        interval_performancePriority: interval_performancePriority_ELe.value,
-                        interval_balance: interval_balance_ELe.value,
+                        interval_balance: parseInt(interval_balance_ELe.value),
+                        interval_performancePriority1: parseInt(interval_performancePriority1_ELe.value),
+                        interval_performancePriority2: parseInt(interval_performancePriority2_ELe.value),
                         overRide_disable: overRide_disable_Ele.value,
-                        overRide_performancePriority: overRide_performancePriority_Ele.value,
+                        overRide_performancePriority1: overRide_performancePriority1_Ele.value,
+                        overRide_performancePriority2: overRide_performancePriority2_Ele.value,
                         overRide_blockPriority: overRide_blockPriority_Ele.value,
                         overRide_balance: overRide_balance_Ele.value
                     }
                     PreferenceSettingStorage.performanceConfig = performanceConfig_setObj;
                     await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
-                    RootShadow.getElementById("PerformanceConfig_SaveInfoText").style.display = "";
+                    const saveInfo_Ele = RootShadow.getElementById("PerformanceConfig_SaveInfoText");
+                    saveInfo_Ele.style.display = "";
                     await pauseSleep(3000);
-                    RootShadow.getElementById("PerformanceConfig_SaveInfoText").style.display = "none";
+                    saveInfo_Ele.style.display = "none";
                 }, false);
 
                 RootShadow.getElementById("PerformanceConfig_BackButton").addEventListener("click", () => {
