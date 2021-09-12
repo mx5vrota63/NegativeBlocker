@@ -737,6 +737,8 @@
     const BG_sentenceBlock_obj = new class extends BackGround_Func {
         constructor() {
             super();
+            this.textNodeArray = new Array();
+            this.optionNodeArray = new Array();
             this.SentenceBlock_filter1 = null;
             this.SentenceBlock_filter2 = null;
             this.SentenceBlock_filter3 = null;
@@ -791,11 +793,33 @@
             await this.BlockListText_StorageLoad(this.SentenceBlock_filter3);
         }
         async Start(node) {
-            this.SentenceBlock_BackgroundExecute(node, this.SentenceBlock_filter1);
-            this.SentenceBlock_BackgroundExecute(node, this.SentenceBlock_filter2);
-            this.SentenceBlock_BackgroundExecute(node, this.SentenceBlock_filter3);
+            let textNode;
+            let optionNode;
+            if (node) {
+                const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                textNode = new Array();
+                for (let i = 0; i < candidates1.snapshotLength; i++) {
+                    textNode.push(candidates1.snapshotItem(i));
+                }
+                const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                optionNode = new Array();
+                for (let i = 0; i < candidates2.snapshotLength; i++) {
+                    optionNode.push(candidates2.snapshotItem(i));
+                }
+            } else {
+                const textNodeTemp = this.textNodeArray.slice();
+                this.textNodeArray.splice(0);
+                const optionNodeTemp = this.optionNodeArray.slice();
+                this.optionNodeArray.splice(0);
+                textNode = [...new Set(textNodeTemp)];
+                optionNode = [...new Set(optionNodeTemp)];
+            }
+
+            await Promise.all([this.SentenceBlock_BackgroundExecute(this.SentenceBlock_filter1, textNode, optionNode),
+            this.SentenceBlock_BackgroundExecute(this.SentenceBlock_filter2, textNode, optionNode),
+            this.SentenceBlock_BackgroundExecute(this.SentenceBlock_filter3, textNode, optionNode)]);
         }
-        async SentenceBlock_BackgroundExecute(node, SentenceBlock_settingArray) {
+        async SentenceBlock_BackgroundExecute(SentenceBlock_settingArray, textNode, optionNode) {
             const textReplaceExecute = async (EleObj, PropertyName) => {
                 let sentenceReplaceFlag = false;
 
@@ -861,20 +885,8 @@
                     }
                 }));
             };
-
-            if (!node) return;
-
-            const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            const candidatesNode1 = new Array();
-            for (let i = 0; i < candidates1.snapshotLength; i++) {
-                candidatesNode1.push(candidates1.snapshotItem(i));
-            }
-            const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-            const candidatesNode2 = new Array();
-            for (let i = 0; i < candidates2.snapshotLength; i++) {
-                candidatesNode2.push(candidates2.snapshotItem(i));
-            }
-            await Promise.all(candidatesNode1.map(async (arrNode) => { textReplaceExecute(arrNode, "nodeValue") }), candidatesNode2.map(async (arrNode) => { textReplaceExecute(arrNode, "value") }));
+            await Promise.all(textNode.map(async (arrNode) => { textReplaceExecute(arrNode, "nodeValue") }), optionNode.map(async (arrNode) => { textReplaceExecute(arrNode, "value") }));
+            return true;
         }
     }
 
@@ -1161,15 +1173,53 @@
             childList: true,
             subtree: true
         }
-        const observer = new MutationObserver(async () => {
+
+        const SentenceBlock_textNodeArrayPush = async (mutationList) => {
+            if (mutationList[0].type == "characterData") {
+                mutationList.forEach((mutation) => {
+                    const textNode = mutation.target;
+                    if (textNode.parentElement) {
+                        if (textNode.parentElement.tagName !== "STYLE" && textNode.parentElement.tagName !== "TEXTAREA" && textNode.parentElement.tagName !== "SCRIPT") {
+                            BG_sentenceBlock_obj.textNodeArray.push(textNode);
+                        }
+                    }
+                });
+            }
+            if (mutationList[0].type == "childList") {
+                mutationList.forEach((mutation) => {
+                    const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]',
+                        mutation.target, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                    for (let i = 0; i < candidates1.snapshotLength; i++) {
+                        BG_sentenceBlock_obj.textNodeArray.push(candidates1.snapshotItem(i));
+                    }
+                    const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href',
+                        mutation.target, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                    for (let i = 0; i < candidates2.snapshotLength; i++) {
+                        BG_sentenceBlock_obj.optionNodeArray.push(candidates2.snapshotItem(i));
+                    }
+                });
+            }
+        }
+
+        const observerTextNode = new MutationObserver(async (mutationList) => {
+            SentenceBlock_textNodeArrayPush(mutationList);
+        });
+
+        const observer = new MutationObserver(async (mutationList) => {
             const interval = Date.now() - dateInterval
             if (interval > observerInterval) {
-                StartExecute();
+                await SentenceBlock_textNodeArrayPush(mutationList);
+                BG_elementBlock_Obj.Start(document);
+                BG_sentenceBlock_obj.Start();
                 dateInterval = Date.now();
             } else {
                 observer.disconnect();
+                observerTextNode.observe(document.body, observerConfig);
+                await SentenceBlock_textNodeArrayPush(mutationList);
                 await pauseSleep(interval);
-                StartExecute();
+                BG_elementBlock_Obj.Start(document);
+                observerTextNode.disconnect();
+                BG_sentenceBlock_obj.Start();
                 observer.observe(document.body, observerConfig);
                 dateInterval = Date.now();
             }
