@@ -44,7 +44,7 @@
     let ElementBlockStorage;
     let PreferenceSettingStorage;
     let SentenceBlockTempDisableArray;
-    let fetchtimeStampGlobalStorage;
+    let fetchGlobalFlagStorage;
 
     const lang = {
         OKButton: "OK",
@@ -169,6 +169,14 @@
             buttonHide_description: "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。",
             buttonHide_boxText: "ボタンを非表示にする",
             buttonHide_warning: "メニューAPIが検出されませんでした。このまま非表示にすると、再インストールして設定をすべて消去しない限り二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？",
+            fetchInterval_title: "URLから取得する間隔",
+            fetchInterval_Description: "ブロックリストテキストでURLからテキストを取得する際の更新間隔を設定します。",
+            fetchInterval_300000: "5分",
+            fetchInterval_900000: "15分",
+            fetchInterval_1800000: "30分",
+            fetchInterval_3600000: "1時間",
+            fetchInterval_7200000: "2時間",
+            fetchInterval_18000000: "5時間",
             dashboardColor_title: "ダッシュボード背景色",
             dashboardColor_Description: "ダッシュボード画面全体の背景色の色を指定します。",
             dashboardColor_red: "赤色",
@@ -364,6 +372,7 @@
                     overRide_balance: "",
                 },
                 hideButton: false,
+                fetchInterval: 3600000,
                 dashboardColor: "#ffffb2"
             };
             await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
@@ -376,44 +385,72 @@
             SentenceBlockTempDisableArray = new Array();
         }
         await storageAPI.write("SentenceBlock_TempDisable", JSON.stringify(new Array()));
+
+        fetchGlobalFlagStorage = await storageAPI.read("FetchGlobalFlag");
+        if (fetchGlobalFlagStorage) {
+            fetchGlobalFlagStorage = JSON.parse(fetchGlobalFlagStorage);
+        } else {
+            fetchGlobalFlagStorage = {
+                globalFetchTime: Date.now(),
+                fetchRetryIntervalTime: Date.now(),
+                retryFlag: false
+            };
+            await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
+        }
     }
     await StorageLoad();
 
     async function BlockListText_feathLoad() {
-        await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
+        const fetchResultArray = await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
             if (BlockListText_Obj.fetch_enable) {
+                let errorFlag = false;
                 let BlockListText_textObj = await storageAPI.read("BLT_" + BlockListText_Obj.name);
                 try {
                     BlockListText_textObj = JSON.parse(BlockListText_textObj);
-                    if (Date.now() - BlockListText_textObj.fetch_timeStamp >= 3600000) {
+                    if (Date.now() - BlockListText_textObj.fetch_timeStamp >= PreferenceSettingStorage.fetchInterval) {
                         await fetch(BlockListText_Obj.fetch_url).then(async (response) => {
                             if (response.ok) {
                                 BlockListText_textObj.text = await response.text();
                             } else {
-                                throw new Error('[NegativeBlocker] FetchAPI Failure: ' + response.status);
+                                throw new Error("[NegativeBlocker] FetchAPI Failure: [ " + BlockListText_Obj.name + " ] status: " + response.status);
                             }
                         }).catch((e) => {
                             console.error(e);
+                            errorFlag = true;
                         });
+                        if (errorFlag) return false;
                         BlockListText_textObj.fetch_timeStamp = Date.now();
                         await storageAPI.write("BLT_" + BlockListText_Obj.name, JSON.stringify(BlockListText_textObj));
+                        return true;
+                    } else {
+                        return undefined;
                     }
                 } catch (e) {
                     console.error(e);
-                    return false;
+                    return undefined;
                 }
             }
+            return undefined;
         }));
-        await storageAPI.write("fetchLastTime", Date.now());
-        console.log("fetch update");
+        if (fetchResultArray.every(arr => arr !== false)) {
+            console.log("Fetch All Update");
+            fetchGlobalFlagStorage.retryFlag = false;
+        } else {
+            fetchGlobalFlagStorage.retryFlag = true;
+        }
+        await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
     }
 
-    fetchtimeStampGlobalStorage = await storageAPI.read("fetchLastTime");
-    if (!fetchtimeStampGlobalStorage) {
-        fetchtimeStampGlobalStorage = Date.now();
-        await storageAPI.write("fetchLastTime", fetchtimeStampGlobalStorage);
-    }
-    if (Date.now() - fetchtimeStampGlobalStorage >= 3600000) {
+    const globalFetchTimeDiff = Date.now() - fetchGlobalFlagStorage.globalFetchTime
+    const fetchRetryIntervalTimeDiff = Date.now() - fetchGlobalFlagStorage.fetchRetryIntervalTime;
+    if (globalFetchTimeDiff >= PreferenceSettingStorage.fetchInterval) {
+        fetchGlobalFlagStorage.globalFetchTime = Date.now();
+        fetchGlobalFlagStorage.fetchRetryIntervalTime = Date.now();
+        await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
+        BlockListText_feathLoad();
+    } else if (fetchGlobalFlagStorage.retryFlag == true && fetchRetryIntervalTimeDiff >= 300000) {
+        fetchGlobalFlagStorage.fetchRetryIntervalTime = Date.now();
+        await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
         BlockListText_feathLoad();
     }
 
@@ -796,16 +833,21 @@
             let textNode;
             let optionNode;
             if (node) {
-                const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-                textNode = new Array();
-                for (let i = 0; i < candidates1.snapshotLength; i++) {
-                    textNode.push(candidates1.snapshotItem(i));
-                }
-                const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-                optionNode = new Array();
-                for (let i = 0; i < candidates2.snapshotLength; i++) {
-                    optionNode.push(candidates2.snapshotItem(i));
-                }
+                await Promise.all([(async () => {
+                    const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                    textNode = new Array();
+                    for (let i = 0; i < candidates1.snapshotLength; i++) {
+                        textNode.push(candidates1.snapshotItem(i));
+                    }
+                    return true;
+                })(), (async () => {
+                    const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                    optionNode = new Array();
+                    for (let i = 0; i < candidates2.snapshotLength; i++) {
+                        optionNode.push(candidates2.snapshotItem(i));
+                    }
+                    return true;
+                })()]);
             } else {
                 const textNodeTemp = this.textNodeArray.slice();
                 this.textNodeArray.splice(0);
@@ -1176,17 +1218,17 @@
 
         const SentenceBlock_textNodeArrayPush = async (mutationList) => {
             if (mutationList[0].type == "characterData") {
-                mutationList.forEach((mutation) => {
+                Promise.all(mutationList.map(async (mutation) => {
                     const textNode = mutation.target;
                     if (textNode.parentElement) {
                         if (textNode.parentElement.tagName !== "STYLE" && textNode.parentElement.tagName !== "TEXTAREA" && textNode.parentElement.tagName !== "SCRIPT") {
                             BG_sentenceBlock_obj.textNodeArray.push(textNode);
                         }
                     }
-                });
+                }));
             }
             if (mutationList[0].type == "childList") {
-                mutationList.forEach((mutation) => {
+                Promise.all(mutationList.map(async (mutation) => {
                     const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]',
                         mutation.target, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
                     for (let i = 0; i < candidates1.snapshotLength; i++) {
@@ -1197,7 +1239,7 @@
                     for (let i = 0; i < candidates2.snapshotLength; i++) {
                         BG_sentenceBlock_obj.optionNodeArray.push(candidates2.snapshotItem(i));
                     }
-                });
+                }));
             }
         }
 
@@ -1497,7 +1539,7 @@
 <style type="text/css">
   div#PopupBack {
     width: calc(100% - 5px);
-    height: calc(100% - 63px);
+    height: calc(100% - 62px);
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1;
     position: absolute;
@@ -2120,6 +2162,8 @@
                             this.textarea_Ele.style.display = "block";
                             this.textareaDisable_Ele.style.display = "none";
                         }
+
+                        this.optionCheckboxDisableChange();
                     }
                     this.SaveButtonFunc = this.BlockListText_storageSave.bind(this);
                     this.DelButtonFunc = this.BlockListText_storageDelete.bind(this);
@@ -2181,30 +2225,32 @@
   </div>
   <div class="ItemFrame_Border">
     <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
-    <label class="BlockListText_Label">
-      <input id="BlockListText_Config1_Input" type="checkbox" />
-      <span id="BlockListText_Config1_SpanText"></span>
-    </label>
-    <label class="BlockListText_Label">
-      <input id="BlockListText_Config2_Input" type="checkbox" />
-      <span id="BlockListText_Config2_SpanText"></span>
-    </label>
-    <label class="BlockListText_Label">
-      <input id="BlockListText_Config3_Input" type="checkbox" />
-      <span id="BlockListText_Config3_SpanText"></span>
-    </label>
-    <label class="BlockListText_Label">
-      <input id="BlockListText_Config4_Input" type="checkbox" />
-      <span id="BlockListText_Config4_SpanText"></span>
-    </label>
-    <label class="BlockListText_Label">
-      <input id="BlockListText_Config5_Input" type="checkbox" />
-      <span id="BlockListText_Config5_SpanText"></span>
-    </label>
-    <label class="BlockListText_Label">
-      <input id="BlockListText_Config6_Input" type="checkbox" />
-      <span id="BlockListText_Config6_SpanText"></span>
-    </label>
+    <div id="BlockListText_Config_Div">
+      <label class="BlockListText_Label">
+        <input id="BlockListText_Config1_Input" type="checkbox" />
+        <span id="BlockListText_Config1_SpanText"></span>
+      </label>
+      <label class="BlockListText_Label">
+        <input id="BlockListText_Config2_Input" type="checkbox" />
+        <span id="BlockListText_Config2_SpanText"></span>
+      </label>
+      <label class="BlockListText_Label">
+        <input id="BlockListText_Config3_Input" type="checkbox" />
+        <span id="BlockListText_Config3_SpanText"></span>
+      </label>
+      <label class="BlockListText_Label">
+        <input id="BlockListText_Config4_Input" type="checkbox" />
+        <span id="BlockListText_Config4_SpanText"></span>
+      </label>
+      <label class="BlockListText_Label">
+        <input id="BlockListText_Config5_Input" type="checkbox" />
+        <span id="BlockListText_Config5_SpanText"></span>
+      </label>
+      <label class="BlockListText_Label">
+        <input id="BlockListText_Config6_Input" type="checkbox" />
+        <span id="BlockListText_Config6_SpanText"></span>
+      </label>
+    </div>
   </div>
   <div>
     <button id="BlockListText_BackButton"></button>
@@ -2264,6 +2310,10 @@
                         this.textareaDisable_Ele.style.display = "none";
                     }, false);
 
+                    RootShadow.getElementById("BlockListText_Config_Div").addEventListener("change", () => {
+                        this.optionCheckboxDisableChange();
+                    });
+
                     RootShadow.getElementById("BlockListText_BackButton").addEventListener("click", () => {
                         this.ListEditPage_Ele.style.display = "block";
                         this.EditConfigPage_Ele.style.display = "none";
@@ -2271,6 +2321,33 @@
                     }, false);
 
                     RootShadow.getElementById("SettingsObject_ConfigItems_Enable").style.display = "none";
+                }
+
+                async optionCheckboxDisableChange() {
+                    if (this.uBlacklist_Ele.checked) {
+                        this.regexp_Ele.disabled = true;
+                        this.regexp_Ele.parentElement.style.textDecoration = "line-through";
+                        this.caseSensitive_Ele.disabled = true;
+                        this.caseSensitive_Ele.parentElement.style.textDecoration = "line-through";
+                        this.exact_Ele.disabled = true;
+                        this.exact_Ele.parentElement.style.textDecoration = "line-through";
+                        this.spaceIgnore_Ele.disabled = true;
+                        this.spaceIgnore_Ele.parentElement.style.textDecoration = "line-through";
+                    } else {
+                        this.regexp_Ele.disabled = false;
+                        this.regexp_Ele.parentElement.style.textDecoration = "";
+                        this.caseSensitive_Ele.disabled = false;
+                        this.caseSensitive_Ele.parentElement.style.textDecoration = "";
+                        this.spaceIgnore_Ele.disabled = false;
+                        this.spaceIgnore_Ele.parentElement.style.textDecoration = "";
+                        if (this.regexp_Ele.checked) {
+                            this.exact_Ele.disabled = true;
+                            this.exact_Ele.parentElement.style.textDecoration = "line-through";
+                        } else {
+                            this.exact_Ele.disabled = false;
+                            this.exact_Ele.parentElement.style.textDecoration = "";
+                        }
+                    }
                 }
 
                 async BlockListText_storageUpdateOtherSetting(oldName, newName) {
@@ -2376,6 +2453,8 @@
 
                         this.textarea_Ele.style.display = "block";
                         this.textareaDisable_Ele.style.display = "none";
+
+                        this.optionCheckboxDisableChange();
                     }
                 }
 
@@ -3092,11 +3171,13 @@
     <p id="ImportAndExport_Description"></p>
     <button id="ImportAndExport_Button"></button>
   </div>
+
   <div id="PerformanceConfig" class="ItemFrame_Border">
     <h1 id="PerformanceConfig_Title" class="ItemFrame_Title"></h1>
     <p id="PerformanceConfig_Description"></p>
     <button id="PerformanceConfig_Button"></button>
   </div>
+
   <div id="ButtonHide" class="ItemFrame_Border">
     <h1 id="ButtonHide_Title" class="ItemFrame_Title"></h1>
     <p id="ButtonHide_Description"></p>
@@ -3105,6 +3186,20 @@
       <span id="ButtonHide_Input_SpanText"></span>
     </label>
   </div>
+
+  <div id="FetchInterval" class="ItemFrame_Border">
+    <h1 id="FetchInterval_Title" class="ItemFrame_Title"></h1>
+    <p id="FetchInterval_Description"></p>
+    <select id="FetchInterval_Select" size="1">
+      <option id="FetchInterval_Select_Option1" value="300000"></option>
+      <option id="FetchInterval_Select_Option2" value="900000"></option>
+      <option id="FetchInterval_Select_Option3" value="1800000"></option>
+      <option id="FetchInterval_Select_Option4" value="3600000"></option>
+      <option id="FetchInterval_Select_Option5" value="7200000"></option>
+      <option id="FetchInterval_Select_Option6" value="18000000"></option>
+    </select>
+  </div>
+
   <div id="DashboardColor" class="ItemFrame_Border">
     <h1 id="DashboardColor_Title" class="ItemFrame_Title"></h1>
     <p id="DashboardColor_Description"></p>
@@ -3132,6 +3227,16 @@
             RootShadow.getElementById("ButtonHide_Title").textContent = lang.DB_preference.buttonHide_title;
             RootShadow.getElementById("ButtonHide_Description").textContent = lang.DB_preference.buttonHide_description;
             RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = lang.DB_preference.buttonHide_boxText;
+
+            RootShadow.getElementById("FetchInterval_Title").textContent = lang.DB_preference.fetchInterval_title;
+            RootShadow.getElementById("FetchInterval_Description").textContent = lang.DB_preference.fetchInterval_Description;
+            RootShadow.getElementById("FetchInterval_Select_Option1").textContent = lang.DB_preference.fetchInterval_300000;
+            RootShadow.getElementById("FetchInterval_Select_Option2").textContent = lang.DB_preference.fetchInterval_900000;
+            RootShadow.getElementById("FetchInterval_Select_Option3").textContent = lang.DB_preference.fetchInterval_1800000;
+            RootShadow.getElementById("FetchInterval_Select_Option4").textContent = lang.DB_preference.fetchInterval_3600000;
+            RootShadow.getElementById("FetchInterval_Select_Option5").textContent = lang.DB_preference.fetchInterval_7200000;
+            RootShadow.getElementById("FetchInterval_Select_Option6").textContent = lang.DB_preference.fetchInterval_18000000;
+
             RootShadow.getElementById("DashboardColor_Title").textContent = lang.DB_preference.dashboardColor_title;
             RootShadow.getElementById("DashboardColor_Description").textContent = lang.DB_preference.dashboardColor_Description;
             RootShadow.getElementById("DashboardColor_Select_Option1").textContent = lang.DB_preference.dashboardColor_red;
@@ -3177,6 +3282,12 @@
             RootShadow.getElementById("DashboardColor_Select").addEventListener("change", async (evt) => {
                 PreferenceSettingStorage.dashboardColor = evt.target.value;
                 RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", evt.target.value);
+                await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+            })
+
+            RootShadow.getElementById("FetchInterval_Select").value = PreferenceSettingStorage.fetchInterval;
+            RootShadow.getElementById("FetchInterval_Select").addEventListener("change", async (evt) => {
+                PreferenceSettingStorage.fetchInterval = parseInt(evt.target.value);
                 await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
             })
 
