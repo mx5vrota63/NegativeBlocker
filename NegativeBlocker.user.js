@@ -126,7 +126,7 @@
         },
         DB_elementBlock: {
             URL_title: "URL",
-            URL_description: "このルールを有効にするサイトを指定します。何も入力せず空欄にするとすべてのサイトが対象になります。",
+            URL_description: "このルールを有効にするサイトを指定します。",
             URL_wildcard: "ワイルドカード(*)",
             URL_regexp: "正規表現",
             URL_BLT: "ブロックリストテキスト",
@@ -193,8 +193,10 @@
             import_title: "インポート",
             import_file: "JSONファイルからインポート",
             import_textArea: "テキストエリアからインポート(JSON形式)",
+            import_addImport: "インポートする際、上書きせず設定を追加してインポートする（環境設定は変更されません）",
             import_success: "インポートしました。",
             import_overWrite: "現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？",
+            import_addImportConfirm: "現在の設定内容にインポートする設定を追加します。よろしいですか？",
             textArea_title: "テキストエリア",
             error_export: "エラー：エクスポートに失敗しました。詳細はコンソールログを参照してください。",
             error_import: "エラー：設定を読み込めませんでした。JSONファイル(テキスト)が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。"
@@ -232,7 +234,7 @@
                 StorageValue = await GM.getValue(keyName);
             } catch (e) {
                 console.error(e);
-                console.log("GM Function Not Detected");
+                console.log("NegativeBlocker: GM Function Not Detected");
             }
             return StorageValue;
         }
@@ -243,7 +245,7 @@
                 return true;
             } catch (e) {
                 console.error(e);
-                console.log("GM Function Not Detected");
+                console.log("NegativeBlocker: GM Function Not Detected");
                 return false;
             }
         }
@@ -254,7 +256,7 @@
                 return true;
             } catch (e) {
                 console.error(e);
-                console.log("GM Function Not Detected");
+                console.log("NegativeBlocker: GM Function Not Detected");
                 return false;
             }
         }
@@ -264,7 +266,7 @@
                 return await GM.listValues();
             } catch (e) {
                 console.error(e);
-                console.log("GM Function Not Detected");
+                console.log("NegativeBlocker: GM Function Not Detected");
                 return undefined;
             }
         }
@@ -305,10 +307,10 @@
         try {
             const successful = document.execCommand('copy');
             const msg = successful ? 'successful' : 'failure';
-            console.log('Clipboard Copy' + msg);
+            console.log('NegativeBlocker: Clipboard Copy' + msg);
         } catch (e) {
             console.error(e);
-            console.log('Copy Command ERROR');
+            console.log('NegativeBlocker: Copy Command ERROR');
         }
         document.body.removeChild(textArea);
     }
@@ -412,7 +414,7 @@
                             if (response.ok) {
                                 BlockListText_textObj.text = await response.text();
                             } else {
-                                throw new Error("[NegativeBlocker] FetchAPI Failure: [ " + BlockListText_Obj.name + " ] status: " + response.status);
+                                throw new Error("NegativeBlocker: FetchAPI Failure: [ " + BlockListText_Obj.name + " ] status: " + response.status);
                             }
                         }).catch((e) => {
                             console.error(e);
@@ -433,7 +435,7 @@
             return undefined;
         }));
         if (fetchResultArray.every(arr => arr !== false)) {
-            console.log("Fetch All Update");
+            console.log("NegativeBlocker: Fetch All Update");
             fetchGlobalFlagStorage.retryFlag = false;
         } else {
             fetchGlobalFlagStorage.retryFlag = true;
@@ -1023,13 +1025,20 @@
                         return;
                     }
 
-                    let SearchEleNode;
                     if (eleBlockSet.elementSearch === "") {
-                        elementObj.style.display = "none";
-                        ElementBlock_executeResultList_func(eleBlockSet, elementObj, "");
+                        if (eleBlockSet.elementHide_hideMethod === "displayNone") {
+                            if (elementObj.style.display !== "none") {
+                                elementObj.style.display = "none";
+                                ElementBlock_executeResultList_func(eleBlockSet, elementObj, "");
+                            }
+                        } else if (eleBlockSet.elementHide_hideMethod === "remove") {
+                            elementObj.remove();
+                            ElementBlock_executeResultList_func(eleBlockSet, undefined, "");
+                        }
                         return;
                     }
 
+                    let SearchEleNode;
                     try {
                         if (eleBlockSet.elementSearch_method === "css") {
                             SearchEleNode = elementObj.querySelectorAll(eleBlockSet.elementSearch);
@@ -1159,6 +1168,9 @@
         }
     }
 
+
+
+
     async function initInsertElement() {
         if (!divElement_RootShadow) {
             divElement_RootShadow = document.createElement("div");
@@ -1201,9 +1213,36 @@
         }
     }
 
-    async function StartExecute() {
+    async function firstStartExecute() {
         await BG_elementBlock_Obj.Start(document);
         await BG_sentenceBlock_obj.Start(document);
+    }
+
+    async function SentenceBlock_textNodeArrayPush(mutationList) {
+        if (mutationList[0].type == "characterData") {
+            Promise.all(mutationList.map(async (mutation) => {
+                const textNode = mutation.target;
+                if (textNode.parentElement) {
+                    if (textNode.parentElement.tagName !== "STYLE" && textNode.parentElement.tagName !== "TEXTAREA" && textNode.parentElement.tagName !== "SCRIPT") {
+                        BG_sentenceBlock_obj.textNodeArray.push(textNode);
+                    }
+                }
+            }));
+        }
+        if (mutationList[0].type == "childList") {
+            Promise.all(mutationList.map(async (mutation) => {
+                const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]',
+                    mutation.target, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                for (let i = 0; i < candidates1.snapshotLength; i++) {
+                    BG_sentenceBlock_obj.textNodeArray.push(candidates1.snapshotItem(i));
+                }
+                const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href',
+                    mutation.target, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                for (let i = 0; i < candidates2.snapshotLength; i++) {
+                    BG_sentenceBlock_obj.optionNodeArray.push(candidates2.snapshotItem(i));
+                }
+            }));
+        }
     }
 
     async function observerregister() {
@@ -1216,39 +1255,12 @@
             subtree: true
         }
 
-        const SentenceBlock_textNodeArrayPush = async (mutationList) => {
-            if (mutationList[0].type == "characterData") {
-                Promise.all(mutationList.map(async (mutation) => {
-                    const textNode = mutation.target;
-                    if (textNode.parentElement) {
-                        if (textNode.parentElement.tagName !== "STYLE" && textNode.parentElement.tagName !== "TEXTAREA" && textNode.parentElement.tagName !== "SCRIPT") {
-                            BG_sentenceBlock_obj.textNodeArray.push(textNode);
-                        }
-                    }
-                }));
-            }
-            if (mutationList[0].type == "childList") {
-                Promise.all(mutationList.map(async (mutation) => {
-                    const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]',
-                        mutation.target, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-                    for (let i = 0; i < candidates1.snapshotLength; i++) {
-                        BG_sentenceBlock_obj.textNodeArray.push(candidates1.snapshotItem(i));
-                    }
-                    const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href',
-                        mutation.target, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-                    for (let i = 0; i < candidates2.snapshotLength; i++) {
-                        BG_sentenceBlock_obj.optionNodeArray.push(candidates2.snapshotItem(i));
-                    }
-                }));
-            }
-        }
-
         const observerTextNode = new MutationObserver(async (mutationList) => {
             SentenceBlock_textNodeArrayPush(mutationList);
         });
 
         const observer = new MutationObserver(async (mutationList) => {
-            const interval = Date.now() - dateInterval
+            const interval = Date.now() - dateInterval;
             if (interval > observerInterval) {
                 await SentenceBlock_textNodeArrayPush(mutationList);
                 BG_elementBlock_Obj.Start(document);
@@ -1256,18 +1268,22 @@
                 dateInterval = Date.now();
             } else {
                 observer.disconnect();
-                observerTextNode.observe(document.body, observerConfig);
+                observerTextNode.observe(document, observerConfig);
                 await SentenceBlock_textNodeArrayPush(mutationList);
-                await pauseSleep(interval);
+                await pauseSleep(observerInterval - interval);
                 BG_elementBlock_Obj.Start(document);
                 observerTextNode.disconnect();
                 BG_sentenceBlock_obj.Start();
-                observer.observe(document.body, observerConfig);
+                observer.observe(document, observerConfig);
                 dateInterval = Date.now();
             }
         });
-        observer.observe(document.body, observerConfig);
+        observer.observe(document, observerConfig);
     }
+
+
+
+
 
     await perModeObj.init();
 
@@ -1276,7 +1292,9 @@
         await BG_elementBlock_Obj.init();
 
         if (document.readyState == "complete") {
-            StartExecute();
+            if (document.body != null) {
+                firstStartExecute();
+            }
             switch (perModeObj.performanceMode) {
                 case "balance":
                 case "block":
@@ -1313,7 +1331,9 @@
             document.addEventListener("readystatechange", async (evt) => {
                 switch (evt.target.readyState) {
                     case "interactive":
-                        StartExecute();
+                        if (document.body != null) {
+                            firstStartExecute();
+                        }
                         break;
                     case "complete":
                         switch (perModeObj.performanceMode) {
@@ -1340,9 +1360,10 @@
             await observerregister();
             initInsertElement();
         } else {
-            const observer = new MutationObserver(async () => {
+            const observer = new MutationObserver(async (mutationList) => {
                 if (document.body != null) {
                     observer.disconnect();
+                    await SentenceBlock_textNodeArrayPush(mutationList);
                     await observerregister();
                     initInsertElement();
                 }
@@ -1350,7 +1371,7 @@
             observer.observe(document, {
                 attributes: false,
                 attributeOldValue: false,
-                characterData: false,
+                characterData: true,
                 characterDataOldValue: false,
                 childList: true,
                 subtree: true
@@ -2398,6 +2419,25 @@
                         }
                     });
                     await storageAPI.write("ElementBlock", JSON.stringify(ElementBlockStorageTemp));
+
+                    const PreferenceSettingStorageTemp = JSON.parse(await storageAPI.read("PreferenceSetting"));
+                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_disable == oldName) {
+                        PreferenceSettingStorageTemp.performanceConfig.overRide_disable = newName;
+                    }
+                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority1 === oldName) {
+                        PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority1 = newName;
+                    }
+                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority2 === oldName) {
+                        PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority2 = newName;
+                    }
+                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_blockPriority === oldName) {
+                        PreferenceSettingStorageTemp.performanceConfig.overRide_blockPriority = newName;
+                    }
+                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_balance === oldName) {
+                        PreferenceSettingStorageTemp.performanceConfig.overRide_balance = newName;
+                    }
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorageTemp));
+
                     StorageLoad();
                 }
 
@@ -2414,7 +2454,7 @@
                         uBlacklist: this.uBlacklist_Ele.checked
                     }
                     const StoObj_Text = {
-                        text: this.textarea_Ele.value.trim(),
+                        text: this.textarea_Ele.value,
                         fetch_timeStamp: 0
                     }
                     if (await this.ListStoSave("BlockListText", StoObj)) {
@@ -3315,15 +3355,12 @@
                         }
                     } else if (mode === "import") {
                         try {
-                            let importset;
-                            try {
-                                importset = JSON.parse(importjson);
-                            } catch (e) {
-                                console.error(e);
-                                await popup.alert(lang.DB_exportImport.error_import);
-                                return undefined;
-                            }
+                            const importset = JSON.parse(importjson);
                             const ExistKeyList = await storageAPI.keynameList();
+                            // JSON.parse Test
+                            await Promise.all(Object.keys(importset).map(async (keyName) => {
+                                JSON.parse(importset[keyName]);
+                            }));
                             await Promise.all(ExistKeyList.map(async (ExistKey) => {
                                 await storageAPI.delete(ExistKey);
                             }));
@@ -3334,7 +3371,119 @@
                             return true;
                         } catch (e) {
                             console.error(e);
-                            return undefined;
+                            await popup.alert(lang.DB_exportImport.error_import);
+                            return false;
+                        }
+                    } else if (mode === "addimport") {
+                        try {
+                            const importset = JSON.parse(importjson);
+                            const BlockListTextTemp = JSON.parse(importset.BlockListText);
+                            const SentenceBlockTemp = JSON.parse(importset.SentenceBlock)
+                            const ElementBlockTemp = JSON.parse(importset.ElementBlock)
+                            const nameDuplicateRename = (name, currentSetting) => {
+                                let nameDuplicate_Name = name;
+                                let nameDuplicate_loopFlag = false;
+                                let nameDuplicate_renameNumber = 0;
+                                do {
+                                    nameDuplicate_loopFlag = false;
+                                    const dupCheck = currentSetting.some((currentSetObj) => nameDuplicate_Name == currentSetObj.name);
+                                    if (dupCheck) {
+                                        nameDuplicate_loopFlag = true;
+                                        nameDuplicate_renameNumber++;
+                                        nameDuplicate_Name = name + "_" + nameDuplicate_renameNumber;
+                                    }
+                                } while (nameDuplicate_loopFlag);
+                                return nameDuplicate_Name;
+                            }
+
+                            const BLTStorageTemp = new Array();
+                            BlockListTextTemp.forEach((settingObj) => {
+                                const newName = nameDuplicateRename(settingObj.name, BlockListTextStorage);
+                                const oldName = settingObj.name;
+                                BLTStorageTemp.push({
+                                    keyName: "BLT_" + newName,
+                                    setValue: importset["BLT_" + oldName]
+                                });
+                                if (oldName != newName) {
+                                    settingObj.name = newName;
+
+                                    SentenceBlockTemp.forEach((SentenceBlock_Obj) => {
+                                        const indexOldB = SentenceBlock_Obj.BlockListText_list.indexOf(oldName);
+                                        if (indexOldB != -1) {
+                                            if (newName) {
+                                                SentenceBlock_Obj.BlockListText_list[indexOldB] = newName;
+                                            } else {
+                                                SentenceBlock_Obj.BlockListText_list.splice(indexOldB, 1);
+                                            }
+                                        }
+                                        const indexOldE = SentenceBlock_Obj.BlockListText_exclude_list.indexOf(oldName);
+                                        if (indexOldE != -1) {
+                                            if (newName) {
+                                                SentenceBlock_Obj.BlockListText_exclude_list[indexOldE] = newName;
+                                            } else {
+                                                SentenceBlock_Obj.BlockListText_exclude_list.splice(indexOldE, 1);
+                                            }
+                                        }
+                                        if (SentenceBlock_Obj.url_BLT === oldName) {
+                                            SentenceBlock_Obj.url_BLT = newName;
+                                        }
+                                    });
+
+                                    ElementBlockTemp.forEach((ElementBlock_Obj) => {
+                                        const indexOldB = ElementBlock_Obj.BlockListText_list.indexOf(oldName);
+                                        if (indexOldB != -1) {
+                                            if (newName) {
+                                                ElementBlock_Obj.BlockListText_list[indexOldB] = newName;
+                                            } else {
+                                                ElementBlock_Obj.BlockListText_list.splice(indexOldB, 1);
+                                            }
+                                        }
+                                        const indexOldE = ElementBlock_Obj.BlockListText_exclude_list.indexOf(oldName);
+                                        if (indexOldE != -1) {
+                                            if (newName) {
+                                                ElementBlock_Obj.BlockListText_exclude_list[indexOldE] = newName;
+                                            } else {
+                                                ElementBlock_Obj.BlockListText_exclude_list.splice(indexOldE, 1);
+                                            }
+                                        }
+                                        if (ElementBlock_Obj.url_BLT === oldName) {
+                                            ElementBlock_Obj.url_BLT = newName;
+                                        }
+                                    });
+                                }
+                            });
+                            const BlockListTextStorage_writeReady = [...BlockListTextStorage, ...BlockListTextTemp];
+
+                            SentenceBlockTemp.forEach((settingObj) => {
+                                const newName = nameDuplicateRename(settingObj.name, SentenceBlockStorage);
+                                const oldName = settingObj.name;
+                                if (oldName != newName) {
+                                    settingObj.name = newName;
+                                }
+                            });
+                            const SentenceBlockStorage_writeReady = [...SentenceBlockStorage, ...SentenceBlockTemp];
+
+                            ElementBlockTemp.forEach((settingObj) => {
+                                const newName = nameDuplicateRename(settingObj.name, ElementBlockStorage);
+                                const oldName = settingObj.name;
+                                if (oldName != newName) {
+                                    settingObj.name = newName;
+                                }
+                            });
+                            const ElementBlockStorage_writeReady = [...ElementBlockStorage, ...ElementBlockTemp];
+
+                            await Promise.all(BLTStorageTemp.map(async (writeObj) => {
+                                await storageAPI.write(writeObj.keyName, writeObj.setValue);
+                            }));
+                            await storageAPI.write("BlockListText", JSON.stringify(BlockListTextStorage_writeReady));
+                            await storageAPI.write("SentenceBlock", JSON.stringify(SentenceBlockStorage_writeReady));
+                            await storageAPI.write("ElementBlock", JSON.stringify(ElementBlockStorage_writeReady));
+                            StorageLoad();
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            await popup.alert(lang.DB_exportImport.error_import);
+                            return false;
                         }
                     } else {
                         return undefined;
@@ -3380,6 +3529,12 @@
     <div class="ItemFrame_Border">
       <button id="ExportAndImportConfig2-2_Button"></button>
     </div>
+    <div class="ItemFrame_Border">
+      <label class="ExportAndImportConfig2-3_Label">
+        <input id="ExportAndImportConfig2-3_Input" type="checkbox" />
+        <span id="ExportAndImportConfig2-3_SpanText"></span>
+      </label>
+    </div>
     <span id="ExportAndImportConfig2_SpanText" style="display: none"></span>
   </div>
   <div class="ItemFrame_Border">
@@ -3403,14 +3558,15 @@
                 RootShadow.getElementById("ExportAndImportConfig2_Title").textContent = lang.DB_exportImport.import_title;
                 RootShadow.getElementById("ExportAndImportConfig2-1_SpanText").textContent = lang.DB_exportImport.import_file;
                 RootShadow.getElementById("ExportAndImportConfig2-2_Button").textContent = lang.DB_exportImport.import_textArea;
+                RootShadow.getElementById("ExportAndImportConfig2-3_SpanText").textContent = lang.DB_exportImport.import_addImport;
                 RootShadow.getElementById("ExportAndImportConfig2_SpanText").textContent = lang.DB_exportImport.import_success;
                 RootShadow.getElementById("ExportAndImportConfig3_Title").textContent = lang.DB_exportImport.textArea_title;
                 RootShadow.getElementById("ExportAndImportConfig_BackButton").textContent = lang.backButton;
 
-
                 const ExportSuccessTextEle = RootShadow.getElementById("ExportAndImportConfig1_SpanText");
                 const ImportSuccessTextEle = RootShadow.getElementById("ExportAndImportConfig2_SpanText");
                 const TextareaEle = RootShadow.getElementById("ExportAndImportConfig3_Textarea");
+                const addImport_ELe = RootShadow.getElementById("ExportAndImportConfig2-3_Input");
 
                 RootShadow.getElementById("ExportAndImportConfig1_Button1").addEventListener("click", async () => {
                     const setJSON = await DB_ExportImport_JSONFormat("export");
@@ -3448,7 +3604,12 @@
                 RootShadow.getElementById("ExportAndImportConfig2-1_Input").addEventListener("change", async (evt) => {
                     const targetElement = evt.target;
                     if (targetElement.files[0]) {
-                        const res = await popup.confirm(lang.DB_exportImport.import_overWrite);
+                        let res;
+                        if (addImport_ELe.checked) {
+                            res = await popup.confirm(lang.DB_exportImport.import_addImportConfirm);
+                        } else {
+                            res = await popup.confirm(lang.DB_exportImport.import_overWrite);
+                        }
                         if (!res) {
                             targetElement.value = "";
                             return false;
@@ -3456,7 +3617,12 @@
                         const file = targetElement.files[0];
                         const reader = new FileReader();
                         reader.onload = async (evt) => {
-                            const result = await DB_ExportImport_JSONFormat("import", evt.target.result);
+                            let result;
+                            if (addImport_ELe.checked) {
+                                result = await DB_ExportImport_JSONFormat("addimport", evt.target.result);
+                            } else {
+                                result = await DB_ExportImport_JSONFormat("import", evt.target.result);
+                            }
                             if (result) {
                                 ImportSuccessTextEle.style.display = "block";
                             }
@@ -3467,11 +3633,22 @@
                 });
 
                 RootShadow.getElementById("ExportAndImportConfig2-2_Button").addEventListener("click", async () => {
-                    const res = await popup.confirm(lang.DB_exportImport.import_overWrite);
+                    let res;
+                    if (addImport_ELe.checked) {
+                        res = await popup.confirm(lang.DB_exportImport.import_addImportConfirm);
+                    } else {
+                        res = await popup.confirm(lang.DB_exportImport.import_overWrite);
+                    }
                     if (!res) {
                         return false;
                     }
-                    const result = await DB_ExportImport_JSONFormat("import", TextareaEle.value);
+
+                    let result;
+                    if (addImport_ELe.checked) {
+                        result = await DB_ExportImport_JSONFormat("addimport", TextareaEle.value);
+                    } else {
+                        result = await DB_ExportImport_JSONFormat("import", TextareaEle.value);
+                    }
                     if (result) {
                         ImportSuccessTextEle.style.display = "block";
                     }
