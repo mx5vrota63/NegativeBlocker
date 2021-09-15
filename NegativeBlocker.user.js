@@ -172,6 +172,9 @@
             buttonHide_description: "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。",
             buttonHide_boxText: "ボタンを非表示にする",
             buttonHide_warning: "メニューAPIが検出されませんでした。非表示にすると、 \"" + safeModeURL + "\" からのみダッシュボードにアクセスできます。非表示にしてよろしいですか？",
+            nowLoadSet_title: "設定の即時適用(Beta)",
+            nowLoadSet_description: "通常は設定した内容は、リロード後に適用されますが、このチェックボックスを入れるとすぐに設定内容が適用されます。",
+            nowLoadSet_boxText: "設定を即時適用する",
             fetchInterval_title: "URLから取得する間隔",
             fetchInterval_Description: "ブロックリストテキストでURLからテキストを取得する際の更新間隔を設定します。",
             fetchInterval_300000: "5分",
@@ -377,8 +380,9 @@
                     overRide_balance: "",
                 },
                 hideButton: false,
+                nowLoadSet: false,
                 fetchInterval: 3600000,
-                dashboardColor: "#ffffb2"
+                dashboardColor: "#FFFFB2"
             };
             await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
         }
@@ -611,7 +615,6 @@
 
         async BLT_loadFunction(keyName) {
             if (keyName === "") return false;
-            if (this.BlockListText_loadObj[keyName]) return true;
             const BlockListText_Keyname = "BLT_" + keyName;
             let BlockListText_Obj = await storageAPI.read(BlockListText_Keyname);
             try {
@@ -2142,6 +2145,15 @@
                 this.index_Ele.lastChild.remove();
             }
 
+            async immediatelyLoadSettings() {
+                if (PreferenceSettingStorage.nowLoadSet) {
+                    await StorageLoad();
+                    await BG_sentenceBlock_obj.init();
+                    await BG_elementBlock_Obj.init();
+                    firstStartExecute();
+                }
+            }
+
         }
 
         async function Dashboard_BlockListText() {
@@ -2475,7 +2487,8 @@
                             this.BlockListText_storageUpdateOtherSetting(this.currentName, StoObj.name);
                         }
                     }
-                    BlockListText_feathLoad();
+                    await BlockListText_feathLoad();
+                    this.immediatelyLoadSettings();
                 }
 
                 async BlockListText_storageDelete() {
@@ -2484,6 +2497,7 @@
                         await storageAPI.delete(BlockListText_keyName);
                         this.BlockListText_storageUpdateOtherSetting(this.currentName, "");
                     }
+                    this.immediatelyLoadSettings();
                 }
 
                 async BlockListText_newEditButton(NewbuttonEle) {
@@ -2751,10 +2765,12 @@
                         aTag_replace_mode: this.aTag_replace_mode_ELe.value
                     }
                     await this.ListStoSave("SentenceBlock", StoObj);
+                    this.immediatelyLoadSettings();
                 }
 
                 async SentenceBlock_ListStoDel() {
                     await this.ListStoDel("SentenceBlock");
+                    this.immediatelyLoadSettings();
                 }
 
                 async SentenceBlock_ListNewEditButton(NewbuttonEle) {
@@ -3160,10 +3176,12 @@
                         resultShow: this.resultShow_Ele.resultShow.value
                     }
                     await this.ListStoSave("ElementBlock", StoObj);
+                    this.immediatelyLoadSettings();
                 }
 
                 async ElementBlock_ListStoDel() {
                     await this.ListStoDel("ElementBlock");
+                    this.immediatelyLoadSettings();
                 }
 
                 async ElementBlock_ListNewEditButton(NewbuttonEle) {
@@ -3234,6 +3252,15 @@
     </label>
   </div>
 
+  <div id="immediatelyLoadSettings" class="ItemFrame_Border">
+    <h1 id="immediatelyLoadSettings_Title" class="ItemFrame_Title"></h1>
+    <p id="immediatelyLoadSettings_Description"></p>
+    <label>
+      <input id="immediatelyLoadSettings_Input" type="checkbox" />
+      <span id="immediatelyLoadSettings_Input_SpanText"></span>
+    </label>
+  </div>
+
   <div id="FetchInterval" class="ItemFrame_Border">
     <h1 id="FetchInterval_Title" class="ItemFrame_Title"></h1>
     <p id="FetchInterval_Description"></p>
@@ -3251,10 +3278,10 @@
     <h1 id="DashboardColor_Title" class="ItemFrame_Title"></h1>
     <p id="DashboardColor_Description"></p>
     <select id="DashboardColor_Select" size="1">
-      <option id="DashboardColor_Select_Option1" value="#FFB2B2"></option>
-      <option id="DashboardColor_Select_Option2" value="#ffffb2"></option>
-      <option id="DashboardColor_Select_Option3" value="#B2FFB2"></option>
-      <option id="DashboardColor_Select_Option4" value="#B2B2FF"></option>
+      <option id="DashboardColor_Select_Option1" value="#FFCDCD"></option>
+      <option id="DashboardColor_Select_Option2" value="#FFFFB2"></option>
+      <option id="DashboardColor_Select_Option3" value="#D0FFCA"></option>
+      <option id="DashboardColor_Select_Option4" value="#BAD4FF"></option>
     </select>
   </div>
   <div id="SettingMainPageBack" class="PreferencesItem">
@@ -3274,6 +3301,9 @@
             RootShadow.getElementById("ButtonHide_Title").textContent = lang.DB_preference.buttonHide_title;
             RootShadow.getElementById("ButtonHide_Description").textContent = lang.DB_preference.buttonHide_description;
             RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = lang.DB_preference.buttonHide_boxText;
+            RootShadow.getElementById("immediatelyLoadSettings_Title").textContent = lang.DB_preference.nowLoadSet_title;
+            RootShadow.getElementById("immediatelyLoadSettings_Description").textContent = lang.DB_preference.nowLoadSet_description;
+            RootShadow.getElementById("immediatelyLoadSettings_Input_SpanText").textContent = lang.DB_preference.nowLoadSet_boxText;
 
             RootShadow.getElementById("FetchInterval_Title").textContent = lang.DB_preference.fetchInterval_title;
             RootShadow.getElementById("FetchInterval_Description").textContent = lang.DB_preference.fetchInterval_Description;
@@ -3321,6 +3351,23 @@
                     await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                 } else {
                     PreferenceSettingStorage.hideButton = false;
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                }
+            });
+
+            const immediatelyLoadSettings_Input = RootShadow.getElementById("immediatelyLoadSettings_Input");
+            if (PreferenceSettingStorage.nowLoadSet) {
+                immediatelyLoadSettings_Input.checked = true;
+            } else {
+                immediatelyLoadSettings_Input.checked = false;
+            }
+            immediatelyLoadSettings_Input.addEventListener("change", async (evt) => {
+                const targetElement = evt.target;
+                if (targetElement.checked) {
+                    PreferenceSettingStorage.nowLoadSet = true;
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                } else {
+                    PreferenceSettingStorage.nowLoadSet = false;
                     await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                 }
             });
