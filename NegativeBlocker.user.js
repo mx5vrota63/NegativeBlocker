@@ -33,6 +33,8 @@
     let observerInterval = 0;
     let dateInterval = Date.now();
 
+    const safeModeURL = "https://example.com/"
+
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
 
@@ -133,6 +135,7 @@
             css: "CSS",
             XPath: "XPath",
             elementSelector: "要素を選択する",
+            elementSelector_message: "OKボタンを押した後、要素をクリックしてください。",
             eleHide_title: "非表示要素",
             eleHide_description: "非表示する要素をCSS方式[querySelectorAll]かXPath方式[document.evaluate]で指定します。",
             eleHide_displayNone: "非表示要素をCSSで非表示にする",
@@ -168,7 +171,7 @@
             buttonHide_title: "右上のボタンを常時非表示にする",
             buttonHide_description: "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。",
             buttonHide_boxText: "ボタンを非表示にする",
-            buttonHide_warning: "メニューAPIが検出されませんでした。このまま非表示にすると、再インストールして設定をすべて消去しない限り二度と設定画面を表示することはできなくなります。本当に常時ボタンを非表示にしてよろしいですか？",
+            buttonHide_warning: "メニューAPIが検出されませんでした。非表示にすると、 \"" + safeModeURL + "\" からのみダッシュボードにアクセスできます。非表示にしてよろしいですか？",
             fetchInterval_title: "URLから取得する間隔",
             fetchInterval_Description: "ブロックリストテキストでURLからテキストを取得する際の更新間隔を設定します。",
             fetchInterval_300000: "5分",
@@ -400,7 +403,6 @@
             await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
         }
     }
-    await StorageLoad();
 
     async function BlockListText_feathLoad() {
         const fetchResultArray = await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
@@ -441,19 +443,6 @@
             fetchGlobalFlagStorage.retryFlag = true;
         }
         await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
-    }
-
-    const globalFetchTimeDiff = Date.now() - fetchGlobalFlagStorage.globalFetchTime
-    const fetchRetryIntervalTimeDiff = Date.now() - fetchGlobalFlagStorage.fetchRetryIntervalTime;
-    if (globalFetchTimeDiff >= PreferenceSettingStorage.fetchInterval) {
-        fetchGlobalFlagStorage.globalFetchTime = Date.now();
-        fetchGlobalFlagStorage.fetchRetryIntervalTime = Date.now();
-        await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
-        BlockListText_feathLoad();
-    } else if (fetchGlobalFlagStorage.retryFlag == true && fetchRetryIntervalTimeDiff >= 300000) {
-        fetchGlobalFlagStorage.fetchRetryIntervalTime = Date.now();
-        await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
-        BlockListText_feathLoad();
     }
 
 
@@ -693,6 +682,7 @@
 
         async BlockListTextSearch(BLT_name, sourceText, uBlacklistMode) {
             let hitTextReturn = new Array();
+            if (!sourceText) return new Array();
             if (this.BlockListText_loadObj[BLT_name]) {
                 if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
                     hitTextReturn = await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, uBlacklistMode);
@@ -778,9 +768,9 @@
             super();
             this.textNodeArray = new Array();
             this.optionNodeArray = new Array();
-            this.SentenceBlock_filter1 = null;
-            this.SentenceBlock_filter2 = null;
-            this.SentenceBlock_filter3 = null;
+            this.SentenceBlock_filter1;
+            this.SentenceBlock_filter2;
+            this.SentenceBlock_filter3;
         }
         async init() {
             this.SentenceBlock_filter1 = SentenceBlockStorage.filter((setObj) => {
@@ -938,6 +928,7 @@
         constructor() {
             super();
             this.ElementBlock_filter1;
+            this.ElementBlock_filter2;
         }
         async init() {
             const CurrentURL = location.href;
@@ -1134,7 +1125,7 @@
         }
     }
 
-    const perModeObj = new class extends BackGround_Func {
+    class BG_performanceMode extends BackGround_Func {
         constructor() {
             super();
             this.performanceMode;
@@ -1169,16 +1160,14 @@
     }
 
 
-
-
-    async function initInsertElement() {
+    async function DashboardButton_InsertElement() {
         if (!divElement_RootShadow) {
             divElement_RootShadow = document.createElement("div");
             divElement_RootShadow.style.all = "initial";
             divElement_RootShadow.attachShadow({ mode: "open" });
             document.body.append(divElement_RootShadow);
 
-            if (!PreferenceSettingStorage.hideButton || PreferenceSettingStorage.hideButton === false) {
+            if (!PreferenceSettingStorage.hideButton || location.href == safeModeURL) {
                 if (!inIframeDetect()) {
                     DashboardButtonEle = document.createElement("button");
                     DashboardButtonEle.style.position = "fixed";
@@ -1201,6 +1190,27 @@
             } catch (e) {
                 console.error(e);
             }
+        }
+    }
+
+    async function DashboardButtonInsertOnly() {
+        if (document.body != null) {
+            DashboardButton_InsertElement();
+        } else {
+            const observer = new MutationObserver(async () => {
+                if (document.body != null) {
+                    observer.disconnect();
+                    DashboardButton_InsertElement();
+                }
+            });
+            observer.observe(document, {
+                attributes: false,
+                attributeOldValue: false,
+                characterData: false,
+                characterDataOldValue: false,
+                childList: true,
+                subtree: true
+            })
         }
     }
 
@@ -1281,125 +1291,122 @@
         observer.observe(document, observerConfig);
     }
 
+    // Background Processing Start
+    await StorageLoad();
+    if (location.href != safeModeURL) {
+        const BG_perModeObj = new BG_performanceMode;
+        await BG_perModeObj.init();
+        const globalFetchTimeDiff = Date.now() - fetchGlobalFlagStorage.globalFetchTime
+        const fetchRetryIntervalTimeDiff = Date.now() - fetchGlobalFlagStorage.fetchRetryIntervalTime;
+        if (globalFetchTimeDiff >= PreferenceSettingStorage.fetchInterval) {
+            fetchGlobalFlagStorage.globalFetchTime = Date.now();
+            fetchGlobalFlagStorage.fetchRetryIntervalTime = Date.now();
+            await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
+            BlockListText_feathLoad();
+        } else if (fetchGlobalFlagStorage.retryFlag == true && fetchRetryIntervalTimeDiff >= 300000) {
+            fetchGlobalFlagStorage.fetchRetryIntervalTime = Date.now();
+            await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
+            BlockListText_feathLoad();
+        }
 
+        if (BG_perModeObj.performanceMode !== "disable") {
+            await BG_sentenceBlock_obj.init();
+            await BG_elementBlock_Obj.init();
 
+            if (document.readyState == "complete") {
+                if (document.body != null) {
+                    firstStartExecute();
+                }
+                switch (BG_perModeObj.performanceMode) {
+                    case "balance":
+                    case "block":
+                        observerInterval = 0;
+                        break;
+                    case "performance1":
+                        observerInterval = BG_perModeObj.interval_performancePriority1;
+                        break;
+                    case "performance2":
+                        observerInterval = BG_perModeObj.interval_performancePriority2;
+                        break;
+                    default:
+                        observerInterval = 0;
+                        break;
+                }
+            } else {
+                switch (BG_perModeObj.performanceMode) {
+                    case "block":
+                        observerInterval = 0;
+                        break;
+                    case "balance":
+                        observerInterval = BG_perModeObj.interval_balance;
+                        break;
+                    case "performance1":
+                        observerInterval = BG_perModeObj.interval_performancePriority1;
+                        break;
+                    case "performance2":
+                        observerInterval = BG_perModeObj.interval_performancePriority2;
+                        break;
+                    default:
+                        observerInterval = 0;
+                        break;
+                }
+                document.addEventListener("readystatechange", async (evt) => {
+                    switch (evt.target.readyState) {
+                        case "interactive":
+                            if (document.body != null) {
+                                firstStartExecute();
+                            }
+                            break;
+                        case "complete":
+                            switch (BG_perModeObj.performanceMode) {
+                                case "balance":
+                                case "block":
+                                    observerInterval = 0;
+                                    break;
+                                case "performance1":
+                                    observerInterval = BG_perModeObj.interval_performancePriority1;
+                                    break;
+                                case "performance2":
+                                    observerInterval = BG_perModeObj.interval_performancePriority2;
+                                    break;
+                                default:
+                                    observerInterval = 0;
+                                    break;
+                            }
+                            break;
+                    }
+                }, { capture: true });
+            }
 
-
-    await perModeObj.init();
-
-    if (perModeObj.performanceMode !== "disable") {
-        await BG_sentenceBlock_obj.init();
-        await BG_elementBlock_Obj.init();
-
-        if (document.readyState == "complete") {
             if (document.body != null) {
-                firstStartExecute();
+                await observerregister();
+                DashboardButton_InsertElement();
+            } else {
+                const observer = new MutationObserver(async (mutationList) => {
+                    if (document.body != null) {
+                        observer.disconnect();
+                        await SentenceBlock_textNodeArrayPush(mutationList);
+                        await observerregister();
+                        DashboardButton_InsertElement();
+                    }
+                });
+                observer.observe(document, {
+                    attributes: false,
+                    attributeOldValue: false,
+                    characterData: true,
+                    characterDataOldValue: false,
+                    childList: true,
+                    subtree: true
+                })
             }
-            switch (perModeObj.performanceMode) {
-                case "balance":
-                case "block":
-                    observerInterval = 0;
-                    break;
-                case "performance1":
-                    observerInterval = perModeObj.interval_performancePriority1;
-                    break;
-                case "performance2":
-                    observerInterval = perModeObj.interval_performancePriority2;
-                    break;
-                default:
-                    observerInterval = 0;
-                    break;
-            }
-        } else {
-            switch (perModeObj.performanceMode) {
-                case "block":
-                    observerInterval = 0;
-                    break;
-                case "balance":
-                    observerInterval = perModeObj.interval_balance;
-                    break;
-                case "performance1":
-                    observerInterval = perModeObj.interval_performancePriority1;
-                    break;
-                case "performance2":
-                    observerInterval = perModeObj.interval_performancePriority2;
-                    break;
-                default:
-                    observerInterval = 0;
-                    break;
-            }
-            document.addEventListener("readystatechange", async (evt) => {
-                switch (evt.target.readyState) {
-                    case "interactive":
-                        if (document.body != null) {
-                            firstStartExecute();
-                        }
-                        break;
-                    case "complete":
-                        switch (perModeObj.performanceMode) {
-                            case "balance":
-                            case "block":
-                                observerInterval = 0;
-                                break;
-                            case "performance1":
-                                observerInterval = perModeObj.interval_performancePriority1;
-                                break;
-                            case "performance2":
-                                observerInterval = perModeObj.interval_performancePriority2;
-                                break;
-                            default:
-                                observerInterval = 0;
-                                break;
-                        }
-                        break;
-                }
-            }, { capture: true });
-        }
 
-        if (document.body != null) {
-            await observerregister();
-            initInsertElement();
         } else {
-            const observer = new MutationObserver(async (mutationList) => {
-                if (document.body != null) {
-                    observer.disconnect();
-                    await SentenceBlock_textNodeArrayPush(mutationList);
-                    await observerregister();
-                    initInsertElement();
-                }
-            });
-            observer.observe(document, {
-                attributes: false,
-                attributeOldValue: false,
-                characterData: true,
-                characterDataOldValue: false,
-                childList: true,
-                subtree: true
-            })
+            DashboardButtonInsertOnly();
         }
-
     } else {
-        if (document.body != null) {
-            initInsertElement();
-        } else {
-            const observer = new MutationObserver(async () => {
-                if (document.body != null) {
-                    observer.disconnect();
-                    initInsertElement();
-                }
-            });
-            observer.observe(document, {
-                attributes: false,
-                attributeOldValue: false,
-                characterData: false,
-                characterDataOldValue: false,
-                childList: true,
-                subtree: true
-            })
-        }
+        DashboardButtonInsertOnly();
     }
-
-    // BackGround Fuction End
+    // Background Processing End
 
 
     async function DashboardWindow() {
