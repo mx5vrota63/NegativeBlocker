@@ -685,7 +685,7 @@
 
         async BlockListTextSearch(BLT_name, sourceText, uBlacklistMode) {
             let hitTextReturn = new Array();
-            if (!sourceText) return new Array();
+            if (sourceText == null | undefined) return new Array();
             if (this.BlockListText_loadObj[BLT_name]) {
                 if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
                     hitTextReturn = await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, uBlacklistMode);
@@ -836,7 +836,7 @@
                     }
                     return true;
                 })(), (async () => {
-                    const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+                    const candidates2 = document.evaluate('.//input[not(@type="text")]/@value | .//img/@alt | .//*/@title | .//a/@href', node, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
                     optionNode = new Array();
                     for (let i = 0; i < candidates2.snapshotLength; i++) {
                         optionNode.push(candidates2.snapshotItem(i));
@@ -1550,7 +1550,7 @@
             Dashboard_Element.remove();
             Dashboard_Element = null;
             window.removeEventListener("resize", DashboardFrameBackWidthLimit);
-            if (DashboardButtonEle) DashboardButtonEle.style.display = "block";
+            if (DashboardButtonEle) DashboardButtonEle.style.display = "";
         })
 
         RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
@@ -1840,7 +1840,7 @@
             RootShadow.getElementById("SettingMainPageBack_Button").textContent = lang.backButton;
             RootShadow.getElementById("SettingMainPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
-                ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
                 DashboardMain_div.scroll({ top: 0 });
             }, false)
         }
@@ -1896,6 +1896,16 @@
     list-style-position: inside;
     margin: 0 0 0 0;
     padding: 0 0 0 0;
+  }
+  #ObjectLists_ol li {
+    border-style: solid;
+    border-width: 1px;
+    border-top-width: 0;
+    border-color: silver;
+    padding: 0 0 0 5px;
+    cursor: pointer;
+    min-height: 30px;
+    word-break: break-all;
   }
   div#SettingsObject_ConfigItems_Name {
     display: flex;
@@ -1990,7 +2000,7 @@
                 RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").addEventListener("click", () => {
                     this.Editflag = true;
                     this.ListEditPage_Ele.style.display = "none";
-                    this.EditConfigPage_Ele.style.display = "block";
+                    this.EditConfigPage_Ele.style.display = "";
                     DashboardMain_div.scroll({ top: 0 });
                 }, false);
 
@@ -2003,7 +2013,7 @@
                     }
                     Dashboard_Window_Ele_stack.pop().remove();
                     Dashboard_Window_Ele_stack.pop().remove();
-                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
                     DashboardMain_div.scroll({ top: 0 });
                 }, false);
                 RootShadow.getElementById("SettingsObject_ActionButton_NewObject").addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
@@ -2075,7 +2085,7 @@
                 }
                 this.currentName = "";
                 this.name_Ele.value = "";
-                this.index_Ele.lastChild.style.display = "block";
+                this.index_Ele.lastChild.style.display = "";
                 this.index_Ele.selectedIndex = this.ListStorage.length;
                 this.li_EleSelect(NewbuttonEle);
                 this.Editflag = false;
@@ -2084,6 +2094,9 @@
 
             async li_cfunc(cfunchandlersIndex, cfuncinfunction_arg) {
                 return this.li_cfunchandlers[cfunchandlersIndex] || (this.li_cfunchandlers[cfunchandlersIndex] = async () => {
+                    this.li_cfuncArgTemp[0] = cfunchandlersIndex;
+                    this.li_cfuncArgTemp[1] = cfuncinfunction_arg;
+
                     if (this.Editflag) {
                         const res = await popup.confirm(lang.listEdit_Func.editFlag_change);
                         if (!res) {
@@ -2097,8 +2110,6 @@
                     this.index_Ele.selectedIndex = fiindex;
                     this.index_Ele.lastChild.style.display = "none";
                     this.li_EleSelect(cfuncinfunction_arg[0]);
-                    this.li_cfuncArgTemp[0] = cfunchandlersIndex;
-                    this.li_cfuncArgTemp[1] = cfuncinfunction_arg;
                     await this.li_cfuncinfunction(cfuncinfunction_arg);
                     this.Editflag = false;
                 });
@@ -2106,13 +2117,6 @@
 
             async li_Add(index) {
                 const li = document.createElement("li");
-                li.style.borderStyle = "solid";
-                li.style.borderWidth = "1px";
-                li.style.borderTopWidth = 0;
-                li.style.borderColor = "silver";
-                li.style.padding = "0 0 0 5px";
-                li.style.cursor = "pointer";
-                li.style.minHeight = "30px";
                 li.textContent = this.ListStorage[index].name;
                 this.li_cfuncinfunction_arg.unshift(li);
                 li.addEventListener("click", await this.li_cfunc(this.li_cfunchandlers.length, Array.from(this.li_cfuncinfunction_arg)), false);
@@ -2131,7 +2135,7 @@
                 this.currentEle_li = Ele;
                 this.currentEle_li_BGColorTemp = Ele.style.backgroundColor;
                 Ele.style.backgroundColor = "lightskyblue";
-                this.editarea_Ele.style.display = "block";
+                this.editarea_Ele.style.display = "";
             }
 
             async SelectOption_Add() {
@@ -2197,9 +2201,9 @@
 
                         if (applylist.fetch_enable) {
                             this.textarea_Ele.style.display = "none";
-                            this.textareaDisable_Ele.style.display = "block";
+                            this.textareaDisable_Ele.style.display = "";
                         } else {
-                            this.textarea_Ele.style.display = "block";
+                            this.textarea_Ele.style.display = "";
                             this.textareaDisable_Ele.style.display = "none";
                         }
 
@@ -2346,7 +2350,7 @@
                     });
 
                     RootShadow.getElementById("BlockListText_Textarea_Disable_ShowButton").addEventListener("click", () => {
-                        this.textarea_Ele.style.display = "block";
+                        this.textarea_Ele.style.display = "";
                         this.textareaDisable_Ele.style.display = "none";
                     }, false);
 
@@ -2355,7 +2359,7 @@
                     });
 
                     RootShadow.getElementById("BlockListText_BackButton").addEventListener("click", () => {
-                        this.ListEditPage_Ele.style.display = "block";
+                        this.ListEditPage_Ele.style.display = "";
                         this.EditConfigPage_Ele.style.display = "none";
                         DashboardMain_div.scroll({ top: 0 });
                     }, false);
@@ -2512,7 +2516,7 @@
                         this.notSearch_Ele.checked = false;
                         this.uBlacklist_Ele.checked = false;
 
-                        this.textarea_Ele.style.display = "block";
+                        this.textarea_Ele.style.display = "";
                         this.textareaDisable_Ele.style.display = "none";
 
                         this.optionCheckboxDisableChange();
@@ -2547,14 +2551,14 @@
                         this.urlModeChange();
 
                         Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
-                            if (applylist.BlockListText_list.indexOf(htmlOption.value) != -1) {
+                            if (applylist.BlockListText_list.includes(htmlOption.value)) {
                                 htmlOption.selected = true;
                             } else {
                                 htmlOption.selected = false;
                             }
                         });
                         Array.from(this.BlockListText_exclude_list_Ele.options).forEach((htmlOption) => {
-                            if (applylist.BlockListText_exclude_list.indexOf(htmlOption.value) != -1) {
+                            if (applylist.BlockListText_exclude_list.includes(htmlOption.value)) {
                                 htmlOption.selected = true;
                             } else {
                                 htmlOption.selected = false;
@@ -2729,7 +2733,7 @@
                     }, false);
 
                     RootShadow.getElementById("SentenceBlockConfig_BackButton").addEventListener("click", () => {
-                        this.ListEditPage_Ele.style.display = "block";
+                        this.ListEditPage_Ele.style.display = "";
                         this.EditConfigPage_Ele.style.display = "none";
                         DashboardMain_div.scroll({ top: 0 });
                     }, false);
@@ -2836,14 +2840,14 @@
                         this.urlModeChange();
 
                         Array.from(this.BlockListText_list_Ele.options).forEach((htmlOption) => {
-                            if (applylist.BlockListText_list.indexOf(htmlOption.value) != -1) {
+                            if (applylist.BlockListText_list.includes(htmlOption.value)) {
                                 htmlOption.selected = true;
                             } else {
                                 htmlOption.selected = false;
                             }
                         });
                         Array.from(this.BlockListText_exclude_list_Ele.options).forEach((htmlOption) => {
-                            if (applylist.BlockListText_exclude_list.indexOf(htmlOption.value) != -1) {
+                            if (applylist.BlockListText_exclude_list.includes(htmlOption.value)) {
                                 htmlOption.selected = true;
                             } else {
                                 htmlOption.selected = false;
@@ -3132,7 +3136,7 @@
                     }, false);
 
                     RootShadow.getElementById("ElementBlockConfig_BackButton").addEventListener("click", () => {
-                        this.ListEditPage_Ele.style.display = "block";
+                        this.ListEditPage_Ele.style.display = "";
                         this.EditConfigPage_Ele.style.display = "none";
                         DashboardMain_div.scroll({ top: 0 });
                     }, false);
@@ -3387,7 +3391,7 @@
 
             RootShadow.getElementById("PreferencesPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
-                ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
                 DashboardMain_div.scroll({ top: 0 });
             }, false);
 
@@ -3434,14 +3438,19 @@
                             const BlockListTextTemp = JSON.parse(importset.BlockListText);
                             const SentenceBlockTemp = JSON.parse(importset.SentenceBlock)
                             const ElementBlockTemp = JSON.parse(importset.ElementBlock)
-                            const nameDuplicateRename = (name, currentSetting) => {
+                            const nameDuplicateRename = (name, currentSetting, newSetting) => {
                                 let nameDuplicate_Name = name;
                                 let nameDuplicate_loopFlag = false;
                                 let nameDuplicate_renameNumber = 0;
+                                if (nameDuplicate_Name == "") {
+                                    nameDuplicate_renameNumber++;
+                                    nameDuplicate_Name = name + "_" + nameDuplicate_renameNumber;
+                                }
                                 do {
                                     nameDuplicate_loopFlag = false;
-                                    const dupCheck = currentSetting.some((currentSetObj) => nameDuplicate_Name == currentSetObj.name);
-                                    if (dupCheck) {
+                                    const dupCheckCurrent = currentSetting.some(currentSetObj => nameDuplicate_Name == currentSetObj.name);
+                                    const dupCheckNew = newSetting.some(currentSetObj => nameDuplicate_Name == currentSetObj.name);
+                                    if (dupCheckCurrent || dupCheckNew) {
                                         nameDuplicate_loopFlag = true;
                                         nameDuplicate_renameNumber++;
                                         nameDuplicate_Name = name + "_" + nameDuplicate_renameNumber;
@@ -3452,7 +3461,7 @@
 
                             const BLTStorageTemp = new Array();
                             BlockListTextTemp.forEach((settingObj) => {
-                                const newName = nameDuplicateRename(settingObj.name, BlockListTextStorage);
+                                const newName = nameDuplicateRename(settingObj.name, BlockListTextStorage, BlockListTextTemp);
                                 const oldName = settingObj.name;
                                 BLTStorageTemp.push({
                                     keyName: "BLT_" + newName,
@@ -3509,7 +3518,7 @@
                             const BlockListTextStorage_writeReady = [...BlockListTextStorage, ...BlockListTextTemp];
 
                             SentenceBlockTemp.forEach((settingObj) => {
-                                const newName = nameDuplicateRename(settingObj.name, SentenceBlockStorage);
+                                const newName = nameDuplicateRename(settingObj.name, SentenceBlockStorage, SentenceBlockTemp);
                                 const oldName = settingObj.name;
                                 if (oldName != newName) {
                                     settingObj.name = newName;
@@ -3518,7 +3527,7 @@
                             const SentenceBlockStorage_writeReady = [...SentenceBlockStorage, ...SentenceBlockTemp];
 
                             ElementBlockTemp.forEach((settingObj) => {
-                                const newName = nameDuplicateRename(settingObj.name, ElementBlockStorage);
+                                const newName = nameDuplicateRename(settingObj.name, ElementBlockStorage, ElementBlockTemp);
                                 const oldName = settingObj.name;
                                 if (oldName != newName) {
                                     settingObj.name = newName;
@@ -3710,7 +3719,7 @@
 
                 RootShadow.getElementById("ExportAndImportConfig_BackButton").addEventListener("click", () => {
                     Dashboard_Window_Ele_stack.pop().remove();
-                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
                     DashboardMain_div.scroll({ top: 0 });
                 }, false);
 
@@ -3728,7 +3737,7 @@
     margin: 0 0 20px 0;
   }
   #PerformanceConfig p {
-    margin: 0;
+    margin: 8px 0 0 0;
   }
 </style>
 
@@ -3933,7 +3942,7 @@
 
                 RootShadow.getElementById("PerformanceConfig_BackButton").addEventListener("click", () => {
                     Dashboard_Window_Ele_stack.pop().remove();
-                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "block";
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
                     DashboardMain_div.scroll({ top: 0 });
                 }, false);
             }
