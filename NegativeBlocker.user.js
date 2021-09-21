@@ -134,7 +134,7 @@
             URL_BLT: "ブロックリストテキスト",
             css: "CSS",
             XPath: "XPath",
-            elementSelector: "要素を選択する",
+            elementSelector: "要素を選択する(Beta)",
             elementSelector_message: "OKボタンを押した後、要素をクリックしてください。",
             eleHide_title: "非表示要素",
             eleHide_description: "非表示する要素をCSS方式[querySelectorAll]かXPath方式[document.evaluate]で指定します。",
@@ -160,6 +160,9 @@
             resultShow_none: "非表示",
             resultShow_number: "番号で表示",
             resultShow_property: "検索要素のプロパティの値を表示"
+        },
+        ElementSelector: {
+            thisElement: "選択した要素"
         },
         DB_preference: {
             importAndExport_title: "エクスポート&インポート",
@@ -995,6 +998,7 @@
 
                 let elementNode;
                 if (!node) return;
+                if (!eleBlockSet.elementHide) return;
                 try {
                     if (eleBlockSet.elementHide_method === "css") {
                         elementNode = node.querySelectorAll(eleBlockSet.elementHide);
@@ -1654,6 +1658,468 @@
         }
 
 
+        class ElementPicker {
+            constructor() {
+                this.li_cfunchandlers = new Array();
+                this.li_cfuncArgTemp = new Array();
+                this.li_elementArray = new Array();
+                this.overlayHighlight_EleArray = new Array();
+                this.overlayHighlight_counter = 0;
+                this.rootElementArray = new Array();
+                this.documentOnClickFunc = new Function();
+                this.currentElement;
+                this.li_EleSelect_BGColorTemp;
+                this.mode;
+
+                this.flameElement_Ele;
+                this.overlay_PositionFixed_Ele;
+                this.picker_text_Ele;
+                this.picker_button_ELe;
+                this.OK_Ele;
+                this.cancel_Ele;
+                this.ul_ELe;
+                this.li_EleSelect_Ele;
+            }
+
+            async init() {
+                this.flameElement_Ele = document.createElement("div");
+                this.flameElement_Ele.innerHTML = `
+<style type="text/css">
+  div#ElementPicker_PositionFixed {
+    position: fixed;
+    top: 0;
+    width: calc(100vw - (100vw - 100%));
+    height: calc(100vh - (100vh - 100%));
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    z-index: 2147483647;
+    pointer-events: none;
+  }
+  div#ElementPicker_FrameBack {
+    all: initial;
+    right: 1px;
+    padding: 1px 2px;
+    background-color: #ffffff;
+    border: 1px solid #888888;
+    border-radius: 10px;
+    text-align: center;
+    width: 300px;
+    height: 300px;
+    color: #000000;
+    font-size: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  }
+  div#ElementPicker_FrameBack button {
+    min-width: 60px;
+    height: 35px;
+    font-size: medium;
+  }
+  div#ElementPicker_Header {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-end;
+    margin: 4px 0 0 0;
+    height: calc(100% - 267px);
+    box-sizing: border-box;
+  }
+  div#ElementPicker_Window {
+    width: auto;
+    height: calc(100% - 78px);
+    box-sizing: border-box;
+    overflow: auto;
+    border: 2px solid black;
+    font-size: medium;
+  }
+  div#ElementPicker_Window ul {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    background-color: #eee;
+  }
+  div#ElementPicker_Window ul li {
+    border-style: solid;
+    border-width: 1px;
+    border-top-width: 0;
+    border-color: silver;
+    padding: 0 0 0 5px;
+    cursor: pointer;
+    min-height: 30px;
+    word-break: break-all;
+  }
+  div#ElementPicker_Text {
+    box-sizing: border-box;
+    margin: 4px 0 1px 0;
+  }
+  input#ElementPicker_Text_Input {
+    width: calc(100% - 47px);
+    height: 26px;
+    box-sizing: border-box;
+    margin: 0 5px 0 0;
+  }
+  button#ElementPicker_Text_Button {
+    max-width: 40px;
+    min-width: 40px !important;
+    padding: 0;
+  }
+</style>
+
+<div
+  id="ElementPicker_PositionFixed"
+  style="justify-content: flex-end; align-items: flex-end"
+>
+  <div id="ElementPicker_FrameBack" style="display: none">
+    <div id="ElementPicker_Header">
+      <button id="ElementPicker_FrameMove">Move</button>
+      <button id="ElementPicker_ReSelect">↻</button>
+      <button id="ElementPicker_ReSelect_5SecDelay">5↻</button>
+      <button id="ElementPicker_Cancel">×</button>
+      <button id="ElementPicker_OK">〇</button>
+    </div>
+    <div id="ElementPicker_Text">
+      <input id="ElementPicker_Text_Input" type="text" spellcheck="false" />
+      <button id="ElementPicker_Text_Button">0</button>
+    </div>
+    <div id="ElementPicker_Window">
+      <ul id="ElementPicker_ul">
+        <li id="ElementPicker_li_Top">↑</li>
+      </ul>
+    </div>
+  </div>
+</div>
+    `;
+                RootShadow.append(this.flameElement_Ele);
+
+                this.overlay_PositionFixed_Ele = RootShadow.getElementById("ElementPicker_PositionFixed");
+                this.overlay_FrameBack_Ele = RootShadow.getElementById("ElementPicker_FrameBack");
+                this.picker_text_Ele = RootShadow.getElementById("ElementPicker_Text_Input");
+                this.ul_ELe = RootShadow.getElementById("ElementPicker_ul");
+                this.picker_button_ELe = RootShadow.getElementById("ElementPicker_Text_Button");
+                this.OK_Ele = RootShadow.getElementById("ElementPicker_OK");
+                this.cancel_Ele = RootShadow.getElementById("ElementPicker_Cancel");
+
+                RootShadow.getElementById("ElementPicker_FrameMove").addEventListener("click", () => {
+                    if (this.overlay_PositionFixed_Ele.style.alignItems == "flex-end") {
+                        if (this.overlay_PositionFixed_Ele.style.justifyContent == "flex-start") {
+                            this.overlay_PositionFixed_Ele.style.justifyContent = "flex-end";
+                        } else {
+                            this.overlay_PositionFixed_Ele.style.alignItems = "flex-start";
+                        }
+                    } else {
+                        if (this.overlay_PositionFixed_Ele.style.justifyContent == "flex-end") {
+                            this.overlay_PositionFixed_Ele.style.justifyContent = "flex-start";
+                        } else {
+                            this.overlay_PositionFixed_Ele.style.alignItems = "flex-end";
+                        }
+                    }
+                }, false);
+
+                RootShadow.getElementById("ElementPicker_ReSelect").addEventListener("click", async () => {
+                    this.li_Remove();
+                    await this.overlayHighlight_Remove();
+                    this.picker_text_Ele.value = "";
+                    this.picker_button_ELe.textContent = 0;
+                    this.overlay_FrameBack_Ele.style.display = "none";
+                    this.overlay_PositionFixed_Ele.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                    document.addEventListener("click", this.documentOnClickFunc, true);
+                }, false);
+
+                RootShadow.getElementById("ElementPicker_ReSelect_5SecDelay").addEventListener("click", async () => {
+                    this.li_Remove();
+                    await this.overlayHighlight_Remove();
+                    this.picker_text_Ele.value = "";
+                    this.picker_button_ELe.textContent = 0;
+                    this.overlay_FrameBack_Ele.style.display = "none";
+                    await pauseSleep(5000);
+                    this.overlay_PositionFixed_Ele.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                    document.addEventListener("click", this.documentOnClickFunc, true);
+                }, false);
+
+                RootShadow.getElementById("ElementPicker_li_Top").addEventListener("click", () => {
+                    if (this.currentElement && this.currentElement != this.currentElement.ownerDocument.documentElement) {
+                        this.li_Remove();
+                        this.currentElement = this.currentElement.parentElement;
+                        this.ElementNameListAdd(Array.from(this.currentElement.children));
+                    }
+                }, false);
+
+                this.picker_button_ELe.addEventListener("click", async (evt) => {
+                    await this.overlayHighlight_Remove();
+                    if (await this.overlayHighlight_Add(this.picker_text_Ele.value)) {
+                        this.picker_text_Ele.style.backgroundColor = "";
+                    } else {
+                        this.picker_text_Ele.style.backgroundColor = "#FFB2B2";
+                    }
+                    evt.target.textContent = this.overlayHighlight_counter;
+                }, false);
+
+                this.documentOnClickFunc = (evt) => {
+                    this.currentElement = evt.target.parentElement;
+                    if (this.mode == "css") {
+                        this.li_Add(lang.ElementSelector.thisElement, this.CSSselectorString(evt.target, false));
+                    } else if (this.mode == "xpath") {
+                        this.li_Add(lang.ElementSelector.thisElement, this.XPathString(evt.target, false));
+                    }
+                    if (this.currentElement) {
+                        this.ElementNameListAdd(Array.from(this.currentElement.children));
+                    } else {
+                        this.ElementNameListAdd(Array.from([evt.target]));
+                    }
+
+                    evt.stopPropagation();
+                    evt.preventDefault();
+                    this.overlay_FrameBack_Ele.style.display = "";
+                    this.overlay_PositionFixed_Ele.style.backgroundColor = "";
+                    document.removeEventListener("click", this.documentOnClickFunc, true);
+                    return false;
+                }
+            }
+
+            async Start(mode, pickerString, pickerStringMode) {
+                this.mode = mode;
+                if (pickerString) {
+                    try {
+                        if (pickerStringMode == "css") {
+                            this.rootElementArray = Array.from(document.querySelectorAll(pickerString));
+                        } else if (pickerStringMode == "xpath") {
+                            const evaluateObj = document.evaluate(pickerString, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+                            for (let i = 0; i < evaluateObj.snapshotLength; i++) {
+                                this.rootElementArray.push(evaluateObj.snapshotItem(i));
+                            }
+                        } else {
+                            this.rootElementArray = [document];
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.rootElementArray = [document];
+                    }
+                } else {
+                    this.rootElementArray = [document];
+                }
+
+                this.overlay_PositionFixed_Ele.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                document.addEventListener("click", this.documentOnClickFunc, true);
+                return new Promise((resolve) => {
+                    this.OK_Ele.addEventListener("click", async () => {
+                        const returnValue = this.picker_text_Ele.value;
+                        await this.overlayHighlight_Remove();
+                        this.flameElement_Ele.remove();
+                        return resolve(returnValue);
+                    }, false);
+                    this.cancel_Ele.addEventListener("click", async () => {
+                        await this.overlayHighlight_Remove();
+                        this.flameElement_Ele.remove();
+                        return resolve("");
+                    }, false);
+                });
+            }
+
+            async ElementNameListAdd(childElementArray) {
+                const tagElements = new Array();
+                childElementArray.forEach((tagElement) => {
+                    if (!tagElements.some(ele => ele.tagName === tagElement.tagName)) {
+                        tagElements.push(tagElement);
+                    }
+                });
+                const tagAndClassElements = new Array();
+                childElementArray.forEach((tagAndClassElement) => {
+                    if (tagAndClassElement.className &&
+                        !tagAndClassElements.some(ele => ele.tagName === tagAndClassElement.tagName && ele.className === tagAndClassElement.className)) {
+                        tagAndClassElements.push(tagAndClassElement);
+                    }
+                });
+
+                tagElements.forEach((ele) => {
+                    if (this.mode == "css") {
+                        this.li_Add(ele.tagName.toLowerCase(), this.CSSselectorString(ele, true));
+                    } else if (this.mode == "xpath") {
+                        this.li_Add(ele.tagName.toLowerCase(), this.XPathString(ele, true));
+                    }
+                });
+                tagAndClassElements.forEach((ele) => {
+                    if (this.mode == "css") {
+                        this.li_Add(ele.tagName.toLowerCase() + "." + ele.className.split(" ").join("."), this.CSSselectorString(ele, true, ele.className));
+                    } else if (this.mode == "xpath") {
+                        this.li_Add(ele.tagName.toLowerCase() + "." + ele.className.split(" ").join("."), this.XPathString(ele, true, ele.className));
+                    }
+                });
+            }
+
+            async overlayHighlight_Add(selecterString) {
+                this.overlayHighlight_counter = 0;
+                let returnBool = true;
+                this.rootElementArray.forEach((rootEle) => {
+                    let pickerEleArray = new Array();
+                    try {
+                        if (this.mode == "css") {
+                            pickerEleArray = Array.from(rootEle.querySelectorAll(selecterString));
+                        } else if (this.mode == "xpath") {
+                            const evaluateObj = document.evaluate(selecterString, rootEle, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+                            for (let i = 0; i < evaluateObj.snapshotLength; i++) {
+                                pickerEleArray.push(evaluateObj.snapshotItem(i));
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.overlayHighlight_counter = 0;
+                        returnBool = false;
+                        return;
+                    }
+                    pickerEleArray.forEach((pickerEle) => {
+                        const overlayHighlight_Ele = document.createElement("div");
+                        overlayHighlight_Ele.style.position = "absolute";
+                        overlayHighlight_Ele.style.backgroundColor = "rgba(119, 182, 255, 0.5)";
+
+
+                        let olhlTop = pickerEle.offsetTop;
+                        let olhlLeft = pickerEle.offsetLeft;
+                        let offsetElementParent = pickerEle;
+                        while (offsetElementParent.offsetParent) {
+                            olhlTop = olhlTop + offsetElementParent.offsetParent.offsetTop;
+                            olhlLeft = olhlLeft + offsetElementParent.offsetParent.offsetLeft;
+                            offsetElementParent = offsetElementParent.offsetParent;
+                        }
+
+                        overlayHighlight_Ele.style.top = olhlTop + "px";
+                        overlayHighlight_Ele.style.left = olhlLeft + "px";
+                        overlayHighlight_Ele.style.width = pickerEle.offsetWidth + "px";
+                        overlayHighlight_Ele.style.height = pickerEle.offsetHeight + "px";
+                        overlayHighlight_Ele.style.border = "1px solid black";
+                        overlayHighlight_Ele.style.zIndex = 2147483646;
+                        this.flameElement_Ele.append(overlayHighlight_Ele);
+                        this.overlayHighlight_EleArray.push(overlayHighlight_Ele);
+                        this.overlayHighlight_counter++;
+                    });
+                });
+                return returnBool;
+            }
+
+            async overlayHighlight_Remove() {
+                this.overlayHighlight_EleArray.forEach((Ele) => {
+                    Ele.remove();
+                });
+                this.overlayHighlight_EleArray.splice(0);
+            }
+
+            async li_Add(text, pickerString) {
+                const li = document.createElement("li");
+                li.textContent = text;
+                const li_cfuncinfunction_arg = [li, pickerString];
+                li.addEventListener("click", await this.li_cfunc(this.li_cfunchandlers.length, Array.from(li_cfuncinfunction_arg)), false);
+                this.ul_ELe.append(li);
+                this.li_elementArray.push(li);
+            }
+
+            async li_Remove() {
+                this.li_elementArray.forEach((li) => {
+                    li.remove();
+                })
+                this.li_elementArray.splice(0);
+            }
+
+            async li_EleSelect(Ele) {
+                if (this.li_EleSelect_Ele) {
+                    this.li_EleSelect_Ele.style.backgroundColor = this.li_EleSelect_BGColorTemp;
+                }
+                this.li_EleSelect_Ele = Ele;
+                this.li_EleSelect_BGColorTemp = Ele.style.backgroundColor;
+                Ele.style.backgroundColor = "lightskyblue";
+            }
+
+            async li_cfunc(cfunchandlersIndex, cfuncinfunction_arg) {
+                return this.li_cfunchandlers[cfunchandlersIndex] || (this.li_cfunchandlers[cfunchandlersIndex] = async () => {
+                    this.li_cfuncArgTemp[0] = cfunchandlersIndex;
+                    this.li_cfuncArgTemp[1] = cfuncinfunction_arg;
+
+                    this.li_EleSelect(cfuncinfunction_arg[0]);
+                    this.picker_text_Ele.value = cfuncinfunction_arg[1];
+                    await this.overlayHighlight_Remove();
+                    if (await this.overlayHighlight_Add(cfuncinfunction_arg[1])) {
+                        this.picker_text_Ele.style.backgroundColor = "";
+                    } else {
+                        this.picker_text_Ele.style.backgroundColor = "#FFB2B2";
+                    }
+                    this.picker_button_ELe.textContent = this.overlayHighlight_counter;
+                });
+            }
+
+            CSSselectorString(el, firstFlag, className) {
+                var names = [];
+                while (el.parentNode && this.rootElementArray.every(ele => ele != el)) {
+                    if (el.id && !firstFlag) {
+                        names.unshift('#' + el.id);
+                        break;
+                    } else {
+                        if (el == el.ownerDocument.documentElement) names.unshift(el.tagName.toLowerCase());
+                        else if (firstFlag) {
+                            if (className) {
+                                names.unshift(el.tagName.toLowerCase() + "." + className.split(" ").join("."));
+                            } else {
+                                names.unshift(el.tagName.toLowerCase());
+                            }
+                        }
+                        else {
+                            let nthChildCount = 1;
+                            for (let e = el; e.previousElementSibling; e = e.previousElementSibling, nthChildCount++);
+                            names.unshift(el.tagName.toLowerCase() + ":nth-child(" + nthChildCount + ")");
+                        }
+                        el = el.parentNode;
+                    }
+                    firstFlag = false;
+                }
+                return names.join(" > ");
+            }
+
+            XPathString(el, firstFlag, classname) {
+                let nodeElem = el;
+                let relativePathFlag = false;
+                const parts = [];
+                while (nodeElem && nodeElem.nodeType === Node.ELEMENT_NODE) {
+                    if (this.rootElementArray.some(ele => ele == nodeElem)) {
+                        parts.push('.');
+                        relativePathFlag = true;
+                        break;
+                    }
+                    let nbOfPreviousSiblings = 0;
+                    let hasNextSiblings = false;
+                    let sibling = nodeElem.previousSibling;
+                    while (sibling) {
+                        if (sibling.nodeType !== Node.DOCUMENT_TYPE_NODE && sibling.nodeName === nodeElem.nodeName) {
+                            nbOfPreviousSiblings++;
+                        }
+                        sibling = sibling.previousSibling;
+                    }
+                    sibling = nodeElem.nextSibling;
+                    while (sibling) {
+                        if (sibling.nodeName === nodeElem.nodeName) {
+                            hasNextSiblings = true;
+                            break;
+                        }
+                        sibling = sibling.nextSibling;
+                    }
+                    const prefix = nodeElem.prefix ? nodeElem.prefix + ':' : '';
+                    let nth;
+                    if (firstFlag) {
+                        if (classname) {
+                            nth = `[@class='${classname}']`;
+                        } else {
+                            nth = '';
+                        }
+                    } else {
+                        nth = nbOfPreviousSiblings || hasNextSiblings ? `[${nbOfPreviousSiblings + 1}]` : '';
+                    }
+                    parts.push(prefix + nodeElem.localName + nth);
+                    nodeElem = nodeElem.parentNode;
+                    firstFlag = false;
+                }
+                if (relativePathFlag) {
+                    return parts.length ? parts.reverse().join('/') : '';
+                } else {
+                    return parts.length ? '/' + parts.reverse().join('/') : '';
+                }
+            }
+        }
 
         {
             const DB_blockResult_div = document.createElement("div");
@@ -3133,6 +3599,34 @@
 
                     RootShadow.getElementById("ElementBlockConfig1_Form").addEventListener("change", () => {
                         this.urlModeChange();
+                    }, false);
+
+                    RootShadow.getElementById("ElementBlockConfig2_Button").addEventListener("click", async () => {
+                        await popup.alert(lang.DB_elementBlock.elementSelector_message);
+                        Dashboard_Element.style.display = "none";
+                        const pickerObj = new ElementPicker();
+                        const pickerMethod = this.elementHide_method_Ele.pickerMethod.value;
+                        await pickerObj.init();
+                        const selectorString = await pickerObj.Start(pickerMethod);
+                        Dashboard_Element.style.display = "";
+                        if (selectorString) {
+                            this.elementHide_Ele.value = selectorString;
+                        }
+                    }, false);
+
+                    RootShadow.getElementById("ElementBlockConfig3_Button").addEventListener("click", async () => {
+                        await popup.alert(lang.DB_elementBlock.elementSelector_message);
+                        Dashboard_Element.style.display = "none";
+                        const pickerObj = new ElementPicker();
+                        const pickerMethod = this.elementSearch_method_Ele.pickerMethod.value;
+                        const elementHide_pickerString = this.elementHide_Ele.value;
+                        const elementHide_pickerMethod = this.elementHide_method_Ele.pickerMethod.value
+                        await pickerObj.init();
+                        const selectorString = await pickerObj.Start(pickerMethod, elementHide_pickerString, elementHide_pickerMethod);
+                        Dashboard_Element.style.display = "";
+                        if (selectorString) {
+                            this.elementSearch_Ele.value = selectorString;
+                        }
                     }, false);
 
                     RootShadow.getElementById("ElementBlockConfig_BackButton").addEventListener("click", () => {
