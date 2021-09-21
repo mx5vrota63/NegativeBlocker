@@ -48,7 +48,9 @@
     let SentenceBlockTempDisableArray;
     let fetchGlobalFlagStorage;
 
-    const lang = {
+    let localeText;
+
+    const localeText_ja_jp = {
         OKButton: "OK",
         cancelButton: "キャンセル",
         backButton: "←戻る",
@@ -96,7 +98,7 @@
             blockListText_URLoverWrite: "URLから取得する設定になっているため自動的にブロックリストテキストは上書きされます。",
             blockListText_show: "テキストを表示",
             textFile_title: "テキストファイルを読み込む",
-            textFile_overWrite: "現在入力されているテキストはファイルのテキストで上書きされます。よろしいですか？",
+            textFile_overWrite: "現在入力されているブロックリストテキストはファイルのテキストで上書きされます。よろしいですか？",
             URLget_title: "URLから取得する",
             URLget_enable: "有効",
             option_title: "オプション",
@@ -105,7 +107,7 @@
             option_exact: "完全一致",
             option_spaceIgnore: "空白スペースを無視する",
             option_notSearch: "NOT検索をする",
-            option_uBlacklist: "uBlacklist形式を使用する"
+            option_uBlacklist: "uBlacklist形式を使用する(Beta)"
         },
         DB_sentenceBlock: {
             URL_title: "URL",
@@ -134,8 +136,8 @@
             URL_BLT: "ブロックリストテキスト",
             css: "CSS",
             XPath: "XPath",
-            elementSelector: "要素を選択する(Beta)",
-            elementSelector_message: "OKボタンを押した後、要素をクリックしてください。",
+            elementPicker: "要素を選択する(Beta)",
+            elementPicker_message: "OKボタンを押した後、要素をクリックしてください。",
             eleHide_title: "非表示要素",
             eleHide_description: "非表示する要素をCSS方式[querySelectorAll]かXPath方式[document.evaluate]で指定します。",
             eleHide_displayNone: "非表示要素をCSSで非表示にする",
@@ -146,7 +148,7 @@
             eleSearch_methodText: "要素のテキストを検索する",
             eleSearch_methodHref: "要素のリンクを検索する(検索要素が[a]要素の場合のみ)",
             eleSearch_methodStyle: "要素のスタイルシートを検索する(上級者向け)",
-            eleSearch_methodAdvanced: "要素の要素のプロパティを直接指定する(上級者向け)",
+            eleSearch_methodAdvanced: "要素のプロパティを直接指定する(上級者向け)",
             BLT_title: "ブロックリストテキスト",
             BLT_description: "使用するブロックリストテキストを指定します。Ctrlキー(MacはCommandキー）を押しながらクリックすると複数指定ができます。",
             BLT_exclude: "除外設定を使用する場合は下のリストから選択してください。(複数可)",
@@ -161,7 +163,7 @@
             resultShow_number: "番号で表示",
             resultShow_property: "検索要素のプロパティの値を表示"
         },
-        ElementSelector: {
+        elementPicker: {
             thisElement: "選択した要素"
         },
         DB_preference: {
@@ -169,7 +171,7 @@
             importAndExport_description: "設定内容をエクスポートまたはインポートします。",
             importAndExport_button: "エクスポート&インポート",
             performanceConfig_title: "パフォーマンス設定",
-            performanceConfig_description: "拡張機能の動作頻度などのパフォーマンス関係の設定をします。",
+            performanceConfig_description: "拡張機能の動作間隔などのパフォーマンス関係の設定をします。",
             performanceConfig_button: "パフォーマンス設定",
             buttonHide_title: "右上のボタンを常時非表示にする",
             buttonHide_description: "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。",
@@ -191,7 +193,11 @@
             dashboardColor_red: "赤色",
             dashboardColor_yellow: "黄色",
             dashboardColor_green: "緑色",
-            dashboardColor_blue: "青色"
+            dashboardColor_blue: "青色",
+            language_title: "ダッシュボードの言語",
+            language_Description: "ダッシュボード画面の表示言語を指定します。ページのリロード後に有効になります。",
+            language_en: "English",
+            language_ja_jp: "日本語"
         },
         DB_exportImport: {
             export_title: "エクスポート",
@@ -202,13 +208,13 @@
             import_title: "インポート",
             import_file: "JSONファイルからインポート",
             import_textArea: "テキストエリアからインポート(JSON形式)",
-            import_addImport: "インポートする際、上書きせず設定を追加してインポートする（環境設定は変更されません）",
+            import_addImport: "インポートする際、上書きせず設定を追加してインポートする(環境設定は変更されません)",
             import_success: "インポートしました。",
             import_overWrite: "現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？",
             import_addImportConfirm: "現在の設定内容にインポートする設定を追加します。よろしいですか？",
             textArea_title: "テキストエリア",
             error_export: "エラー：エクスポートに失敗しました。詳細はコンソールログを参照してください。",
-            error_import: "エラー：設定を読み込めませんでした。JSONファイル(テキスト)が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。"
+            error_import: "エラー：インポートに失敗しました。JSONファイル(テキスト)が壊れている可能性があります。エラーの詳細はコンソールログを参照してください。"
         },
         DB_performanceConfig: {
             disable: "無効化",
@@ -217,13 +223,13 @@
             performancePriority1: "パフォーマンス優先(設定1)",
             performancePriority2: "パフォーマンス優先(設定2)",
             mode_title: "モード設定",
-            mode_description1: "パフォーマンスのモード設定をします。",
-            mode_description2: "ブロック優先にするとページに変更があった場合、すぐにブロック動作をしますが、ページが重たくなる可能性があります。",
+            mode_description1: "動作間隔のモード設定をします。",
+            mode_description2: "ブロック優先にするとページに変更があった場合、すぐにブロック動作をしますが、ブラウザの動作が遅くなる可能性があります。",
             mode_description3: "パフォーマンス優先にすると一定間隔でブロック動作をすることで処理を軽くしますが、一瞬ブロックする要素が表示される可能性があります。",
             mode_description4: "バランスにするとページを表示して読み込みが終わるまで、パフォーマンス優先で動作をし、読み込み完了後はブロック優先で動作します。",
             interval_title: "動作間隔",
             interval_description1: "パフォーマンス優先モードまたはバランスモードを選択時の動作間隔の設定をします。",
-            interval_description2: "ミリ単位で動作間隔の設定ができます。(1秒=1000ミリ)",
+            interval_description2: "ミリ単位で動作間隔の設定ができます。(1秒=1000ミリ秒)",
             interval_description3: "数値を大きくするほど動作が軽くなりますが、ブロック処理がその分遅れます。",
             overRide_title: "サイト別設定",
             overRide_description1: "ブロックリストテキストのマッチするサイトで動作モードを上書きすることができます。",
@@ -232,6 +238,200 @@
             saveInfo: "保存しました。"
         }
     }
+
+    const localeText_en = {
+        OKButton: "OK",
+        cancelButton: "Cancel",
+        backButton: "←Back",
+        DB_blockResult: {
+            sentenceBlock: "SentenceBlock Apply list",
+            sentenceBlock_tempDisableButton: "Apply temporary disable and then reload.",
+            elementBlock: "ElementBlock Apply list",
+            elementBlock_Countcase: "Case",
+            settingPageButton: "Settings page",
+            reDisplay: "Redisplay",
+            copy: "Copy properties"
+        },
+        DB_settingsTop: {
+            blockListText_title: "BlockListText",
+            blockListText_description: "You can set the text, URL, etc. to be blocked for each group.",
+            blockListText_button: "BlockListText Config",
+            sentenceBlock_title: "SentenceBlock",
+            sentenceBlock_description: "If a BlockListText is included in a Web sentence, it will replace that one sentence or word with another character.",
+            sentenceBlock_button: "SentenceBlock Config",
+            elementBlock_title: "ElementBlock",
+            elementBlock_description: "If an element's characters or properties contain BlockListText, the entire element will be blocked.",
+            elementBlock_button: "ElementBlock Config",
+            preferences_title: "Preferences",
+            preferences_description: "Configure the entire Extensions settings.",
+            preferences_button: "Preferences Config"
+        },
+        listEdit_Func: {
+            name: "Name:",
+            sort: "SortIndex:",
+            enable: "Enable:",
+            config: "Settings editing:",
+            config_button: "Settings editing",
+            new: "New",
+            delete: "Delete",
+            save: "Save",
+            editFlag_back: "You will be returned to the Top Settings page. The information currently entered will be lost, are you sure?",
+            editFlag_new: "Do you want to create a new one? The currently entered information will be lost.",
+            editFlag_change: "Do you want to change the configuration field? The currently entered information will be lost.",
+            deleteConfirm: "Are you sure you want to delete the settings?",
+            error_nameEmpty: "error: Please enter your name.",
+            error_nameDuplication: "error: The same name already exists."
+        },
+        DB_blockListText: {
+            blockListText_title: "BlockListText",
+            blockListText_URLoverWrite: "The BlockListText will be automatically overwritten because it is set to be retrieved from the URL.",
+            blockListText_show: "Show Text",
+            textFile_title: "Load a text file",
+            textFile_overWrite: "The currently entered BlockListText will be overwritten by the text in the file. Are you sure?",
+            URLget_title: "Get from URL",
+            URLget_enable: "Enable",
+            option_title: "Option",
+            option_regexp: "RegExp",
+            option_caseSensitive: "Case Sensitive",
+            option_exact: "Exact",
+            option_spaceIgnore: "Ignore white space",
+            option_notSearch: "Do a NOT search",
+            option_uBlacklist: "Use uBlacklist Format (Beta)"
+        },
+        DB_sentenceBlock: {
+            URL_title: "URL",
+            URL_description: "Specify the sites for which you want to enable this rule. If you leave this field blank, all sites will be included.",
+            URL_wildcard: "Wildcard(*)",
+            URL_regexp: "RegExp",
+            URL_BLT: "BlockListText",
+            BLT_title: "BlockListText",
+            BLT_description: "Specify the BlockListText to be used. holding down the Ctrl key (Command key on Mac) while clicking to specify multiple text.",
+            BLT_exclude: "Please select from the list below if you want to use the exclusion settings. (Can be more than one)",
+            replace_title: "Replace string",
+            replace_description: "Enter the string to be replaced.",
+            replace_sentence: "replace with a single sentence",
+            replace_word: "Replace with a word",
+            aTag_title: "Link replacement for \"a\" tag",
+            aTag_description: "Set whether to replace the \"a\" tag link.(If you replace links in \"a\" tags, the links will not work properly.)",
+            aTag_hrefExclude: "Do not replace \"a\" tag links.",
+            aTag_hrefOnly: "Only replace links in \"a\" tags.",
+            aTag_all: "Replace all"
+        },
+        DB_elementBlock: {
+            URL_title: "URL",
+            URL_description: "Specify the sites for which you want to enable this rule.",
+            URL_wildcard: "Wildcard(*)",
+            URL_regexp: "RegExp",
+            URL_BLT: "BlockListText",
+            css: "CSS",
+            XPath: "XPath",
+            elementPicker: "Element Picker(Beta)",
+            elementPicker_message: "After pressing the OK button, click on the element.",
+            eleHide_title: "Hidden elements",
+            eleHide_description: "Specify the elements to be hidden using the CSS method [querySelectorAll] or XPath method [document.evaluate].",
+            eleHide_displayNone: "Hiding Hidden elements with CSS",
+            eleHide_remove: "Remove an Hidden elements",
+            eleSearch_title: "Search elements",
+            eleSearch_description: "Specify the elements to be searched for in order to hide them using the CSS method [querySelectorAll] or XPath method [document.evaluate]. If you leave the field blank, the hidden element will be unconditionally hidden.",
+            eleSearch_firstOnly: "If more than one element is found, search only the first element found.",
+            eleSearch_methodText: "Search the text of an element",
+            eleSearch_methodHref: "Search for links in elements (only if the search element is an [a] tag element).",
+            eleSearch_methodStyle: "Search the CSS of an element (Advanced)",
+            eleSearch_methodAdvanced: "Specifying element properties directly (Advanced)",
+            BLT_title: "BlockListText",
+            BLT_description: "Specify the BlockListText to be used. holding down the Ctrl key (Command key on Mac) while clicking to specify multiple text.",
+            BLT_exclude: "Please select from the list below if you want to use the exclusion settings. (Can be more than one)",
+            uBlacklist_title: "Types to enable when using uBlacklist",
+            uBlacklist_description: "Specifies the type to be enabled when using uBlacklist.",
+            uBlacklist_urlOnly: "URL match patterns and URL RegExp (Only valid if the value to be searched is a URL.)",
+            uBlacklist_titleOnly: "Only text in \"title/\"",
+            uBlacklist_all: "Use all types",
+            resultShow_title: "Display the Block Apply list",
+            resultShow_description: "Select how you want to view the block results on the top page of the dashboard.",
+            resultShow_none: "Hide",
+            resultShow_number: "Display by number",
+            resultShow_property: "Display the value of a property of a search element."
+        },
+        elementPicker: {
+            thisElement: "This Element"
+        },
+        DB_preference: {
+            importAndExport_title: "Export & Import",
+            importAndExport_description: "Exports or imports the settings.",
+            importAndExport_button: "Export & Import",
+            performanceConfig_title: "Performance settings",
+            performanceConfig_description: "Configure performance-related settings such as the operation interval of the Extensions.",
+            performanceConfig_button: "Performance settings",
+            buttonHide_title: "Always hide the top right button.",
+            buttonHide_description: "Always hide the button in the upper right corner. You can access the dashboard from the UserScript Manager menu screen even after hiding it.",
+            buttonHide_boxText: "Hide the button",
+            buttonHide_warning: "The menu API was not detected. If you hide it, you can access the dashboard only from \"" + safeModeURL + "\" . Are you sure you want to hide it?",
+            nowLoadSet_title: "Apply settings immediately(Beta)",
+            nowLoadSet_description: "Normally, the settings will be applied after reloading, but if you check this checkbox, the settings will be applied immediately.",
+            nowLoadSet_boxText: "Apply settings immediately",
+            fetchInterval_title: "Interval to get from URL",
+            fetchInterval_Description: "Sets the update interval when retrieving text from URL in BlockListText.",
+            fetchInterval_300000: "5 min",
+            fetchInterval_900000: "15 min",
+            fetchInterval_1800000: "30 min",
+            fetchInterval_3600000: "1 hour",
+            fetchInterval_7200000: "2 hour",
+            fetchInterval_18000000: "5 hour",
+            dashboardColor_title: "Dashboard background color",
+            dashboardColor_Description: "Specifies the color of the background color for the entire dashboard screen.",
+            dashboardColor_red: "Red",
+            dashboardColor_yellow: "Yellow",
+            dashboardColor_green: "Green",
+            dashboardColor_blue: "Blue",
+            language_title: "Dashboard language",
+            language_Description: "Specifies the display language of the dashboard screen. This will take effect after the page reload.",
+            language_en: "English",
+            language_ja_jp: "日本語"
+        },
+        DB_exportImport: {
+            export_title: "Export",
+            export_file: "Export as JSON file",
+            export_copy: "Copy to clipboard in JSON format",
+            export_textArea: "Export to textarea (JSON format)",
+            export_success: "Exported.",
+            import_title: "Import",
+            import_file: "Importing from JSON files",
+            import_textArea: "Import from textarea (JSON format)",
+            import_addImport: "Add and import the settings without overwriting them. (Preferences will not be changed.)",
+            import_success: "Imported.",
+            import_overWrite: "All current settings will be overwritten with the imported data. Are you sure?",
+            import_addImportConfirm: "Add import settings to the current settings. Are you sure?",
+            textArea_title: "text area",
+            error_export: "error: Export failed. Please refer to the console log for details.",
+            error_import: "error: Import failed, the JSON file (text) may be corrupted. Please refer to the console log for error details."
+        },
+        DB_performanceConfig: {
+            disable: "Disable",
+            blockPriority: "Block priority",
+            balance: "Balance",
+            performancePriority1: "Performance priority (Config1)",
+            performancePriority2: "Performance priority (Config2)",
+            mode_title: "Mode setting",
+            mode_description1: "Sets the mode setting for the operation interval.",
+            mode_description2: "If you set block priority, the blocking action will be taken as soon as there is a change in the page, but it may slow down the browser.",
+            mode_description3: "When you select the performance priority mode, the system will block at regular intervals to lighten the load, but there is a possibility that the blocking elements will appear momentarily.",
+            mode_description4: "If you select balanced, the page will be displayed and run with performance priority until it finishes loading, and then run with block priority after it finishes loading.",
+            interval_title: "operating interval",
+            interval_description1: "Sets the operation interval when performance priority mode or balanced mode is selected.",
+            interval_description2: "The operation interval can be set in millimeter increments. (1sec = 1000millisec)",
+            interval_description3: "The larger the value, the lighter the operation becomes, but the block processing will be delayed.",
+            overRide_title: "Site Specific Settings",
+            overRide_description1: "You can override the mode of operation with a matching site in the BlockListText.",
+            overRide_description2: "If URLs are matched in multiple settings, the top item displayed in this settings section will take precedence.",
+            save: "Save",
+            saveInfo: "Saveed."
+        }
+    }
+
+
+
+
+
 
 
     class storageAPI {
@@ -370,6 +570,11 @@
         if (PreferenceSettingStorage) {
             PreferenceSettingStorage = JSON.parse(PreferenceSettingStorage);
         } else {
+            let languageCode = "en";
+            const langCodeTemp = navigator.languages[0];
+            if (langCodeTemp == "ja") {
+                languageCode = "ja-jp";
+            }
             PreferenceSettingStorage = {
                 performanceConfig: {
                     mode: "balance",
@@ -385,7 +590,8 @@
                 hideButton: false,
                 nowLoadSet: false,
                 fetchInterval: 3600000,
-                dashboardColor: "#FFFFB2"
+                dashboardColor: "#FFFFB2",
+                language: languageCode
             };
             await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
         }
@@ -1166,6 +1372,14 @@
         }
     }
 
+    async function localeTextSetFunction() {
+        const langCode = PreferenceSettingStorage.language;
+        if (langCode == "ja-jp") {
+            localeText = localeText_ja_jp;
+        } else {
+            localeText = localeText_en;
+        }
+    }
 
     async function DashboardButton_InsertElement() {
         if (!divElement_RootShadow) {
@@ -1173,6 +1387,8 @@
             divElement_RootShadow.style.all = "initial";
             divElement_RootShadow.attachShadow({ mode: "open" });
             document.body.append(divElement_RootShadow);
+
+            await localeTextSetFunction();
 
             if (!PreferenceSettingStorage.hideButton || location.href == safeModeURL) {
                 if (!inIframeDetect()) {
@@ -1611,8 +1827,8 @@
                 this.buttonOK_Ele = RootShadow.getElementById("PopupMessageBox_OK");
                 this.buttonCancel_Ele = RootShadow.getElementById("PopupMessageBox_Cancel");
 
-                this.buttonOK_Ele.textContent = lang.OKButton;
-                this.buttonCancel_Ele.textContent = lang.cancelButton;
+                this.buttonOK_Ele.textContent = localeText.OKButton;
+                this.buttonCancel_Ele.textContent = localeText.cancelButton;
             }
 
             async alert(message) {
@@ -1857,9 +2073,9 @@
                 this.documentOnClickFunc = (evt) => {
                     this.currentElement = evt.target.parentElement;
                     if (this.mode == "css") {
-                        this.li_Add(lang.ElementSelector.thisElement, this.CSSselectorString(evt.target, false));
+                        this.li_Add(localeText.elementPicker.thisElement, this.CSSselectorString(evt.target, false));
                     } else if (this.mode == "xpath") {
-                        this.li_Add(lang.ElementSelector.thisElement, this.XPathString(evt.target, false));
+                        this.li_Add(localeText.elementPicker.thisElement, this.XPathString(evt.target, false));
                     }
                     if (this.currentElement) {
                         this.ElementNameListAdd(Array.from(this.currentElement.children));
@@ -2145,10 +2361,10 @@
             Dashboard_Window_Ele_stack.push(DB_blockResult_div);
             DashboardMain_div.append(DB_blockResult_div);
 
-            RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = lang.DB_blockResult.sentenceBlock;
-            RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = lang.DB_blockResult.sentenceBlock_tempDisableButton;
-            RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = lang.DB_blockResult.elementBlock;
-            RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = lang.DB_blockResult.settingPageButton;
+            RootShadow.getElementById("Text-ResultSentenceBlockTitle").textContent = localeText.DB_blockResult.sentenceBlock;
+            RootShadow.getElementById("ItemFrame_SentenceBlock_Result_TempDisableButton").textContent = localeText.DB_blockResult.sentenceBlock_tempDisableButton;
+            RootShadow.getElementById("Text-ResultElementBlockTitle").textContent = localeText.DB_blockResult.elementBlock;
+            RootShadow.getElementById("ItemFrame-SettingPageButton").textContent = localeText.DB_blockResult.settingPageButton;
 
             {
                 const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
@@ -2197,7 +2413,7 @@
                         if (arr.settingobj.resultShow === "number") {
                             const div_p = document.createElement("p");
                             const indexNumShow = index + 1;
-                            div_p.textContent = indexNumShow + lang.DB_blockResult.elementBlock_Countcase;
+                            div_p.textContent = indexNumShow + localeText.DB_blockResult.elementBlock_Countcase;
                             div.append(div_p);
                         } else if (arr.settingobj.resultShow === "property") {
                             const div_p = document.createElement("p");
@@ -2211,7 +2427,7 @@
 
                         if (arr.element) {
                             const div_button1 = document.createElement("button");
-                            div_button1.textContent = lang.DB_blockResult.reDisplay;
+                            div_button1.textContent = localeText.DB_blockResult.reDisplay;
                             div_button1.addEventListener("click", () => {
                                 arr.element.style.display = "";
                             })
@@ -2219,7 +2435,7 @@
                         }
 
                         const div_button2 = document.createElement("button");
-                        div_button2.textContent = lang.DB_blockResult.copy;
+                        div_button2.textContent = localeText.DB_blockResult.copy;
                         div_button2.addEventListener("click", () => {
                             if (arr.searchProperty === "") return;
                             copyTextToClipboard(arr.searchProperty);
@@ -2283,27 +2499,27 @@
             DashboardMain_div.append(DB_settingTop_div);
 
 
-            RootShadow.getElementById("BlockListText_Setting_Title").textContent = lang.DB_settingsTop.blockListText_title;
-            RootShadow.getElementById("BlockListText_Setting_Description").textContent = lang.DB_settingsTop.blockListText_description;
-            RootShadow.getElementById("BlockListText_Setting_Button").textContent = lang.DB_settingsTop.blockListText_button;
+            RootShadow.getElementById("BlockListText_Setting_Title").textContent = localeText.DB_settingsTop.blockListText_title;
+            RootShadow.getElementById("BlockListText_Setting_Description").textContent = localeText.DB_settingsTop.blockListText_description;
+            RootShadow.getElementById("BlockListText_Setting_Button").textContent = localeText.DB_settingsTop.blockListText_button;
             RootShadow.getElementById("BlockListText_Setting_Button").addEventListener("click", Dashboard_BlockListText, false);
 
-            RootShadow.getElementById("SentenceBlock_Setting_Title").textContent = lang.DB_settingsTop.sentenceBlock_title;
-            RootShadow.getElementById("SentenceBlock_Setting_Description").textContent = lang.DB_settingsTop.sentenceBlock_description;
-            RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = lang.DB_settingsTop.sentenceBlock_button;
+            RootShadow.getElementById("SentenceBlock_Setting_Title").textContent = localeText.DB_settingsTop.sentenceBlock_title;
+            RootShadow.getElementById("SentenceBlock_Setting_Description").textContent = localeText.DB_settingsTop.sentenceBlock_description;
+            RootShadow.getElementById("SentenceBlock_Setting_Button").textContent = localeText.DB_settingsTop.sentenceBlock_button;
             RootShadow.getElementById("SentenceBlock_Setting_Button").addEventListener("click", Dashboard_SentenceBlock, false);
 
-            RootShadow.getElementById("ElementBlock_Setting_Title").textContent = lang.DB_settingsTop.elementBlock_title;
-            RootShadow.getElementById("ElementBlock_Setting_Description").textContent = lang.DB_settingsTop.elementBlock_description;
-            RootShadow.getElementById("ElementBlock_Setting_Button").textContent = lang.DB_settingsTop.elementBlock_button;
+            RootShadow.getElementById("ElementBlock_Setting_Title").textContent = localeText.DB_settingsTop.elementBlock_title;
+            RootShadow.getElementById("ElementBlock_Setting_Description").textContent = localeText.DB_settingsTop.elementBlock_description;
+            RootShadow.getElementById("ElementBlock_Setting_Button").textContent = localeText.DB_settingsTop.elementBlock_button;
             RootShadow.getElementById("ElementBlock_Setting_Button").addEventListener("click", Dashboard_ElementBlock, false);
 
-            RootShadow.getElementById("Preferences_Setting_Title").textContent = lang.DB_settingsTop.preferences_title;
-            RootShadow.getElementById("Preferences_Setting_Description").textContent = lang.DB_settingsTop.preferences_description;
-            RootShadow.getElementById("Preferences_Setting_Button").textContent = lang.DB_settingsTop.preferences_button;
+            RootShadow.getElementById("Preferences_Setting_Title").textContent = localeText.DB_settingsTop.preferences_title;
+            RootShadow.getElementById("Preferences_Setting_Description").textContent = localeText.DB_settingsTop.preferences_description;
+            RootShadow.getElementById("Preferences_Setting_Button").textContent = localeText.DB_settingsTop.preferences_button;
             RootShadow.getElementById("Preferences_Setting_Button").addEventListener("click", Dashboard_PreferencePage, false);
 
-            RootShadow.getElementById("SettingMainPageBack_Button").textContent = lang.backButton;
+            RootShadow.getElementById("SettingMainPageBack_Button").textContent = localeText.backButton;
             RootShadow.getElementById("SettingMainPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
@@ -2428,15 +2644,15 @@
                 `;
                 DashboardMain_div.append(this.ListEditPage_Ele);
 
-                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = lang.listEdit_Func.name;
-                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = lang.listEdit_Func.sort;
-                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Span").textContent = lang.listEdit_Func.enable;
-                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Span").textContent = lang.listEdit_Func.config;
-                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").textContent = lang.listEdit_Func.config_button;
-                RootShadow.getElementById("SettingsObject_ActionButton_Back").textContent = lang.backButton;
-                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").textContent = lang.listEdit_Func.new;
-                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").textContent = lang.listEdit_Func.delete;
-                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").textContent = lang.listEdit_Func.save;
+                RootShadow.getElementById("SettingsObject_ConfigItems_Name_Span").textContent = localeText.listEdit_Func.name;
+                RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Span").textContent = localeText.listEdit_Func.sort;
+                RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Span").textContent = localeText.listEdit_Func.enable;
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Span").textContent = localeText.listEdit_Func.config;
+                RootShadow.getElementById("SettingsObject_ConfigItems_EditConfig_Form").textContent = localeText.listEdit_Func.config_button;
+                RootShadow.getElementById("SettingsObject_ActionButton_Back").textContent = localeText.backButton;
+                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").textContent = localeText.listEdit_Func.new;
+                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").textContent = localeText.listEdit_Func.delete;
+                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").textContent = localeText.listEdit_Func.save;
 
                 this.ulol_Ele = RootShadow.getElementById("ObjectLists_ol");
                 this.editarea_Ele = RootShadow.getElementById("SettingsObject_ConfigItems");
@@ -2472,7 +2688,7 @@
 
                 RootShadow.getElementById("SettingsObject_ActionButton_Back").addEventListener("click", async () => {
                     if (this.Editflag) {
-                        const res = await popup.confirm(lang.listEdit_Func.editFlag_back);
+                        const res = await popup.confirm(localeText.listEdit_Func.editFlag_back);
                         if (!res) {
                             return false;
                         }
@@ -2489,7 +2705,7 @@
 
             async ListStoSave(StoKey, StoObj) {
                 if (StoObj.name === "") {
-                    await popup.alert(lang.listEdit_Func.error_nameEmpty);
+                    await popup.alert(localeText.listEdit_Func.error_nameEmpty);
                     return false;
                 }
                 const fiindex = this.ListStorage.findIndex(({ name }) => name === this.currentName);
@@ -2501,7 +2717,7 @@
                 }
                 const dupcheck2 = dupcheck1.filter((v) => v.name === StoObj.name);
                 if (dupcheck2.length) {
-                    await popup.alert(lang.listEdit_Func.error_nameDuplication);
+                    await popup.alert(localeText.listEdit_Func.error_nameDuplication);
                     return false;
                 }
                 if (fiindex !== -1) {
@@ -2526,7 +2742,7 @@
             async ListStoDel(StoKey) {
                 const fiindex = this.ListStorage.findIndex(({ name }) => name === this.currentName);
                 if (fiindex !== -1) {
-                    const res = await popup.confirm("[" + this.currentName + "]" + lang.listEdit_Func.deleteConfirm);
+                    const res = await popup.confirm("[" + this.currentName + "]" + localeText.listEdit_Func.deleteConfirm);
                     if (!res) {
                         return false;
                     }
@@ -2544,7 +2760,7 @@
 
             async NewEditButton(NewbuttonEle) {
                 if (this.Editflag) {
-                    const res = await popup.confirm(lang.listEdit_Func.editFlag_new);
+                    const res = await popup.confirm(localeText.listEdit_Func.editFlag_new);
                     if (!res) {
                         return false;
                     }
@@ -2564,7 +2780,7 @@
                     this.li_cfuncArgTemp[1] = cfuncinfunction_arg;
 
                     if (this.Editflag) {
-                        const res = await popup.confirm(lang.listEdit_Func.editFlag_change);
+                        const res = await popup.confirm(localeText.listEdit_Func.editFlag_change);
                         if (!res) {
                             return false;
                         }
@@ -2770,20 +2986,20 @@
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
-                    RootShadow.getElementById("BlockListText_Textarea_Title").textContent = lang.DB_blockListText.blockListText_title;
-                    RootShadow.getElementById("BlockListText_Textarea_Disable_SpanText").textContent = lang.DB_blockListText.blockListText_URLoverWrite;
-                    RootShadow.getElementById("BlockListText_Textarea_Disable_ShowButton").textContent = lang.DB_blockListText.blockListText_show;
-                    RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = lang.DB_blockListText.textFile_title;
-                    RootShadow.getElementById("BlockListText_Fetch_Title").textContent = lang.DB_blockListText.URLget_title;
-                    RootShadow.getElementById("BlockListText_Fetch_InputCheckbox_SpanText").textContent = lang.DB_blockListText.URLget_enable;
-                    RootShadow.getElementById("BlockListText_Config_Title").textContent = lang.DB_blockListText.option_title;
-                    RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = lang.DB_blockListText.option_regexp;
-                    RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = lang.DB_blockListText.option_caseSensitive;
-                    RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = lang.DB_blockListText.option_exact;
-                    RootShadow.getElementById("BlockListText_Config4_SpanText").textContent = lang.DB_blockListText.option_spaceIgnore;
-                    RootShadow.getElementById("BlockListText_Config5_SpanText").textContent = lang.DB_blockListText.option_notSearch;
-                    RootShadow.getElementById("BlockListText_Config6_SpanText").textContent = lang.DB_blockListText.option_uBlacklist;
-                    RootShadow.getElementById("BlockListText_BackButton").textContent = lang.backButton;
+                    RootShadow.getElementById("BlockListText_Textarea_Title").textContent = localeText.DB_blockListText.blockListText_title;
+                    RootShadow.getElementById("BlockListText_Textarea_Disable_SpanText").textContent = localeText.DB_blockListText.blockListText_URLoverWrite;
+                    RootShadow.getElementById("BlockListText_Textarea_Disable_ShowButton").textContent = localeText.DB_blockListText.blockListText_show;
+                    RootShadow.getElementById("BlockListText_ReadFile_Title").textContent = localeText.DB_blockListText.textFile_title;
+                    RootShadow.getElementById("BlockListText_Fetch_Title").textContent = localeText.DB_blockListText.URLget_title;
+                    RootShadow.getElementById("BlockListText_Fetch_InputCheckbox_SpanText").textContent = localeText.DB_blockListText.URLget_enable;
+                    RootShadow.getElementById("BlockListText_Config_Title").textContent = localeText.DB_blockListText.option_title;
+                    RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = localeText.DB_blockListText.option_regexp;
+                    RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = localeText.DB_blockListText.option_caseSensitive;
+                    RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = localeText.DB_blockListText.option_exact;
+                    RootShadow.getElementById("BlockListText_Config4_SpanText").textContent = localeText.DB_blockListText.option_spaceIgnore;
+                    RootShadow.getElementById("BlockListText_Config5_SpanText").textContent = localeText.DB_blockListText.option_notSearch;
+                    RootShadow.getElementById("BlockListText_Config6_SpanText").textContent = localeText.DB_blockListText.option_uBlacklist;
+                    RootShadow.getElementById("BlockListText_BackButton").textContent = localeText.backButton;
 
                     this.textareaDisable_Ele = RootShadow.getElementById("BlockListText_Textarea_Disable");
 
@@ -2800,7 +3016,7 @@
                     RootShadow.getElementById("BlockListText_ReadFile_Input").addEventListener("change", async (evt) => {
                         const targetElement = evt.target;
                         if (targetElement.files[0]) {
-                            const res = await popup.confirm(lang.DB_blockListText.textFile_overWrite);
+                            const res = await popup.confirm(localeText.DB_blockListText.textFile_overWrite);
                             if (!res) {
                                 targetElement.value = "";
                                 return false;
@@ -3156,24 +3372,24 @@
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
-                    RootShadow.getElementById("SentenceBlockConfig1_Title").textContent = lang.DB_sentenceBlock.URL_title;
-                    RootShadow.getElementById("SentenceBlockConfig1_Description").textContent = lang.DB_sentenceBlock.URL_description;
-                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input1_SpanText").textContent = lang.DB_sentenceBlock.URL_wildcard;
-                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input2_SpanText").textContent = lang.DB_sentenceBlock.URL_regexp;
-                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input3_SpanText").textContent = lang.DB_sentenceBlock.URL_BLT;
-                    RootShadow.getElementById("SentenceBlockConfig2_Title").textContent = lang.DB_sentenceBlock.BLT_title;
-                    RootShadow.getElementById("SentenceBlockConfig2_Description").textContent = lang.DB_sentenceBlock.BLT_description;
-                    RootShadow.getElementById("SentenceBlockConfig2-2_Description").textContent = lang.DB_sentenceBlock.BLT_exclude;
-                    RootShadow.getElementById("SentenceBlockConfig3_Title").textContent = lang.DB_sentenceBlock.replace_title;
-                    RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = lang.DB_sentenceBlock.replace_description;
-                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = lang.DB_sentenceBlock.replace_sentence;
-                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input2_SpanText").textContent = lang.DB_sentenceBlock.replace_word;
-                    RootShadow.getElementById("SentenceBlockConfig4_Title").textContent = lang.DB_sentenceBlock.aTag_title;
-                    RootShadow.getElementById("SentenceBlockConfig4_Description").textContent = lang.DB_sentenceBlock.aTag_description;
-                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option1").textContent = lang.DB_sentenceBlock.aTag_hrefExclude;
-                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option2").textContent = lang.DB_sentenceBlock.aTag_hrefOnly;
-                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option3").textContent = lang.DB_sentenceBlock.aTag_all;
-                    RootShadow.getElementById("SentenceBlockConfig_BackButton").textContent = lang.backButton;
+                    RootShadow.getElementById("SentenceBlockConfig1_Title").textContent = localeText.DB_sentenceBlock.URL_title;
+                    RootShadow.getElementById("SentenceBlockConfig1_Description").textContent = localeText.DB_sentenceBlock.URL_description;
+                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input1_SpanText").textContent = localeText.DB_sentenceBlock.URL_wildcard;
+                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input2_SpanText").textContent = localeText.DB_sentenceBlock.URL_regexp;
+                    RootShadow.getElementById("SentenceBlockConfig1_Form_Input3_SpanText").textContent = localeText.DB_sentenceBlock.URL_BLT;
+                    RootShadow.getElementById("SentenceBlockConfig2_Title").textContent = localeText.DB_sentenceBlock.BLT_title;
+                    RootShadow.getElementById("SentenceBlockConfig2_Description").textContent = localeText.DB_sentenceBlock.BLT_description;
+                    RootShadow.getElementById("SentenceBlockConfig2-2_Description").textContent = localeText.DB_sentenceBlock.BLT_exclude;
+                    RootShadow.getElementById("SentenceBlockConfig3_Title").textContent = localeText.DB_sentenceBlock.replace_title;
+                    RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = localeText.DB_sentenceBlock.replace_description;
+                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = localeText.DB_sentenceBlock.replace_sentence;
+                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input2_SpanText").textContent = localeText.DB_sentenceBlock.replace_word;
+                    RootShadow.getElementById("SentenceBlockConfig4_Title").textContent = localeText.DB_sentenceBlock.aTag_title;
+                    RootShadow.getElementById("SentenceBlockConfig4_Description").textContent = localeText.DB_sentenceBlock.aTag_description;
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option1").textContent = localeText.DB_sentenceBlock.aTag_hrefExclude;
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option2").textContent = localeText.DB_sentenceBlock.aTag_hrefOnly;
+                    RootShadow.getElementById("SentenceBlockConfig4_Select_Option3").textContent = localeText.DB_sentenceBlock.aTag_all;
+                    RootShadow.getElementById("SentenceBlockConfig_BackButton").textContent = localeText.backButton;
 
                     this.url_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input1");
                     this.url_BLT_Ele = RootShadow.getElementById("SentenceBlockConfig1_Select");
@@ -3533,41 +3749,41 @@
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
-                    RootShadow.getElementById("ElementBlockConfig1_Title").textContent = lang.DB_elementBlock.URL_title;
-                    RootShadow.getElementById("ElementBlockConfig1_Description").innerHTML = lang.DB_elementBlock.URL_description;
-                    RootShadow.getElementById("ElementBlockConfig1_Form_Input1_SpanText").textContent = lang.DB_elementBlock.URL_wildcard;
-                    RootShadow.getElementById("ElementBlockConfig1_Form_Input2_SpanText").textContent = lang.DB_elementBlock.URL_regexp;
-                    RootShadow.getElementById("ElementBlockConfig1_Form_Input3_SpanText").textContent = lang.DB_elementBlock.URL_BLT;
-                    RootShadow.getElementById("ElementBlockConfig2_Title").textContent = lang.DB_elementBlock.eleHide_title;
-                    RootShadow.getElementById("ElementBlockConfig2_Description").textContent = lang.DB_elementBlock.eleHide_description;
-                    RootShadow.getElementById("ElementBlockConfig2_Form_Input1_SpanText").textContent = lang.DB_elementBlock.css;
-                    RootShadow.getElementById("ElementBlockConfig2_Form_Input2_SpanText").textContent = lang.DB_elementBlock.XPath;
-                    RootShadow.getElementById("ElementBlockConfig2_Button").textContent = lang.DB_elementBlock.elementSelector;
-                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input1_SpanText").textContent = lang.DB_elementBlock.eleHide_displayNone;
-                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input2_SpanText").textContent = lang.DB_elementBlock.eleHide_remove;
-                    RootShadow.getElementById("ElementBlockConfig3_Title").textContent = lang.DB_elementBlock.eleSearch_title;
-                    RootShadow.getElementById("ElementBlockConfig3_Description").textContent = lang.DB_elementBlock.eleSearch_description;
-                    RootShadow.getElementById("ElementBlockConfig3_Form_Input1_SpanText").textContent = lang.DB_elementBlock.css;
-                    RootShadow.getElementById("ElementBlockConfig3_Form_Input2_SpanText").textContent = lang.DB_elementBlock.XPath;
-                    RootShadow.getElementById("ElementBlockConfig3_Button").textContent = lang.DB_elementBlock.elementSelector;
-                    RootShadow.getElementById("ElementBlockConfig3_Input1_SpanText").textContent = lang.DB_elementBlock.eleSearch_firstOnly;
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input1_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodText;
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input2_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodHref;
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodStyle;
-                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input4_SpanText").textContent = lang.DB_elementBlock.eleSearch_methodAdvanced;
-                    RootShadow.getElementById("ElementBlockConfig4_Title").textContent = lang.DB_elementBlock.BLT_title;
-                    RootShadow.getElementById("ElementBlockConfig4_Description").textContent = lang.DB_elementBlock.BLT_description;
-                    RootShadow.getElementById("ElementBlockConfig4-2_Description").textContent = lang.DB_elementBlock.BLT_exclude;
-                    RootShadow.getElementById("ElementBlockConfig5_Title").textContent = lang.DB_elementBlock.uBlacklist_title;
-                    RootShadow.getElementById("ElementBlockConfig5_Description").textContent = lang.DB_elementBlock.uBlacklist_description;
-                    RootShadow.getElementById("ElementBlockConfig5_Select_Option1").textContent = lang.DB_elementBlock.uBlacklist_urlOnly;
-                    RootShadow.getElementById("ElementBlockConfig5_Select_Option2").textContent = lang.DB_elementBlock.uBlacklist_titleOnly;
-                    RootShadow.getElementById("ElementBlockConfig5_Select_Option3").textContent = lang.DB_elementBlock.uBlacklist_all;
-                    RootShadow.getElementById("ElementBlockConfig6_Title").textContent = lang.DB_elementBlock.resultShow_title;
-                    RootShadow.getElementById("ElementBlockConfig6_Description").textContent = lang.DB_elementBlock.resultShow_description;
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input1_SpanText").textContent = lang.DB_elementBlock.resultShow_none;
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input2_SpanText").textContent = lang.DB_elementBlock.resultShow_number;
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input3_SpanText").textContent = lang.DB_elementBlock.resultShow_property;
+                    RootShadow.getElementById("ElementBlockConfig1_Title").textContent = localeText.DB_elementBlock.URL_title;
+                    RootShadow.getElementById("ElementBlockConfig1_Description").innerHTML = localeText.DB_elementBlock.URL_description;
+                    RootShadow.getElementById("ElementBlockConfig1_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.URL_wildcard;
+                    RootShadow.getElementById("ElementBlockConfig1_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.URL_regexp;
+                    RootShadow.getElementById("ElementBlockConfig1_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.URL_BLT;
+                    RootShadow.getElementById("ElementBlockConfig2_Title").textContent = localeText.DB_elementBlock.eleHide_title;
+                    RootShadow.getElementById("ElementBlockConfig2_Description").textContent = localeText.DB_elementBlock.eleHide_description;
+                    RootShadow.getElementById("ElementBlockConfig2_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.css;
+                    RootShadow.getElementById("ElementBlockConfig2_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.XPath;
+                    RootShadow.getElementById("ElementBlockConfig2_Button").textContent = localeText.DB_elementBlock.elementPicker;
+                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.eleHide_displayNone;
+                    RootShadow.getElementById("ElementBlockConfig2-2_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.eleHide_remove;
+                    RootShadow.getElementById("ElementBlockConfig3_Title").textContent = localeText.DB_elementBlock.eleSearch_title;
+                    RootShadow.getElementById("ElementBlockConfig3_Description").textContent = localeText.DB_elementBlock.eleSearch_description;
+                    RootShadow.getElementById("ElementBlockConfig3_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.css;
+                    RootShadow.getElementById("ElementBlockConfig3_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.XPath;
+                    RootShadow.getElementById("ElementBlockConfig3_Button").textContent = localeText.DB_elementBlock.elementPicker;
+                    RootShadow.getElementById("ElementBlockConfig3_Input1_SpanText").textContent = localeText.DB_elementBlock.eleSearch_firstOnly;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.eleSearch_methodText;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.eleSearch_methodHref;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.eleSearch_methodStyle;
+                    RootShadow.getElementById("ElementBlockConfig3-2_Form_Input4_SpanText").textContent = localeText.DB_elementBlock.eleSearch_methodAdvanced;
+                    RootShadow.getElementById("ElementBlockConfig4_Title").textContent = localeText.DB_elementBlock.BLT_title;
+                    RootShadow.getElementById("ElementBlockConfig4_Description").textContent = localeText.DB_elementBlock.BLT_description;
+                    RootShadow.getElementById("ElementBlockConfig4-2_Description").textContent = localeText.DB_elementBlock.BLT_exclude;
+                    RootShadow.getElementById("ElementBlockConfig5_Title").textContent = localeText.DB_elementBlock.uBlacklist_title;
+                    RootShadow.getElementById("ElementBlockConfig5_Description").textContent = localeText.DB_elementBlock.uBlacklist_description;
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option1").textContent = localeText.DB_elementBlock.uBlacklist_urlOnly;
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option2").textContent = localeText.DB_elementBlock.uBlacklist_titleOnly;
+                    RootShadow.getElementById("ElementBlockConfig5_Select_Option3").textContent = localeText.DB_elementBlock.uBlacklist_all;
+                    RootShadow.getElementById("ElementBlockConfig6_Title").textContent = localeText.DB_elementBlock.resultShow_title;
+                    RootShadow.getElementById("ElementBlockConfig6_Description").textContent = localeText.DB_elementBlock.resultShow_description;
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.resultShow_none;
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.resultShow_number;
+                    RootShadow.getElementById("ElementBlockConfig6_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.resultShow_property;
                     RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = "←戻る";
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
@@ -3602,7 +3818,7 @@
                     }, false);
 
                     RootShadow.getElementById("ElementBlockConfig2_Button").addEventListener("click", async () => {
-                        await popup.alert(lang.DB_elementBlock.elementSelector_message);
+                        await popup.alert(localeText.DB_elementBlock.elementPicker_message);
                         Dashboard_Element.style.display = "none";
                         const pickerObj = new ElementPicker();
                         const pickerMethod = this.elementHide_method_Ele.pickerMethod.value;
@@ -3615,7 +3831,7 @@
                     }, false);
 
                     RootShadow.getElementById("ElementBlockConfig3_Button").addEventListener("click", async () => {
-                        await popup.alert(lang.DB_elementBlock.elementSelector_message);
+                        await popup.alert(localeText.DB_elementBlock.elementPicker_message);
                         Dashboard_Element.style.display = "none";
                         const pickerObj = new ElementPicker();
                         const pickerMethod = this.elementSearch_method_Ele.pickerMethod.value;
@@ -3782,6 +3998,16 @@
       <option id="DashboardColor_Select_Option4" value="#BAD4FF"></option>
     </select>
   </div>
+
+  <div id="Language" class="ItemFrame_Border">
+    <h1 id="Language_Title" class="ItemFrame_Title"></h1>
+    <p id="Language_Description"></p>
+    <select id="Language_Select" size="1">
+      <option id="Language_Select_Option1" value="en"></option>
+      <option id="Language_Select_Option2" value="ja-jp"></option>
+    </select>
+  </div>
+
   <div id="SettingMainPageBack" class="PreferencesItem">
     <button id="PreferencesPageBack_Button"></button>
   </div>
@@ -3790,35 +4016,42 @@
             DashboardMain_div.append(DB_preference_div);
             Dashboard_Window_Ele_stack.push(DB_preference_div);
 
-            RootShadow.getElementById("ImportAndExport_Title").textContent = lang.DB_preference.importAndExport_title;
-            RootShadow.getElementById("ImportAndExport_Description").textContent = lang.DB_preference.importAndExport_description;
-            RootShadow.getElementById("ImportAndExport_Button").textContent = lang.DB_preference.importAndExport_button;
-            RootShadow.getElementById("PerformanceConfig_Title").textContent = lang.DB_preference.performanceConfig_title;
-            RootShadow.getElementById("PerformanceConfig_Description").textContent = lang.DB_preference.performanceConfig_description;
-            RootShadow.getElementById("PerformanceConfig_Button").textContent = lang.DB_preference.performanceConfig_button;
-            RootShadow.getElementById("ButtonHide_Title").textContent = lang.DB_preference.buttonHide_title;
-            RootShadow.getElementById("ButtonHide_Description").textContent = lang.DB_preference.buttonHide_description;
-            RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = lang.DB_preference.buttonHide_boxText;
-            RootShadow.getElementById("immediatelyLoadSettings_Title").textContent = lang.DB_preference.nowLoadSet_title;
-            RootShadow.getElementById("immediatelyLoadSettings_Description").textContent = lang.DB_preference.nowLoadSet_description;
-            RootShadow.getElementById("immediatelyLoadSettings_Input_SpanText").textContent = lang.DB_preference.nowLoadSet_boxText;
+            RootShadow.getElementById("ImportAndExport_Title").textContent = localeText.DB_preference.importAndExport_title;
+            RootShadow.getElementById("ImportAndExport_Description").textContent = localeText.DB_preference.importAndExport_description;
+            RootShadow.getElementById("ImportAndExport_Button").textContent = localeText.DB_preference.importAndExport_button;
+            RootShadow.getElementById("PerformanceConfig_Title").textContent = localeText.DB_preference.performanceConfig_title;
+            RootShadow.getElementById("PerformanceConfig_Description").textContent = localeText.DB_preference.performanceConfig_description;
+            RootShadow.getElementById("PerformanceConfig_Button").textContent = localeText.DB_preference.performanceConfig_button;
+            RootShadow.getElementById("ButtonHide_Title").textContent = localeText.DB_preference.buttonHide_title;
+            RootShadow.getElementById("ButtonHide_Description").textContent = localeText.DB_preference.buttonHide_description;
+            RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = localeText.DB_preference.buttonHide_boxText;
+            RootShadow.getElementById("immediatelyLoadSettings_Title").textContent = localeText.DB_preference.nowLoadSet_title;
+            RootShadow.getElementById("immediatelyLoadSettings_Description").textContent = localeText.DB_preference.nowLoadSet_description;
+            RootShadow.getElementById("immediatelyLoadSettings_Input_SpanText").textContent = localeText.DB_preference.nowLoadSet_boxText;
 
-            RootShadow.getElementById("FetchInterval_Title").textContent = lang.DB_preference.fetchInterval_title;
-            RootShadow.getElementById("FetchInterval_Description").textContent = lang.DB_preference.fetchInterval_Description;
-            RootShadow.getElementById("FetchInterval_Select_Option1").textContent = lang.DB_preference.fetchInterval_300000;
-            RootShadow.getElementById("FetchInterval_Select_Option2").textContent = lang.DB_preference.fetchInterval_900000;
-            RootShadow.getElementById("FetchInterval_Select_Option3").textContent = lang.DB_preference.fetchInterval_1800000;
-            RootShadow.getElementById("FetchInterval_Select_Option4").textContent = lang.DB_preference.fetchInterval_3600000;
-            RootShadow.getElementById("FetchInterval_Select_Option5").textContent = lang.DB_preference.fetchInterval_7200000;
-            RootShadow.getElementById("FetchInterval_Select_Option6").textContent = lang.DB_preference.fetchInterval_18000000;
+            RootShadow.getElementById("FetchInterval_Title").textContent = localeText.DB_preference.fetchInterval_title;
+            RootShadow.getElementById("FetchInterval_Description").textContent = localeText.DB_preference.fetchInterval_Description;
+            RootShadow.getElementById("FetchInterval_Select_Option1").textContent = localeText.DB_preference.fetchInterval_300000;
+            RootShadow.getElementById("FetchInterval_Select_Option2").textContent = localeText.DB_preference.fetchInterval_900000;
+            RootShadow.getElementById("FetchInterval_Select_Option3").textContent = localeText.DB_preference.fetchInterval_1800000;
+            RootShadow.getElementById("FetchInterval_Select_Option4").textContent = localeText.DB_preference.fetchInterval_3600000;
+            RootShadow.getElementById("FetchInterval_Select_Option5").textContent = localeText.DB_preference.fetchInterval_7200000;
+            RootShadow.getElementById("FetchInterval_Select_Option6").textContent = localeText.DB_preference.fetchInterval_18000000;
 
-            RootShadow.getElementById("DashboardColor_Title").textContent = lang.DB_preference.dashboardColor_title;
-            RootShadow.getElementById("DashboardColor_Description").textContent = lang.DB_preference.dashboardColor_Description;
-            RootShadow.getElementById("DashboardColor_Select_Option1").textContent = lang.DB_preference.dashboardColor_red;
-            RootShadow.getElementById("DashboardColor_Select_Option2").textContent = lang.DB_preference.dashboardColor_yellow;
-            RootShadow.getElementById("DashboardColor_Select_Option3").textContent = lang.DB_preference.dashboardColor_green;
-            RootShadow.getElementById("DashboardColor_Select_Option4").textContent = lang.DB_preference.dashboardColor_blue;
-            RootShadow.getElementById("PreferencesPageBack_Button").textContent = lang.backButton;
+            RootShadow.getElementById("DashboardColor_Title").textContent = localeText.DB_preference.dashboardColor_title;
+            RootShadow.getElementById("DashboardColor_Description").textContent = localeText.DB_preference.dashboardColor_Description;
+            RootShadow.getElementById("DashboardColor_Select_Option1").textContent = localeText.DB_preference.dashboardColor_red;
+            RootShadow.getElementById("DashboardColor_Select_Option2").textContent = localeText.DB_preference.dashboardColor_yellow;
+            RootShadow.getElementById("DashboardColor_Select_Option3").textContent = localeText.DB_preference.dashboardColor_green;
+            RootShadow.getElementById("DashboardColor_Select_Option4").textContent = localeText.DB_preference.dashboardColor_blue;
+
+            RootShadow.getElementById("Language_Title").textContent = localeText.DB_preference.language_title;
+            RootShadow.getElementById("Language_Description").textContent = localeText.DB_preference.language_Description;
+            RootShadow.getElementById("Language_Select_Option1").textContent = localeText.DB_preference.language_en;
+            RootShadow.getElementById("Language_Select_Option2").textContent = localeText.DB_preference.language_ja_jp;
+
+            RootShadow.getElementById("PreferencesPageBack_Button").textContent = localeText.backButton;
+
 
             RootShadow.getElementById("ImportAndExport_Button").addEventListener("click", DB_ExportImport, false);
             RootShadow.getElementById("PerformanceConfig_Button").addEventListener("click", DB_performanceConfig, false);
@@ -3838,7 +4071,7 @@
                     } catch (e) {
                         console.error(e);
                         targetElement.checked = false;
-                        const res = await popup.confirm(lang.DB_preference.buttonHide_warning);
+                        const res = await popup.confirm(localeText.DB_preference.buttonHide_warning);
                         if (res) {
                             targetElement.checked = true;
                         } else {
@@ -3870,18 +4103,24 @@
                 }
             });
 
+            RootShadow.getElementById("FetchInterval_Select").value = PreferenceSettingStorage.fetchInterval;
+            RootShadow.getElementById("FetchInterval_Select").addEventListener("change", async (evt) => {
+                PreferenceSettingStorage.fetchInterval = parseInt(evt.target.value);
+                await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+            });
+
             RootShadow.getElementById("DashboardColor_Select").value = PreferenceSettingStorage.dashboardColor;
             RootShadow.getElementById("DashboardColor_Select").addEventListener("change", async (evt) => {
                 PreferenceSettingStorage.dashboardColor = evt.target.value;
                 RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", evt.target.value);
                 await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
-            })
+            });
 
-            RootShadow.getElementById("FetchInterval_Select").value = PreferenceSettingStorage.fetchInterval;
-            RootShadow.getElementById("FetchInterval_Select").addEventListener("change", async (evt) => {
-                PreferenceSettingStorage.fetchInterval = parseInt(evt.target.value);
+            RootShadow.getElementById("Language_Select").value = PreferenceSettingStorage.language;
+            RootShadow.getElementById("Language_Select").addEventListener("change", async (evt) => {
+                PreferenceSettingStorage.language = evt.target.value;
                 await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
-            })
+            });
 
             RootShadow.getElementById("PreferencesPageBack_Button").addEventListener("click", () => {
                 Dashboard_Window_Ele_stack.pop().remove();
@@ -3902,7 +4141,7 @@
                             return JSON.stringify(JSONObject);
                         } catch (e) {
                             console.error(e);
-                            await popup.alert(lang.DB_exportImport.error_export);
+                            await popup.alert(localeText.DB_exportImport.error_export);
                             return undefined;
                         }
                     } else if (mode === "import") {
@@ -3923,7 +4162,7 @@
                             return true;
                         } catch (e) {
                             console.error(e);
-                            await popup.alert(lang.DB_exportImport.error_import);
+                            await popup.alert(localeText.DB_exportImport.error_import);
                             return false;
                         }
                     } else if (mode === "addimport") {
@@ -4039,7 +4278,7 @@
                             return true;
                         } catch (e) {
                             console.error(e);
-                            await popup.alert(lang.DB_exportImport.error_import);
+                            await popup.alert(localeText.DB_exportImport.error_import);
                             return false;
                         }
                     } else {
@@ -4107,18 +4346,18 @@
                 DashboardMain_div.append(DB_exportAndImport_div);
                 Dashboard_Window_Ele_stack.push(DB_exportAndImport_div);
 
-                RootShadow.getElementById("ExportAndImportConfig1_Title").textContent = lang.DB_exportImport.export_title;
-                RootShadow.getElementById("ExportAndImportConfig1_Button1").textContent = lang.DB_exportImport.export_file;
-                RootShadow.getElementById("ExportAndImportConfig1_Button2").textContent = lang.DB_exportImport.export_copy;
-                RootShadow.getElementById("ExportAndImportConfig1_Button3").textContent = lang.DB_exportImport.export_textArea;
-                RootShadow.getElementById("ExportAndImportConfig1_SpanText").textContent = lang.DB_exportImport.export_success;
-                RootShadow.getElementById("ExportAndImportConfig2_Title").textContent = lang.DB_exportImport.import_title;
-                RootShadow.getElementById("ExportAndImportConfig2-1_SpanText").textContent = lang.DB_exportImport.import_file;
-                RootShadow.getElementById("ExportAndImportConfig2-2_Button").textContent = lang.DB_exportImport.import_textArea;
-                RootShadow.getElementById("ExportAndImportConfig2-3_SpanText").textContent = lang.DB_exportImport.import_addImport;
-                RootShadow.getElementById("ExportAndImportConfig2_SpanText").textContent = lang.DB_exportImport.import_success;
-                RootShadow.getElementById("ExportAndImportConfig3_Title").textContent = lang.DB_exportImport.textArea_title;
-                RootShadow.getElementById("ExportAndImportConfig_BackButton").textContent = lang.backButton;
+                RootShadow.getElementById("ExportAndImportConfig1_Title").textContent = localeText.DB_exportImport.export_title;
+                RootShadow.getElementById("ExportAndImportConfig1_Button1").textContent = localeText.DB_exportImport.export_file;
+                RootShadow.getElementById("ExportAndImportConfig1_Button2").textContent = localeText.DB_exportImport.export_copy;
+                RootShadow.getElementById("ExportAndImportConfig1_Button3").textContent = localeText.DB_exportImport.export_textArea;
+                RootShadow.getElementById("ExportAndImportConfig1_SpanText").textContent = localeText.DB_exportImport.export_success;
+                RootShadow.getElementById("ExportAndImportConfig2_Title").textContent = localeText.DB_exportImport.import_title;
+                RootShadow.getElementById("ExportAndImportConfig2-1_SpanText").textContent = localeText.DB_exportImport.import_file;
+                RootShadow.getElementById("ExportAndImportConfig2-2_Button").textContent = localeText.DB_exportImport.import_textArea;
+                RootShadow.getElementById("ExportAndImportConfig2-3_SpanText").textContent = localeText.DB_exportImport.import_addImport;
+                RootShadow.getElementById("ExportAndImportConfig2_SpanText").textContent = localeText.DB_exportImport.import_success;
+                RootShadow.getElementById("ExportAndImportConfig3_Title").textContent = localeText.DB_exportImport.textArea_title;
+                RootShadow.getElementById("ExportAndImportConfig_BackButton").textContent = localeText.backButton;
 
                 const ExportSuccessTextEle = RootShadow.getElementById("ExportAndImportConfig1_SpanText");
                 const ImportSuccessTextEle = RootShadow.getElementById("ExportAndImportConfig2_SpanText");
@@ -4163,9 +4402,9 @@
                     if (targetElement.files[0]) {
                         let res;
                         if (addImport_ELe.checked) {
-                            res = await popup.confirm(lang.DB_exportImport.import_addImportConfirm);
+                            res = await popup.confirm(localeText.DB_exportImport.import_addImportConfirm);
                         } else {
-                            res = await popup.confirm(lang.DB_exportImport.import_overWrite);
+                            res = await popup.confirm(localeText.DB_exportImport.import_overWrite);
                         }
                         if (!res) {
                             targetElement.value = "";
@@ -4192,9 +4431,9 @@
                 RootShadow.getElementById("ExportAndImportConfig2-2_Button").addEventListener("click", async () => {
                     let res;
                     if (addImport_ELe.checked) {
-                        res = await popup.confirm(lang.DB_exportImport.import_addImportConfirm);
+                        res = await popup.confirm(localeText.DB_exportImport.import_addImportConfirm);
                     } else {
-                        res = await popup.confirm(lang.DB_exportImport.import_overWrite);
+                        res = await popup.confirm(localeText.DB_exportImport.import_overWrite);
                     }
                     if (!res) {
                         return false;
@@ -4318,36 +4557,36 @@
                 DashboardMain_div.append(DB_performanceConfig_div);
                 Dashboard_Window_Ele_stack.push(DB_performanceConfig_div);
 
-                RootShadow.getElementById("PerformanceConfig1_Title").textContent = lang.DB_performanceConfig.mode_title;
-                RootShadow.getElementById("PerformanceConfig1_Description1").textContent = lang.DB_performanceConfig.mode_description1;
-                RootShadow.getElementById("PerformanceConfig1_Description2").textContent = lang.DB_performanceConfig.mode_description2;
-                RootShadow.getElementById("PerformanceConfig1_Description3").textContent = lang.DB_performanceConfig.mode_description3;
-                RootShadow.getElementById("PerformanceConfig1_Description4").textContent = lang.DB_performanceConfig.mode_description4;
-                RootShadow.getElementById("PerformanceConfig1_Select_Option1").textContent = lang.DB_performanceConfig.blockPriority;
-                RootShadow.getElementById("PerformanceConfig1_Select_Option2").textContent = lang.DB_performanceConfig.balance;
-                RootShadow.getElementById("PerformanceConfig1_Select_Option3").textContent = lang.DB_performanceConfig.performancePriority1;
-                RootShadow.getElementById("PerformanceConfig1_Select_Option4").textContent = lang.DB_performanceConfig.performancePriority2;
+                RootShadow.getElementById("PerformanceConfig1_Title").textContent = localeText.DB_performanceConfig.mode_title;
+                RootShadow.getElementById("PerformanceConfig1_Description1").textContent = localeText.DB_performanceConfig.mode_description1;
+                RootShadow.getElementById("PerformanceConfig1_Description2").textContent = localeText.DB_performanceConfig.mode_description2;
+                RootShadow.getElementById("PerformanceConfig1_Description3").textContent = localeText.DB_performanceConfig.mode_description3;
+                RootShadow.getElementById("PerformanceConfig1_Description4").textContent = localeText.DB_performanceConfig.mode_description4;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option1").textContent = localeText.DB_performanceConfig.blockPriority;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option2").textContent = localeText.DB_performanceConfig.balance;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option3").textContent = localeText.DB_performanceConfig.performancePriority1;
+                RootShadow.getElementById("PerformanceConfig1_Select_Option4").textContent = localeText.DB_performanceConfig.performancePriority2;
 
-                RootShadow.getElementById("PerformanceConfig2_Title").textContent = lang.DB_performanceConfig.interval_title;
-                RootShadow.getElementById("PerformanceConfig2_Description1").textContent = lang.DB_performanceConfig.interval_description1;
-                RootShadow.getElementById("PerformanceConfig2_Description2").textContent = lang.DB_performanceConfig.interval_description2;
-                RootShadow.getElementById("PerformanceConfig2_Description3").textContent = lang.DB_performanceConfig.interval_description3;
-                RootShadow.getElementById("PerformanceConfig2_input1_SpanText").textContent = lang.DB_performanceConfig.balance;
-                RootShadow.getElementById("PerformanceConfig2_input2_SpanText").textContent = lang.DB_performanceConfig.performancePriority1;
-                RootShadow.getElementById("PerformanceConfig2_input3_SpanText").textContent = lang.DB_performanceConfig.performancePriority2;
+                RootShadow.getElementById("PerformanceConfig2_Title").textContent = localeText.DB_performanceConfig.interval_title;
+                RootShadow.getElementById("PerformanceConfig2_Description1").textContent = localeText.DB_performanceConfig.interval_description1;
+                RootShadow.getElementById("PerformanceConfig2_Description2").textContent = localeText.DB_performanceConfig.interval_description2;
+                RootShadow.getElementById("PerformanceConfig2_Description3").textContent = localeText.DB_performanceConfig.interval_description3;
+                RootShadow.getElementById("PerformanceConfig2_input1_SpanText").textContent = localeText.DB_performanceConfig.balance;
+                RootShadow.getElementById("PerformanceConfig2_input2_SpanText").textContent = localeText.DB_performanceConfig.performancePriority1;
+                RootShadow.getElementById("PerformanceConfig2_input3_SpanText").textContent = localeText.DB_performanceConfig.performancePriority2;
 
-                RootShadow.getElementById("PerformanceConfig3_Title").textContent = lang.DB_performanceConfig.overRide_title;
-                RootShadow.getElementById("PerformanceConfig3_Description1").textContent = lang.DB_performanceConfig.overRide_description1;
-                RootShadow.getElementById("PerformanceConfig3_Description2").textContent = lang.DB_performanceConfig.overRide_description2;
-                RootShadow.getElementById("PerformanceConfig3_Select1_SpanText").textContent = lang.DB_performanceConfig.disable;
-                RootShadow.getElementById("PerformanceConfig3_Select2_SpanText").textContent = lang.DB_performanceConfig.performancePriority1;
-                RootShadow.getElementById("PerformanceConfig3_Select3_SpanText").textContent = lang.DB_performanceConfig.performancePriority2;
-                RootShadow.getElementById("PerformanceConfig3_Select4_SpanText").textContent = lang.DB_performanceConfig.blockPriority;
-                RootShadow.getElementById("PerformanceConfig3_Select5_SpanText").textContent = lang.DB_performanceConfig.balance;
+                RootShadow.getElementById("PerformanceConfig3_Title").textContent = localeText.DB_performanceConfig.overRide_title;
+                RootShadow.getElementById("PerformanceConfig3_Description1").textContent = localeText.DB_performanceConfig.overRide_description1;
+                RootShadow.getElementById("PerformanceConfig3_Description2").textContent = localeText.DB_performanceConfig.overRide_description2;
+                RootShadow.getElementById("PerformanceConfig3_Select1_SpanText").textContent = localeText.DB_performanceConfig.disable;
+                RootShadow.getElementById("PerformanceConfig3_Select2_SpanText").textContent = localeText.DB_performanceConfig.performancePriority1;
+                RootShadow.getElementById("PerformanceConfig3_Select3_SpanText").textContent = localeText.DB_performanceConfig.performancePriority2;
+                RootShadow.getElementById("PerformanceConfig3_Select4_SpanText").textContent = localeText.DB_performanceConfig.blockPriority;
+                RootShadow.getElementById("PerformanceConfig3_Select5_SpanText").textContent = localeText.DB_performanceConfig.balance;
 
-                RootShadow.getElementById("PerformanceConfig_BackButton").textContent = lang.backButton;
-                RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = lang.DB_performanceConfig.save;
-                RootShadow.getElementById("PerformanceConfig_SaveInfoText").textContent = lang.DB_performanceConfig.saveInfo;
+                RootShadow.getElementById("PerformanceConfig_BackButton").textContent = localeText.backButton;
+                RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = localeText.DB_performanceConfig.save;
+                RootShadow.getElementById("PerformanceConfig_SaveInfoText").textContent = localeText.DB_performanceConfig.saveInfo;
 
 
                 const mode_ELe = RootShadow.getElementById("PerformanceConfig1_Select");
