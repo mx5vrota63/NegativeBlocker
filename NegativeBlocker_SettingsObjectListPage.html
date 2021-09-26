@@ -1,78 +1,82 @@
 <style type="text/css">
-  div#SettingsObjectListPage {
-    height: 100%;
-  }
-  div#ObjectLists_Frame {
-    width: auto;
-    height: calc(100% - 154px);
-    overflow: auto;
-    border: 2px solid black;
-  }
-  ol#ObjectLists_ol {
-    background-color: #eee;
-    list-style-position: inside;
-    margin: 0 0 0 0;
-    padding: 0 0 0 0;
-  }
-  #ObjectLists_ol li {
-    border-style: solid;
-    border-width: 1px;
-    border-top-width: 0;
-    border-color: silver;
-    padding: 0 0 0 5px;
-    cursor: pointer;
-    min-height: 30px;
-    word-break: break-all;
-  }
-  div#SettingsObject_ConfigItems_Name {
-    display: flex;
-  }
-  div#SettingsObject_ConfigItems div {
-    margin: 2px 0 2px 0;
-  }
-  input#SettingsObject_ConfigItems_Name_Form {
-    flex: 1;
-    height: 20px;
-  }
-  select#SettingsObject_ConfigItems_Sort_Form {
-    width: auto !important;
-    transform: scale(1.2);
-  }
-  input#SettingsObject_ConfigItems_Enable_Form {
-    transform: scale(1.3);
-  }
+    div#SettingsObjectListPage {
+        height: 100%;
+    }
+
+    div#ObjectLists_Frame {
+        width: auto;
+        height: calc(100% - 154px);
+        overflow: auto;
+        border: 2px solid black;
+    }
+
+    ol#ObjectLists_ol {
+        background-color: #eee;
+        list-style-position: inside;
+        margin: 0 0 0 0;
+        padding: 0 0 0 0;
+    }
+
+    #ObjectLists_ol li {
+        border-style: solid;
+        border-width: 1px;
+        border-top-width: 0;
+        border-color: silver;
+        padding: 0 0 0 5px;
+        cursor: pointer;
+        min-height: 30px;
+        word-break: break-all;
+    }
+
+    div#SettingsObject_ConfigItems_Name {
+        display: flex;
+    }
+
+    div#SettingsObject_ConfigItems div {
+        margin: 2px 0 2px 0;
+    }
+
+    input#SettingsObject_ConfigItems_Name_Form {
+        flex: 1;
+        height: 20px;
+    }
+
+    select#SettingsObject_ConfigItems_Sort_Form {
+        width: auto !important;
+        transform: scale(1.2);
+    }
+
+    input#SettingsObject_ConfigItems_Enable_Form {
+        transform: scale(1.3);
+    }
 </style>
 
 <div id="SettingsObjectListPage">
-  <div id="ObjectLists_Frame">
-    <ol id="ObjectLists_ol"></ol>
-  </div>
-  <div id="SettingsObject_ConfigItems" style="display: none">
-    <div id="SettingsObject_ConfigItems_Name">
-      <span id="SettingsObject_ConfigItems_Name_Span"></span>
-      <input
-        id="SettingsObject_ConfigItems_Name_Form"
-        type="text"
-        spellcheck="false"
-      />
+    <div id="ObjectLists_Frame">
+        <ol id="ObjectLists_ol"></ol>
     </div>
-    <div id="SettingsObject_ConfigItems_Sort">
-      <span id="SettingsObject_ConfigItems_Sort_Span"></span>
-      <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
+    <div id="SettingsObject_ConfigItems" style="display: none">
+        <div id="SettingsObject_ConfigItems_Name">
+            <span id="SettingsObject_ConfigItems_Name_Span"></span>
+            <input id="SettingsObject_ConfigItems_Name_Form" type="text" spellcheck="false" />
+        </div>
+        <div id="SettingsObject_ConfigItems_Sort">
+            <span id="SettingsObject_ConfigItems_Sort_Span"></span>
+            <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
+        </div>
+        <div id="SettingsObject_ConfigItems_Enable">
+            <span id="SettingsObject_ConfigItems_Enable_Span"></span>
+            <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
+        </div>
+        <div id="SettingsObject_ConfigItems_EditConfig">
+            <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
+            <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
+        </div>
     </div>
-    <div id="SettingsObject_ConfigItems_Enable">
-      <span id="SettingsObject_ConfigItems_Enable_Span"></span>
-      <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
+    <div id="SettingsObject_ActionButton">
+        <button id="SettingsObject_ActionButton_Back"></button>
+        <button id="SettingsObject_ActionButton_NewObject"></button>
+        <button id="SettingsObject_ActionButton_DeleteObject" disabled></button>
+        <button id="SettingsObject_ActionButton_SaveObject" disabled></button>
     </div>
-    <div id="SettingsObject_ConfigItems_EditConfig">
-      <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
-      <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
-    </div>
-  </div>
-  <div id="SettingsObject_ActionButton">
-    <button id="SettingsObject_ActionButton_Back"></button>
-    <button id="SettingsObject_ActionButton_NewObject"></button>
-    <button id="SettingsObject_ActionButton_DeleteObject"></button>
-    <button id="SettingsObject_ActionButton_SaveObject"></button>
-  </div>
 </div>

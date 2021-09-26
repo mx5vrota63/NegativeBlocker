@@ -1,109 +1,92 @@
 <style type="text/css">
-  div.EditConfigObjectPage {
-    height: 100%;
-  }
-  select.SentenceBlock_Select {
-    overflow: scroll;
-  }
-  option.SentenceBlock_Option {
-    display: table;
-    min-width: 100%;
-    box-sizing: border-box;
-  }
-  label.SentenceBlock_Label {
-    display: block;
-    margin: 5px 0 0 0;
-  }
+    div.EditConfigObjectPage {
+        height: 100%;
+    }
+
+    select.SentenceBlock_Select {
+        overflow: scroll;
+    }
+
+    option.SentenceBlock_Option {
+        display: table;
+        min-width: 100%;
+        box-sizing: border-box;
+    }
+
+    label.SentenceBlock_Label {
+        display: block;
+        margin: 5px 0 0 0;
+    }
 </style>
 
 <div id="SentenceBlockConfig" class="EditConfigObjectPage">
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig1_Description"></p>
-    <input id="SentenceBlockConfig1_Input1" type="text" spellcheck="false" />
-    <select id="SentenceBlockConfig1_Select" size="1" style="display: none">
-      <option value="">-----</option>
-    </select>
-    <br />
-    <form id="SentenceBlockConfig1_Form">
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="url_mode" value="wildcard" checked />
-        <span id="SentenceBlockConfig1_Form_Input1_SpanText"></span>
-      </label>
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="url_mode" value="regexp" />
-        <span id="SentenceBlockConfig1_Form_Input2_SpanText"></span>
-      </label>
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="url_mode" value="blt" />
-        <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
-      </label>
-    </form>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig2_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig2_Description"></p>
-    <select
-      id="SentenceBlockConfig2_Select"
-      class="SentenceBlock_Select"
-      size="7"
-      multiple
-    >
-      <option value="">-----</option>
-    </select>
-    <div>
-      <div class="ItemFrame_Border">
-        <p id="SentenceBlockConfig2-2_Description"></p>
-        <select
-          id="SentenceBlockConfig2-2_Select"
-          class="SentenceBlock_Select"
-          size="7"
-          multiple
-        >
-          <option value="">-----</option>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig1_Description"></p>
+        <input id="SentenceBlockConfig1_Input1" type="text" spellcheck="false" />
+        <select id="SentenceBlockConfig1_Select" size="1" style="display: none">
+            <option value="">-----</option>
         </select>
-      </div>
+        <br />
+        <form id="SentenceBlockConfig1_Form">
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="url_mode" value="wildcard" checked />
+                <span id="SentenceBlockConfig1_Form_Input1_SpanText"></span>
+            </label>
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="url_mode" value="regexp" />
+                <span id="SentenceBlockConfig1_Form_Input2_SpanText"></span>
+            </label>
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="url_mode" value="blt" />
+                <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
+            </label>
+        </form>
     </div>
-  </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig3_Description"></p>
-    <input id="SentenceBlockConfig3_InputText" type="text" spellcheck="false" />
-    <form id="SentenceBlockConfig3_Form">
-      <label>
-        <input type="radio" name="replace_mode" value="sentence" checked />
-        <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
-      </label>
-      <label>
-        <input type="radio" name="replace_mode" value="word" />
-        <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
-      </label>
-    </form>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig2_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig2_Description"></p>
+        <select id="SentenceBlockConfig2_Select" class="SentenceBlock_Select" size="7" multiple>
+            <option value="">-----</option>
+        </select>
+        <div>
+            <div class="ItemFrame_Border">
+                <p id="SentenceBlockConfig2-2_Description"></p>
+                <select id="SentenceBlockConfig2-2_Select" class="SentenceBlock_Select" size="7" multiple>
+                    <option value="">-----</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig4_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig4_Description"></p>
-    <select
-      id="SentenceBlockConfig4_Select"
-      class="ElementBlock_Select"
-      size="1"
-    >
-      <option
-        id="SentenceBlockConfig4_Select_Option1"
-        value="hrefexclude"
-      ></option>
-      <option
-        id="SentenceBlockConfig4_Select_Option2"
-        value="hrefonly"
-      ></option>
-      <option id="SentenceBlockConfig4_Select_Option3" value="all"></option>
-    </select>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig3_Description"></p>
+        <input id="SentenceBlockConfig3_InputText" type="text" spellcheck="false" />
+        <form id="SentenceBlockConfig3_Form">
+            <label>
+                <input type="radio" name="replace_mode" value="sentence" checked />
+                <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
+            </label>
+            <label>
+                <input type="radio" name="replace_mode" value="word" />
+                <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
+            </label>
+        </form>
+    </div>
 
-  <div>
-    <button id="SentenceBlockConfig_BackButton"></button>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig4_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig4_Description"></p>
+        <select id="SentenceBlockConfig4_Select" class="ElementBlock_Select" size="1">
+            <option id="SentenceBlockConfig4_Select_Option1" value="hrefexclude"></option>
+            <option id="SentenceBlockConfig4_Select_Option2" value="hrefonly"></option>
+            <option id="SentenceBlockConfig4_Select_Option3" value="all"></option>
+        </select>
+    </div>
+
+    <div>
+        <button id="SentenceBlockConfig_BackButton"></button>
+    </div>
 </div>

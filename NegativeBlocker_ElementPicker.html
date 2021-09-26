@@ -1,0 +1,110 @@
+<style type="text/css">
+    div#ElementPicker_PositionFixed {
+        position: fixed;
+        top: 0;
+        width: calc(100vw - (100vw - 100%));
+        height: calc(100vh - (100vh - 100%));
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-end;
+        z-index: 2147483647;
+        pointer-events: none;
+    }
+
+    div#ElementPicker_FrameBack {
+        all: initial;
+        right: 1px;
+        padding: 1px 2px;
+        background-color: #ffffff;
+        border: 1px solid #888888;
+        border-radius: 10px;
+        text-align: center;
+        width: 300px;
+        height: 300px;
+        color: #000000;
+        font-size: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    div#ElementPicker_FrameBack button {
+        min-width: 60px;
+        height: 35px;
+        font-size: medium;
+    }
+
+    div#ElementPicker_Header {
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-end;
+        margin: 4px 0 0 0;
+        height: calc(100% - 267px);
+        box-sizing: border-box;
+    }
+
+    div#ElementPicker_Window {
+        width: auto;
+        height: calc(100% - 78px);
+        box-sizing: border-box;
+        overflow: auto;
+        border: 2px solid black;
+        font-size: medium;
+    }
+
+    div#ElementPicker_Window ul {
+        margin: 0;
+        padding: 0;
+        text-align: left;
+        background-color: #eee;
+    }
+
+    div#ElementPicker_Window ul li {
+        border-style: solid;
+        border-width: 1px;
+        border-top-width: 0;
+        border-color: silver;
+        padding: 0 0 0 5px;
+        cursor: pointer;
+        min-height: 30px;
+        word-break: break-all;
+    }
+
+    div#ElementPicker_Text {
+        box-sizing: border-box;
+        margin: 4px 0 1px 0;
+    }
+
+    input#ElementPicker_Text_Input {
+        width: calc(100% - 47px);
+        height: 26px;
+        box-sizing: border-box;
+        margin: 0 5px 0 0;
+    }
+
+    button#ElementPicker_Text_Button {
+        max-width: 40px;
+        min-width: 40px !important;
+        padding: 0;
+    }
+</style>
+
+<div id="ElementPicker_PositionFixed" style="justify-content: flex-end; align-items: flex-end">
+    <div id="ElementPicker_FrameBack" style="display: none">
+        <div id="ElementPicker_Header">
+            <button id="ElementPicker_FrameMove">Move</button>
+            <button id="ElementPicker_ReSelect">↻</button>
+            <button id="ElementPicker_ReSelect_5SecDelay">5↻</button>
+            <button id="ElementPicker_Cancel">×</button>
+            <button id="ElementPicker_OK">〇</button>
+        </div>
+        <div id="ElementPicker_Text">
+            <input id="ElementPicker_Text_Input" type="text" spellcheck="false" />
+            <button id="ElementPicker_Text_Button">0</button>
+        </div>
+        <div id="ElementPicker_Window">
+            <ul id="ElementPicker_ul">
+                <li id="ElementPicker_li_Top">↑</li>
+            </ul>
+        </div>
+    </div>
+</div>

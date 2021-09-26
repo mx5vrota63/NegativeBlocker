@@ -1,197 +1,177 @@
 <style type="text/css">
-  div.EditConfigObjectPage {
-    height: 100%;
-  }
-  select.ElementBlock_Select {
-    width: 100%;
-    overflow: scroll;
-  }
-  option.ElementBlock_Option {
-    display: table;
-    min-width: 100%;
-    box-sizing: border-box;
-  }
-  label.ElementBlock_Label {
-    display: block;
-    margin: 5px 0 0 0;
-  }
-  form#ElementBlockConfig2_Form {
-    margin: 5px 0 5px 0;
-  }
-  form#ElementBlockConfig3_Form {
-    margin: 5px 0 5px 0;
-  }
+    div.EditConfigObjectPage {
+        height: 100%;
+    }
+
+    select.ElementBlock_Select {
+        width: 100%;
+        overflow: scroll;
+    }
+
+    option.ElementBlock_Option {
+        display: table;
+        min-width: 100%;
+        box-sizing: border-box;
+    }
+
+    label.ElementBlock_Label {
+        display: block;
+        margin: 5px 0 0 0;
+    }
+
+    form#ElementBlockConfig2_Form {
+        margin: 5px 0 5px 0;
+    }
+
+    form#ElementBlockConfig3_Form {
+        margin: 5px 0 5px 0;
+    }
 </style>
 
 <div id="ElementBlockConfig" class="EditConfigObjectPage">
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig1_Description"></p>
-    <input id="ElementBlockConfig1_Input1" type="text" spellcheck="false" />
-    <select id="ElementBlockConfig1_Select" size="1" style="display: none">
-      <option value="">-----</option>
-    </select>
-    <form id="ElementBlockConfig1_Form">
-      <label class="ElementBlock_Label">
-        <input type="radio" name="url_mode" value="wildcard" checked />
-        <span id="ElementBlockConfig1_Form_Input1_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="url_mode" value="regexp" />
-        <span id="ElementBlockConfig1_Form_Input2_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="url_mode" value="blt" />
-        <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
-      </label>
-    </form>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig2_Description"></p>
-    <input id="ElementBlockConfig2_InputText" type="text" spellcheck="false" />
-    <form id="ElementBlockConfig2_Form">
-      <label>
-        <input type="radio" name="pickerMethod" value="css" checked />
-        <span id="ElementBlockConfig2_Form_Input1_SpanText"></span>
-      </label>
-      <label>
-        <input type="radio" name="pickerMethod" value="xpath" />
-        <span id="ElementBlockConfig2_Form_Input2_SpanText"></span>
-      </label>
-    </form>
-    <button id="ElementBlockConfig2_Button"></button>
     <div class="ItemFrame_Border">
-      <form id="ElementBlockConfig2-2_From">
-        <label class="ElementBlock_Label">
-          <input type="radio" name="hideMethod" value="displayNone" checked />
-          <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="hideMethod" value="remove" />
-          <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
-        </label>
-      </form>
-    </div>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig3_Description"></p>
-    <input id="ElementBlockConfig3_InputText" type="text" spellcheck="false" />
-    <form id="ElementBlockConfig3_Form">
-      <label>
-        <input type="radio" name="pickerMethod" value="css" checked />
-        <span id="ElementBlockConfig3_Form_Input1_SpanText"></span>
-      </label>
-      <label>
-        <input type="radio" name="pickerMethod" value="xpath" />
-        <span id="ElementBlockConfig3_Form_Input2_SpanText"></span>
-      </label>
-    </form>
-    <button id="ElementBlockConfig3_Button"></button>
-    <label class="ElementBlock_Label">
-      <input id="ElementBlockConfig3_Input1" type="checkbox" />
-      <span id="ElementBlockConfig3_Input1_SpanText"></span>
-    </label>
-    <div class="ItemFrame_Border">
-      <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="text" checked />
-          <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="href" />
-          <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="style" />
-          <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
-          <br />
-          <input
-            id="ElementBlockConfig3-2_Form_Input3_InputText"
-            type="text"
-            spellcheck="false"
-          />
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="advanced" />
-          <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
-          <br />
-          <input
-            id="ElementBlockConfig3-2_Form_Input4_InputText"
-            type="text"
-            spellcheck="false"
-          />
-        </label>
-      </form>
-    </div>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig4_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig4_Description"></p>
-    <select
-      id="ElementBlockConfig4_Select"
-      class="ElementBlock_Select"
-      size="8"
-      multiple
-    >
-      <option value="">-----</option>
-    </select>
-    <div>
-      <div class="ItemFrame_Border">
-        <p id="ElementBlockConfig4-2_Description"></p>
-        <select
-          id="ElementBlockConfig4-2_Select"
-          class="ElementBlock_Select"
-          size="8"
-          multiple
-        >
-          <option value="">-----</option>
+        <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig1_Description"></p>
+        <input id="ElementBlockConfig1_Input1" type="text" spellcheck="false" />
+        <select id="ElementBlockConfig1_Select" size="1" style="display: none">
+            <option value="">-----</option>
         </select>
-      </div>
+        <form id="ElementBlockConfig1_Form">
+            <label class="ElementBlock_Label">
+                <input type="radio" name="url_mode" value="wildcard" checked />
+                <span id="ElementBlockConfig1_Form_Input1_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="url_mode" value="regexp" />
+                <span id="ElementBlockConfig1_Form_Input2_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="url_mode" value="blt" />
+                <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
+            </label>
+        </form>
     </div>
-  </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig5_Description"></p>
-    <select
-      id="ElementBlockConfig5_Select"
-      class="ElementBlock_Select"
-      size="1"
-    >
-      <option id="ElementBlockConfig5_Select_Option1" value="urlonly"></option>
-      <option
-        id="ElementBlockConfig5_Select_Option2"
-        value="titleonly"
-      ></option>
-      <option id="ElementBlockConfig5_Select_Option3" value="all"></option>
-    </select>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig2_Description"></p>
+        <input id="ElementBlockConfig2_InputText" type="text" spellcheck="false" />
+        <form id="ElementBlockConfig2_Form">
+            <label>
+                <input type="radio" name="pickerMethod" value="css" checked />
+                <span id="ElementBlockConfig2_Form_Input1_SpanText"></span>
+            </label>
+            <label>
+                <input type="radio" name="pickerMethod" value="xpath" />
+                <span id="ElementBlockConfig2_Form_Input2_SpanText"></span>
+            </label>
+        </form>
+        <button id="ElementBlockConfig2_Button"></button>
+        <div class="ItemFrame_Border">
+            <form id="ElementBlockConfig2-2_From">
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="hideMethod" value="displayNone" checked />
+                    <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="hideMethod" value="remove" />
+                    <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
+                </label>
+            </form>
+        </div>
+    </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig6_Description"></p>
-    <form id="ElementBlockConfig6_Form">
-      <label class="ElementBlock_Label">
-        <input type="radio" name="resultShow" value="none" checked />
-        <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="resultShow" value="number" />
-        <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="resultShow" value="property" />
-        <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
-      </label>
-    </form>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig3_Description"></p>
+        <input id="ElementBlockConfig3_InputText" type="text" spellcheck="false" />
+        <form id="ElementBlockConfig3_Form">
+            <label>
+                <input type="radio" name="pickerMethod" value="css" checked />
+                <span id="ElementBlockConfig3_Form_Input1_SpanText"></span>
+            </label>
+            <label>
+                <input type="radio" name="pickerMethod" value="xpath" />
+                <span id="ElementBlockConfig3_Form_Input2_SpanText"></span>
+            </label>
+        </form>
+        <button id="ElementBlockConfig3_Button"></button>
+        <label class="ElementBlock_Label">
+            <input id="ElementBlockConfig3_Input1" type="checkbox" />
+            <span id="ElementBlockConfig3_Input1_SpanText"></span>
+        </label>
+        <div class="ItemFrame_Border">
+            <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="text" checked />
+                    <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="href" />
+                    <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="style" />
+                    <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+                    <br />
+                    <input id="ElementBlockConfig3-2_Form_Input3_InputText" type="text" spellcheck="false" />
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="advanced" />
+                    <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
+                    <br />
+                    <input id="ElementBlockConfig3-2_Form_Input4_InputText" type="text" spellcheck="false" />
+                </label>
+            </form>
+        </div>
+    </div>
 
-  <div>
-    <button id="ElementBlockConfig_BackButton"></button>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig4_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig4_Description"></p>
+        <select id="ElementBlockConfig4_Select" class="ElementBlock_Select" size="8" multiple>
+            <option value="">-----</option>
+        </select>
+        <div>
+            <div class="ItemFrame_Border">
+                <p id="ElementBlockConfig4-2_Description"></p>
+                <select id="ElementBlockConfig4-2_Select" class="ElementBlock_Select" size="8" multiple>
+                    <option value="">-----</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig5_Description"></p>
+        <select id="ElementBlockConfig5_Select" class="ElementBlock_Select" size="1">
+            <option id="ElementBlockConfig5_Select_Option1" value="urlonly"></option>
+            <option id="ElementBlockConfig5_Select_Option2" value="titleonly"></option>
+            <option id="ElementBlockConfig5_Select_Option3" value="all"></option>
+        </select>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig6_Description"></p>
+        <form id="ElementBlockConfig6_Form">
+            <label class="ElementBlock_Label">
+                <input type="radio" name="resultShow" value="none" checked />
+                <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="resultShow" value="number" />
+                <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="resultShow" value="property" />
+                <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
+            </label>
+        </form>
+    </div>
+
+    <div>
+        <button id="ElementBlockConfig_BackButton"></button>
+    </div>
 </div>

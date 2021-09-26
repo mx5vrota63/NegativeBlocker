@@ -1636,107 +1636,119 @@
         Dashboard_Element = document.createElement("div");
         Dashboard_Element.innerHTML = `
 <style type="text/css">
-  div#FrameBack {
-    --CustomBackgroundColor: #ffffb2;
-    all: initial;
-    position: fixed;
-    top: 0;
-    right: 1px;
-    z-index: 2147483647;
-    padding: 1px 2px;
-    background-color: #ffffff;
-    border: 1px solid #888888;
-    border-radius: 10px;
-    text-align: center;
-    margin: 0em auto;
-    height: calc(100vh - 150px);
-    color: #000000;
-    font-size: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  }
-  div#FrameBackHeader {
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  p#FrameBackHeaderTitle {
-    margin: 0px;
-    font-size: medium;
-  }
-  button.FrameBackHeaderButton {
-    display: block;
-    margin: 0 0 0 auto;
-    width: 60px;
-    height: inherit;
-  }
-  div#DashboardMain {
-    overflow: auto;
-    width: 100%;
-    height: calc(100% - 60px);
-    margin: 0em auto;
-    margin-top: 2px;
-    margin-bottom: 0px;
-    word-wrap: break-word;
-    padding: 5px;
-    border: 1px solid black;
-    text-align: left;
-    font-size: medium;
-    box-sizing: border-box;
-    background-color: var(--CustomBackgroundColor);
-  }
-  div#DashboardMain div.ItemFrame_Border {
-    position: relative;
-    margin-top: 1em;
-    padding: 12px;
-    border: 1px solid black;
-  }
-  div#DashboardMain h1.ItemFrame_Title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    font-size: 1em;
-    padding: 0 4px;
-    margin: 0;
-    transform: translateY(-50%) translateX(6px);
-    background-color: var(--CustomBackgroundColor);
-    white-space: nowrap;
-  }
-  div#DashboardMain input[type="text"] {
-    width: 100%;
-    height: 26px;
-    box-sizing: border-box;
-  }
-  div#DashboardMain input[type="number"] {
-    width: 100%;
-    height: 26px;
-    box-sizing: border-box;
-  }
-  div#DashboardMain button {
-    min-width: 60px;
-    height: 35px;
-  }
-  div#DashboardMain select {
-    width: 100%;
-  }
-  div#DashboardMain input[type="checkbox"] {
-    transform: scale(1.3);
-  }
-  div#DashboardMain input[type="radio"] {
-    transform: scale(1.3);
-  }
+    div#FrameBack {
+        --CustomBackgroundColor: #ffffb2;
+        all: initial;
+        position: fixed;
+        top: 0;
+        right: 1px;
+        z-index: 2147483647;
+        padding: 1px 2px;
+        background-color: #ffffff;
+        border: 1px solid #888888;
+        border-radius: 10px;
+        text-align: center;
+        margin: 0em auto;
+        height: calc(100vh - 150px);
+        color: #000000;
+        font-size: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    div#FrameBackHeader {
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    p#FrameBackHeaderTitle {
+        margin: 0px;
+        font-size: medium;
+    }
+
+    button.FrameBackHeaderButton {
+        display: block;
+        margin: 0 0 0 auto;
+        width: 60px;
+        height: inherit;
+    }
+
+    div#DashboardMain {
+        overflow: auto;
+        width: 100%;
+        height: calc(100% - 60px);
+        margin: 0em auto;
+        margin-top: 2px;
+        margin-bottom: 0px;
+        word-wrap: break-word;
+        padding: 5px;
+        border: 1px solid black;
+        text-align: left;
+        font-size: medium;
+        box-sizing: border-box;
+        background-color: var(--CustomBackgroundColor);
+    }
+
+    div#DashboardMain div.ItemFrame_Border {
+        position: relative;
+        margin-top: 1em;
+        padding: 12px;
+        border: 1px solid black;
+    }
+
+    div#DashboardMain h1.ItemFrame_Title {
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-size: 1em;
+        padding: 0 4px;
+        margin: 0;
+        transform: translateY(-50%) translateX(6px);
+        background-color: var(--CustomBackgroundColor);
+        white-space: nowrap;
+    }
+
+    div#DashboardMain input[type="text"] {
+        width: 100%;
+        height: 26px;
+        box-sizing: border-box;
+    }
+
+    div#DashboardMain input[type="number"] {
+        width: 100%;
+        height: 26px;
+        box-sizing: border-box;
+    }
+
+    div#DashboardMain button {
+        min-width: 60px;
+        height: 35px;
+    }
+
+    div#DashboardMain select {
+        width: 100%;
+    }
+
+    div#DashboardMain input[type="checkbox"] {
+        transform: scale(1.3);
+    }
+
+    div#DashboardMain input[type="radio"] {
+        transform: scale(1.3);
+    }
 </style>
 
 <div id="FrameBack">
-  <div id="FrameBackHeader">
-    <p id="FrameBackHeaderTitle"><b>NegativeBlocker Dashboard</b></p>
-    <button id="FrameBackHeaderButton1" class="FrameBackHeaderButton">✖</button>
-    <button id="FrameBackHeaderButton2" class="FrameBackHeaderButton">
-      ✖✖✖
-    </button>
-  </div>
-  <div id="DashboardMain"></div>
+    <div id="FrameBackHeader">
+        <p id="FrameBackHeaderTitle"><b>NegativeBlocker Dashboard</b></p>
+        <button id="FrameBackHeaderButton1" class="FrameBackHeaderButton">✖</button>
+        <button id="FrameBackHeaderButton2" class="FrameBackHeaderButton">
+            ✖✖✖
+        </button>
+    </div>
+    <div id="DashboardMain"></div>
 </div>
         `;
         RootShadow.append(Dashboard_Element);
@@ -1784,40 +1796,43 @@
                 this.popup_Element = document.createElement("div");
                 this.popup_Element.innerHTML = `
 <style type="text/css">
-  div#PopupBack {
-    width: calc(100% - 5px);
-    height: calc(100% - 62px);
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1;
-    position: absolute;
-    top: 43px;
-    left: 2px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  div#PopupMessageBox {
-    background-color: white;
-    margin: 10px;
-    border: 1px solid black;
-    box-shadow: 0 0 10px;
-  }
-  div#PopupMessageBox p {
-    margin-left: 5px;
-    margin-right: 5px;
-  }
-  div#PopupBack button {
-    float: right;
-    margin: 5px;
-  }
+    div#PopupBack {
+        width: calc(100% - 5px);
+        height: calc(100% - 62px);
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+        position: absolute;
+        top: 43px;
+        left: 2px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    div#PopupMessageBox {
+        background-color: white;
+        margin: 10px;
+        border: 1px solid black;
+        box-shadow: 0 0 10px;
+    }
+
+    div#PopupMessageBox p {
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+
+    div#PopupBack button {
+        float: right;
+        margin: 5px;
+    }
 </style>
 
 <div id="PopupBack">
-  <div id="PopupMessageBox">
-    <p id="PopupMessage"></p>
-    <button id="PopupMessageBox_Cancel"></button>
-    <button id="PopupMessageBox_OK"></button>
-  </div>
+    <div id="PopupMessageBox">
+        <p id="PopupMessage"></p>
+        <button id="PopupMessageBox_Cancel"></button>
+        <button id="PopupMessageBox_OK"></button>
+    </div>
 </div>
                 `;
                 this.popup_Element.style.display = "none";
@@ -1901,108 +1916,114 @@
                 this.flameElement_Ele = document.createElement("div");
                 this.flameElement_Ele.innerHTML = `
 <style type="text/css">
-  div#ElementPicker_PositionFixed {
-    position: fixed;
-    top: 0;
-    width: calc(100vw - (100vw - 100%));
-    height: calc(100vh - (100vh - 100%));
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    z-index: 2147483647;
-    pointer-events: none;
-  }
-  div#ElementPicker_FrameBack {
-    all: initial;
-    right: 1px;
-    padding: 1px 2px;
-    background-color: #ffffff;
-    border: 1px solid #888888;
-    border-radius: 10px;
-    text-align: center;
-    width: 300px;
-    height: 300px;
-    color: #000000;
-    font-size: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  }
-  div#ElementPicker_FrameBack button {
-    min-width: 60px;
-    height: 35px;
-    font-size: medium;
-  }
-  div#ElementPicker_Header {
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-end;
-    margin: 4px 0 0 0;
-    height: calc(100% - 267px);
-    box-sizing: border-box;
-  }
-  div#ElementPicker_Window {
-    width: auto;
-    height: calc(100% - 78px);
-    box-sizing: border-box;
-    overflow: auto;
-    border: 2px solid black;
-    font-size: medium;
-  }
-  div#ElementPicker_Window ul {
-    margin: 0;
-    padding: 0;
-    text-align: left;
-    background-color: #eee;
-  }
-  div#ElementPicker_Window ul li {
-    border-style: solid;
-    border-width: 1px;
-    border-top-width: 0;
-    border-color: silver;
-    padding: 0 0 0 5px;
-    cursor: pointer;
-    min-height: 30px;
-    word-break: break-all;
-  }
-  div#ElementPicker_Text {
-    box-sizing: border-box;
-    margin: 4px 0 1px 0;
-  }
-  input#ElementPicker_Text_Input {
-    width: calc(100% - 47px);
-    height: 26px;
-    box-sizing: border-box;
-    margin: 0 5px 0 0;
-  }
-  button#ElementPicker_Text_Button {
-    max-width: 40px;
-    min-width: 40px !important;
-    padding: 0;
-  }
+    div#ElementPicker_PositionFixed {
+        position: fixed;
+        top: 0;
+        width: calc(100vw - (100vw - 100%));
+        height: calc(100vh - (100vh - 100%));
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-end;
+        z-index: 2147483647;
+        pointer-events: none;
+    }
+
+    div#ElementPicker_FrameBack {
+        all: initial;
+        right: 1px;
+        padding: 1px 2px;
+        background-color: #ffffff;
+        border: 1px solid #888888;
+        border-radius: 10px;
+        text-align: center;
+        width: 300px;
+        height: 300px;
+        color: #000000;
+        font-size: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+            Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    div#ElementPicker_FrameBack button {
+        min-width: 60px;
+        height: 35px;
+        font-size: medium;
+    }
+
+    div#ElementPicker_Header {
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-end;
+        margin: 4px 0 0 0;
+        height: calc(100% - 267px);
+        box-sizing: border-box;
+    }
+
+    div#ElementPicker_Window {
+        width: auto;
+        height: calc(100% - 78px);
+        box-sizing: border-box;
+        overflow: auto;
+        border: 2px solid black;
+        font-size: medium;
+    }
+
+    div#ElementPicker_Window ul {
+        margin: 0;
+        padding: 0;
+        text-align: left;
+        background-color: #eee;
+    }
+
+    div#ElementPicker_Window ul li {
+        border-style: solid;
+        border-width: 1px;
+        border-top-width: 0;
+        border-color: silver;
+        padding: 0 0 0 5px;
+        cursor: pointer;
+        min-height: 30px;
+        word-break: break-all;
+    }
+
+    div#ElementPicker_Text {
+        box-sizing: border-box;
+        margin: 4px 0 1px 0;
+    }
+
+    input#ElementPicker_Text_Input {
+        width: calc(100% - 47px);
+        height: 26px;
+        box-sizing: border-box;
+        margin: 0 5px 0 0;
+    }
+
+    button#ElementPicker_Text_Button {
+        max-width: 40px;
+        min-width: 40px !important;
+        padding: 0;
+    }
 </style>
 
-<div
-  id="ElementPicker_PositionFixed"
-  style="justify-content: flex-end; align-items: flex-end"
->
-  <div id="ElementPicker_FrameBack" style="display: none">
-    <div id="ElementPicker_Header">
-      <button id="ElementPicker_FrameMove">Move</button>
-      <button id="ElementPicker_ReSelect">↻</button>
-      <button id="ElementPicker_ReSelect_5SecDelay">5↻</button>
-      <button id="ElementPicker_Cancel">×</button>
-      <button id="ElementPicker_OK">〇</button>
+<div id="ElementPicker_PositionFixed" style="justify-content: flex-end; align-items: flex-end">
+    <div id="ElementPicker_FrameBack" style="display: none">
+        <div id="ElementPicker_Header">
+            <button id="ElementPicker_FrameMove">Move</button>
+            <button id="ElementPicker_ReSelect">↻</button>
+            <button id="ElementPicker_ReSelect_5SecDelay">5↻</button>
+            <button id="ElementPicker_Cancel">×</button>
+            <button id="ElementPicker_OK">〇</button>
+        </div>
+        <div id="ElementPicker_Text">
+            <input id="ElementPicker_Text_Input" type="text" spellcheck="false" />
+            <button id="ElementPicker_Text_Button">0</button>
+        </div>
+        <div id="ElementPicker_Window">
+            <ul id="ElementPicker_ul">
+                <li id="ElementPicker_li_Top">↑</li>
+            </ul>
+        </div>
     </div>
-    <div id="ElementPicker_Text">
-      <input id="ElementPicker_Text_Input" type="text" spellcheck="false" />
-      <button id="ElementPicker_Text_Button">0</button>
-    </div>
-    <div id="ElementPicker_Window">
-      <ul id="ElementPicker_ul">
-        <li id="ElementPicker_li_Top">↑</li>
-      </ul>
-    </div>
-  </div>
 </div>
     `;
                 RootShadow.append(this.flameElement_Ele);
@@ -2341,21 +2362,21 @@
             const DB_blockResult_div = document.createElement("div");
             DB_blockResult_div.innerHTML = `
 <style type="text/css">
-  div.ItemFrame_ElementBlock_ItemListFrame {
-    border: 1px solid black;
-  }
+    div.ItemFrame_ElementBlock_ItemListFrame {
+        border: 1px solid black;
+    }
 </style>
 
 <div id="ItemFrame_SentenceBlock" class="ItemFrame_Border">
-  <h1 id="Text-ResultSentenceBlockTitle" class="ItemFrame_Title"></h1>
-  <div id="ItemFrame_SentenceBlock_Result"></div>
-  <button id="ItemFrame_SentenceBlock_Result_TempDisableButton"></button>
+    <h1 id="Text-ResultSentenceBlockTitle" class="ItemFrame_Title"></h1>
+    <div id="ItemFrame_SentenceBlock_Result"></div>
+    <button id="ItemFrame_SentenceBlock_Result_TempDisableButton"></button>
 </div>
 <div id="ItemFrame_ElementBlock" class="ItemFrame_Border">
-  <h1 id="Text-ResultElementBlockTitle" class="ItemFrame_Title"></h1>
+    <h1 id="Text-ResultElementBlockTitle" class="ItemFrame_Title"></h1>
 </div>
 <div>
-  <button id="ItemFrame-SettingPageButton"></button>
+    <button id="ItemFrame-SettingPageButton"></button>
 </div>
             `;
             Dashboard_Window_Ele_stack.push(DB_blockResult_div);
@@ -2465,35 +2486,35 @@
             Dashboard_Window_Ele_stack.push(DB_settingTop_div);
             DB_settingTop_div.innerHTML = `
 <style type="text/css">
-  #SettingMainPage p {
-    margin: 0;
-  }
+    #SettingMainPage p {
+        margin: 0;
+    }
 </style>
 
 <div id="SettingMainPage">
-  <div id="BlockListText_Setting" class="ItemFrame_Border">
-    <h1 id="BlockListText_Setting_Title" class="ItemFrame_Title"></h1>
-    <p id="BlockListText_Setting_Description"></p>
-    <button id="BlockListText_Setting_Button"></button>
-  </div>
-  <div id="SentenceBlock_Setting" class="ItemFrame_Border">
-    <h1 id="SentenceBlock_Setting_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlock_Setting_Description"></p>
-    <button id="SentenceBlock_Setting_Button"></button>
-  </div>
-  <div id="ElementBlock_Setting" class="ItemFrame_Border">
-    <h1 id="ElementBlock_Setting_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlock_Setting_Description"></p>
-    <button id="ElementBlock_Setting_Button"></button>
-  </div>
-  <div id="Preferences_Setting" class="ItemFrame_Border">
-    <h1 id="Preferences_Setting_Title" class="ItemFrame_Title"></h1>
-    <p id="Preferences_Setting_Description"></p>
-    <button id="Preferences_Setting_Button"></button>
-  </div>
-  <div id="SettingMainPageBack">
-    <button id="SettingMainPageBack_Button"></button>
-  </div>
+    <div id="BlockListText_Setting" class="ItemFrame_Border">
+        <h1 id="BlockListText_Setting_Title" class="ItemFrame_Title"></h1>
+        <p id="BlockListText_Setting_Description"></p>
+        <button id="BlockListText_Setting_Button"></button>
+    </div>
+    <div id="SentenceBlock_Setting" class="ItemFrame_Border">
+        <h1 id="SentenceBlock_Setting_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlock_Setting_Description"></p>
+        <button id="SentenceBlock_Setting_Button"></button>
+    </div>
+    <div id="ElementBlock_Setting" class="ItemFrame_Border">
+        <h1 id="ElementBlock_Setting_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlock_Setting_Description"></p>
+        <button id="ElementBlock_Setting_Button"></button>
+    </div>
+    <div id="Preferences_Setting" class="ItemFrame_Border">
+        <h1 id="Preferences_Setting_Title" class="ItemFrame_Title"></h1>
+        <p id="Preferences_Setting_Description"></p>
+        <button id="Preferences_Setting_Button"></button>
+    </div>
+    <div id="SettingMainPageBack">
+        <button id="SettingMainPageBack_Button"></button>
+    </div>
 </div>
             `;
             DashboardMain_div.append(DB_settingTop_div);
@@ -2567,82 +2588,86 @@
                 Dashboard_Window_Ele_stack.push(this.ListEditPage_Ele);
                 this.ListEditPage_Ele.innerHTML = `
 <style type="text/css">
-  div#SettingsObjectListPage {
-    height: 100%;
-  }
-  div#ObjectLists_Frame {
-    width: auto;
-    height: calc(100% - 154px);
-    overflow: auto;
-    border: 2px solid black;
-  }
-  ol#ObjectLists_ol {
-    background-color: #eee;
-    list-style-position: inside;
-    margin: 0 0 0 0;
-    padding: 0 0 0 0;
-  }
-  #ObjectLists_ol li {
-    border-style: solid;
-    border-width: 1px;
-    border-top-width: 0;
-    border-color: silver;
-    padding: 0 0 0 5px;
-    cursor: pointer;
-    min-height: 30px;
-    word-break: break-all;
-  }
-  div#SettingsObject_ConfigItems_Name {
-    display: flex;
-  }
-  div#SettingsObject_ConfigItems div {
-    margin: 2px 0 2px 0;
-  }
-  input#SettingsObject_ConfigItems_Name_Form {
-    flex: 1;
-    height: 20px;
-  }
-  select#SettingsObject_ConfigItems_Sort_Form {
-    width: auto !important;
-    transform: scale(1.2);
-  }
-  input#SettingsObject_ConfigItems_Enable_Form {
-    transform: scale(1.3);
-  }
+    div#SettingsObjectListPage {
+        height: 100%;
+    }
+
+    div#ObjectLists_Frame {
+        width: auto;
+        height: calc(100% - 154px);
+        overflow: auto;
+        border: 2px solid black;
+    }
+
+    ol#ObjectLists_ol {
+        background-color: #eee;
+        list-style-position: inside;
+        margin: 0 0 0 0;
+        padding: 0 0 0 0;
+    }
+
+    #ObjectLists_ol li {
+        border-style: solid;
+        border-width: 1px;
+        border-top-width: 0;
+        border-color: silver;
+        padding: 0 0 0 5px;
+        cursor: pointer;
+        min-height: 30px;
+        word-break: break-all;
+    }
+
+    div#SettingsObject_ConfigItems_Name {
+        display: flex;
+    }
+
+    div#SettingsObject_ConfigItems div {
+        margin: 2px 0 2px 0;
+    }
+
+    input#SettingsObject_ConfigItems_Name_Form {
+        flex: 1;
+        height: 20px;
+    }
+
+    select#SettingsObject_ConfigItems_Sort_Form {
+        width: auto !important;
+        transform: scale(1.2);
+    }
+
+    input#SettingsObject_ConfigItems_Enable_Form {
+        transform: scale(1.3);
+    }
 </style>
 
 <div id="SettingsObjectListPage">
-  <div id="ObjectLists_Frame">
-    <ol id="ObjectLists_ol"></ol>
-  </div>
-  <div id="SettingsObject_ConfigItems" style="display: none">
-    <div id="SettingsObject_ConfigItems_Name">
-      <span id="SettingsObject_ConfigItems_Name_Span"></span>
-      <input
-        id="SettingsObject_ConfigItems_Name_Form"
-        type="text"
-        spellcheck="false"
-      />
+    <div id="ObjectLists_Frame">
+        <ol id="ObjectLists_ol"></ol>
     </div>
-    <div id="SettingsObject_ConfigItems_Sort">
-      <span id="SettingsObject_ConfigItems_Sort_Span"></span>
-      <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
+    <div id="SettingsObject_ConfigItems" style="display: none">
+        <div id="SettingsObject_ConfigItems_Name">
+            <span id="SettingsObject_ConfigItems_Name_Span"></span>
+            <input id="SettingsObject_ConfigItems_Name_Form" type="text" spellcheck="false" />
+        </div>
+        <div id="SettingsObject_ConfigItems_Sort">
+            <span id="SettingsObject_ConfigItems_Sort_Span"></span>
+            <select id="SettingsObject_ConfigItems_Sort_Form" size="1"></select>
+        </div>
+        <div id="SettingsObject_ConfigItems_Enable">
+            <span id="SettingsObject_ConfigItems_Enable_Span"></span>
+            <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
+        </div>
+        <div id="SettingsObject_ConfigItems_EditConfig">
+            <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
+            <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
+        </div>
     </div>
-    <div id="SettingsObject_ConfigItems_Enable">
-      <span id="SettingsObject_ConfigItems_Enable_Span"></span>
-      <input id="SettingsObject_ConfigItems_Enable_Form" type="checkbox" />
+    <div id="SettingsObject_ActionButton">
+        <button id="SettingsObject_ActionButton_Back"></button>
+        <button id="SettingsObject_ActionButton_NewObject"></button>
+        <button id="SettingsObject_ActionButton_DeleteObject" disabled></button>
+        <button id="SettingsObject_ActionButton_SaveObject" disabled></button>
     </div>
-    <div id="SettingsObject_ConfigItems_EditConfig">
-      <span id="SettingsObject_ConfigItems_EditConfig_Span"></span>
-      <button id="SettingsObject_ConfigItems_EditConfig_Form"></button>
-    </div>
-  </div>
-  <div id="SettingsObject_ActionButton">
-    <button id="SettingsObject_ActionButton_Back"></button>
-    <button id="SettingsObject_ActionButton_NewObject"></button>
-    <button id="SettingsObject_ActionButton_DeleteObject" disabled></button>
-    <button id="SettingsObject_ActionButton_SaveObject" disabled></button>
-  </div>
 </div>
                 `;
                 DashboardMain_div.append(this.ListEditPage_Ele);
@@ -2918,84 +2943,83 @@
                     this.EditConfigPage_Ele.style.height = "100%";
                     this.EditConfigPage_Ele.innerHTML = `
 <style type="text/css">
-  div.EditConfigObjectPage {
-    height: 100%;
-  }
-  div#BlockListText_Textarea_div {
-    height: calc(100% - 110px);
-  }
-  textarea#BlockListText_Textarea {
-    font-size: 16px;
-    font-family: Arial;
-    resize: none;
-    margin-left: -10px;
-    width: calc(100% + 20px);
-    height: 100%;
-    box-sizing: border-box;
-  }
-  label.BlockListText_Label {
-    display: block;
-    margin: 5px 0 0 0;
-  }
+    div.EditConfigObjectPage {
+        height: 100%;
+    }
+
+    div#BlockListText_Textarea_div {
+        height: calc(100% - 110px);
+    }
+
+    textarea#BlockListText_Textarea {
+        font-size: 16px;
+        font-family: Arial;
+        resize: none;
+        margin-left: -10px;
+        width: calc(100% + 20px);
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    label.BlockListText_Label {
+        display: block;
+        margin: 5px 0 0 0;
+    }
 </style>
 
 <div id="BlockListText" class="EditConfigObjectPage">
-  <div id="BlockListText_Textarea_div" class="ItemFrame_Border">
-    <h1 id="BlockListText_Textarea_Title" class="ItemFrame_Title"></h1>
-    <textarea
-      id="BlockListText_Textarea"
-      spellcheck="false"
-      wrap="off"
-    ></textarea>
-    <div id="BlockListText_Textarea_Disable" style="display: none">
-      <span id="BlockListText_Textarea_Disable_SpanText"></span>
-      <button id="BlockListText_Textarea_Disable_ShowButton"></button>
+    <div id="BlockListText_Textarea_div" class="ItemFrame_Border">
+        <h1 id="BlockListText_Textarea_Title" class="ItemFrame_Title"></h1>
+        <textarea id="BlockListText_Textarea" spellcheck="false" wrap="off"></textarea>
+        <div id="BlockListText_Textarea_Disable" style="display: none">
+            <span id="BlockListText_Textarea_Disable_SpanText"></span>
+            <button id="BlockListText_Textarea_Disable_ShowButton"></button>
+        </div>
     </div>
-  </div>
-  <div class="ItemFrame_Border">
-    <h1 id="BlockListText_ReadFile_Title" class="ItemFrame_Title"></h1>
-    <input id="BlockListText_ReadFile_Input" type="file" />
-  </div>
-  <div class="ItemFrame_Border">
-    <h1 id="BlockListText_Fetch_Title" class="ItemFrame_Title"></h1>
-    <label class="BlockListText_Label">
-      <input id="BlockListText_Fetch_InputCheckbox" type="checkbox" />
-      <span id="BlockListText_Fetch_InputCheckbox_SpanText"></span>
-    </label>
-    <input id="BlockListText_Fetch_InputText" type="text" spellcheck="false" />
-  </div>
-  <div class="ItemFrame_Border">
-    <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
-    <div id="BlockListText_Config_Div">
-      <label class="BlockListText_Label">
-        <input id="BlockListText_Config1_Input" type="checkbox" />
-        <span id="BlockListText_Config1_SpanText"></span>
-      </label>
-      <label class="BlockListText_Label">
-        <input id="BlockListText_Config2_Input" type="checkbox" />
-        <span id="BlockListText_Config2_SpanText"></span>
-      </label>
-      <label class="BlockListText_Label">
-        <input id="BlockListText_Config3_Input" type="checkbox" />
-        <span id="BlockListText_Config3_SpanText"></span>
-      </label>
-      <label class="BlockListText_Label">
-        <input id="BlockListText_Config4_Input" type="checkbox" />
-        <span id="BlockListText_Config4_SpanText"></span>
-      </label>
-      <label class="BlockListText_Label">
-        <input id="BlockListText_Config5_Input" type="checkbox" />
-        <span id="BlockListText_Config5_SpanText"></span>
-      </label>
-      <label class="BlockListText_Label">
-        <input id="BlockListText_Config6_Input" type="checkbox" />
-        <span id="BlockListText_Config6_SpanText"></span>
-      </label>
+    <div class="ItemFrame_Border">
+        <h1 id="BlockListText_ReadFile_Title" class="ItemFrame_Title"></h1>
+        <input id="BlockListText_ReadFile_Input" type="file" />
     </div>
-  </div>
-  <div>
-    <button id="BlockListText_BackButton"></button>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="BlockListText_Fetch_Title" class="ItemFrame_Title"></h1>
+        <label class="BlockListText_Label">
+            <input id="BlockListText_Fetch_InputCheckbox" type="checkbox" />
+            <span id="BlockListText_Fetch_InputCheckbox_SpanText"></span>
+        </label>
+        <input id="BlockListText_Fetch_InputText" type="text" spellcheck="false" />
+    </div>
+    <div class="ItemFrame_Border">
+        <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
+        <div id="BlockListText_Config_Div">
+            <label class="BlockListText_Label">
+                <input id="BlockListText_Config1_Input" type="checkbox" />
+                <span id="BlockListText_Config1_SpanText"></span>
+            </label>
+            <label class="BlockListText_Label">
+                <input id="BlockListText_Config2_Input" type="checkbox" />
+                <span id="BlockListText_Config2_SpanText"></span>
+            </label>
+            <label class="BlockListText_Label">
+                <input id="BlockListText_Config3_Input" type="checkbox" />
+                <span id="BlockListText_Config3_SpanText"></span>
+            </label>
+            <label class="BlockListText_Label">
+                <input id="BlockListText_Config4_Input" type="checkbox" />
+                <span id="BlockListText_Config4_SpanText"></span>
+            </label>
+            <label class="BlockListText_Label">
+                <input id="BlockListText_Config5_Input" type="checkbox" />
+                <span id="BlockListText_Config5_SpanText"></span>
+            </label>
+            <label class="BlockListText_Label">
+                <input id="BlockListText_Config6_Input" type="checkbox" />
+                <span id="BlockListText_Config6_SpanText"></span>
+            </label>
+        </div>
+    </div>
+    <div>
+        <button id="BlockListText_BackButton"></button>
+    </div>
 </div>
             `;
                     DashboardMain_div.append(this.EditConfigPage_Ele);
@@ -3275,113 +3299,96 @@
                     this.EditConfigPage_Ele.style.height = "calc(100% - 80px)";
                     this.EditConfigPage_Ele.innerHTML = `
 <style type="text/css">
-  div.EditConfigObjectPage {
-    height: 100%;
-  }
-  select.SentenceBlock_Select {
-    overflow: scroll;
-  }
-  option.SentenceBlock_Option {
-    display: table;
-    min-width: 100%;
-    box-sizing: border-box;
-  }
-  label.SentenceBlock_Label {
-    display: block;
-    margin: 5px 0 0 0;
-  }
+    div.EditConfigObjectPage {
+        height: 100%;
+    }
+
+    select.SentenceBlock_Select {
+        overflow: scroll;
+    }
+
+    option.SentenceBlock_Option {
+        display: table;
+        min-width: 100%;
+        box-sizing: border-box;
+    }
+
+    label.SentenceBlock_Label {
+        display: block;
+        margin: 5px 0 0 0;
+    }
 </style>
 
 <div id="SentenceBlockConfig" class="EditConfigObjectPage">
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig1_Description"></p>
-    <input id="SentenceBlockConfig1_Input1" type="text" spellcheck="false" />
-    <select id="SentenceBlockConfig1_Select" size="1" style="display: none">
-      <option value="">-----</option>
-    </select>
-    <br />
-    <form id="SentenceBlockConfig1_Form">
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="url_mode" value="wildcard" checked />
-        <span id="SentenceBlockConfig1_Form_Input1_SpanText"></span>
-      </label>
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="url_mode" value="regexp" />
-        <span id="SentenceBlockConfig1_Form_Input2_SpanText"></span>
-      </label>
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="url_mode" value="blt" />
-        <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
-      </label>
-    </form>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig2_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig2_Description"></p>
-    <select
-      id="SentenceBlockConfig2_Select"
-      class="SentenceBlock_Select"
-      size="7"
-      multiple
-    >
-      <option value="">-----</option>
-    </select>
-    <div>
-      <div class="ItemFrame_Border">
-        <p id="SentenceBlockConfig2-2_Description"></p>
-        <select
-          id="SentenceBlockConfig2-2_Select"
-          class="SentenceBlock_Select"
-          size="7"
-          multiple
-        >
-          <option value="">-----</option>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig1_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig1_Description"></p>
+        <input id="SentenceBlockConfig1_Input1" type="text" spellcheck="false" />
+        <select id="SentenceBlockConfig1_Select" size="1" style="display: none">
+            <option value="">-----</option>
         </select>
-      </div>
+        <br />
+        <form id="SentenceBlockConfig1_Form">
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="url_mode" value="wildcard" checked />
+                <span id="SentenceBlockConfig1_Form_Input1_SpanText"></span>
+            </label>
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="url_mode" value="regexp" />
+                <span id="SentenceBlockConfig1_Form_Input2_SpanText"></span>
+            </label>
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="url_mode" value="blt" />
+                <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
+            </label>
+        </form>
     </div>
-  </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig3_Description"></p>
-    <input id="SentenceBlockConfig3_InputText" type="text" spellcheck="false" />
-    <form id="SentenceBlockConfig3_Form">
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="replace_mode" value="sentence" checked />
-        <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
-      </label>
-      <label class="SentenceBlock_Label">
-        <input type="radio" name="replace_mode" value="word" />
-        <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
-      </label>
-    </form>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig2_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig2_Description"></p>
+        <select id="SentenceBlockConfig2_Select" class="SentenceBlock_Select" size="7" multiple>
+            <option value="">-----</option>
+        </select>
+        <div>
+            <div class="ItemFrame_Border">
+                <p id="SentenceBlockConfig2-2_Description"></p>
+                <select id="SentenceBlockConfig2-2_Select" class="SentenceBlock_Select" size="7" multiple>
+                    <option value="">-----</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="SentenceBlockConfig4_Title" class="ItemFrame_Title"></h1>
-    <p id="SentenceBlockConfig4_Description"></p>
-    <select
-      id="SentenceBlockConfig4_Select"
-      class="ElementBlock_Select"
-      size="1"
-    >
-      <option
-        id="SentenceBlockConfig4_Select_Option1"
-        value="hrefexclude"
-      ></option>
-      <option
-        id="SentenceBlockConfig4_Select_Option2"
-        value="hrefonly"
-      ></option>
-      <option id="SentenceBlockConfig4_Select_Option3" value="all"></option>
-    </select>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig3_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig3_Description"></p>
+        <input id="SentenceBlockConfig3_InputText" type="text" spellcheck="false" />
+        <form id="SentenceBlockConfig3_Form">
+            <label>
+                <input type="radio" name="replace_mode" value="sentence" checked />
+                <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
+            </label>
+            <label>
+                <input type="radio" name="replace_mode" value="word" />
+                <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
+            </label>
+        </form>
+    </div>
 
-  <div>
-    <button id="SentenceBlockConfig_BackButton"></button>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig4_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig4_Description"></p>
+        <select id="SentenceBlockConfig4_Select" class="ElementBlock_Select" size="1">
+            <option id="SentenceBlockConfig4_Select_Option1" value="hrefexclude"></option>
+            <option id="SentenceBlockConfig4_Select_Option2" value="hrefonly"></option>
+            <option id="SentenceBlockConfig4_Select_Option3" value="all"></option>
+        </select>
+    </div>
+
+    <div>
+        <button id="SentenceBlockConfig_BackButton"></button>
+    </div>
 </div>
                     `;
                     DashboardMain_div.append(this.EditConfigPage_Ele);
@@ -3564,201 +3571,181 @@
                     this.EditConfigPage_Ele.style.height = "calc(100% - 80px)";
                     this.EditConfigPage_Ele.innerHTML = `
 <style type="text/css">
-  div.EditConfigObjectPage {
-    height: 100%;
-  }
-  select.ElementBlock_Select {
-    width: 100%;
-    overflow: scroll;
-  }
-  option.ElementBlock_Option {
-    display: table;
-    min-width: 100%;
-    box-sizing: border-box;
-  }
-  label.ElementBlock_Label {
-    display: block;
-    margin: 5px 0 0 0;
-  }
-  form#ElementBlockConfig2_Form {
-    margin: 5px 0 5px 0;
-  }
-  form#ElementBlockConfig3_Form {
-    margin: 5px 0 5px 0;
-  }
+    div.EditConfigObjectPage {
+        height: 100%;
+    }
+
+    select.ElementBlock_Select {
+        width: 100%;
+        overflow: scroll;
+    }
+
+    option.ElementBlock_Option {
+        display: table;
+        min-width: 100%;
+        box-sizing: border-box;
+    }
+
+    label.ElementBlock_Label {
+        display: block;
+        margin: 5px 0 0 0;
+    }
+
+    form#ElementBlockConfig2_Form {
+        margin: 5px 0 5px 0;
+    }
+
+    form#ElementBlockConfig3_Form {
+        margin: 5px 0 5px 0;
+    }
 </style>
 
 <div id="ElementBlockConfig" class="EditConfigObjectPage">
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig1_Description"></p>
-    <input id="ElementBlockConfig1_Input1" type="text" spellcheck="false" />
-    <select id="ElementBlockConfig1_Select" size="1" style="display: none">
-      <option value="">-----</option>
-    </select>
-    <form id="ElementBlockConfig1_Form">
-      <label class="ElementBlock_Label">
-        <input type="radio" name="url_mode" value="wildcard" checked />
-        <span id="ElementBlockConfig1_Form_Input1_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="url_mode" value="regexp" />
-        <span id="ElementBlockConfig1_Form_Input2_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="url_mode" value="blt" />
-        <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
-      </label>
-    </form>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig2_Description"></p>
-    <input id="ElementBlockConfig2_InputText" type="text" spellcheck="false" />
-    <form id="ElementBlockConfig2_Form">
-      <label>
-        <input type="radio" name="pickerMethod" value="css" checked />
-        <span id="ElementBlockConfig2_Form_Input1_SpanText"></span>
-      </label>
-      <label>
-        <input type="radio" name="pickerMethod" value="xpath" />
-        <span id="ElementBlockConfig2_Form_Input2_SpanText"></span>
-      </label>
-    </form>
-    <button id="ElementBlockConfig2_Button"></button>
     <div class="ItemFrame_Border">
-      <form id="ElementBlockConfig2-2_From">
-        <label class="ElementBlock_Label">
-          <input type="radio" name="hideMethod" value="displayNone" checked />
-          <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="hideMethod" value="remove" />
-          <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
-        </label>
-      </form>
-    </div>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig3_Description"></p>
-    <input id="ElementBlockConfig3_InputText" type="text" spellcheck="false" />
-    <form id="ElementBlockConfig3_Form">
-      <label>
-        <input type="radio" name="pickerMethod" value="css" checked />
-        <span id="ElementBlockConfig3_Form_Input1_SpanText"></span>
-      </label>
-      <label>
-        <input type="radio" name="pickerMethod" value="xpath" />
-        <span id="ElementBlockConfig3_Form_Input2_SpanText"></span>
-      </label>
-    </form>
-    <button id="ElementBlockConfig3_Button"></button>
-    <label class="ElementBlock_Label">
-      <input id="ElementBlockConfig3_Input1" type="checkbox" />
-      <span id="ElementBlockConfig3_Input1_SpanText"></span>
-    </label>
-    <div class="ItemFrame_Border">
-      <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="text" checked />
-          <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="href" />
-          <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="style" />
-          <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
-          <br />
-          <input
-            id="ElementBlockConfig3-2_Form_Input3_InputText"
-            type="text"
-            spellcheck="false"
-          />
-        </label>
-        <label class="ElementBlock_Label">
-          <input type="radio" name="propertyMode" value="advanced" />
-          <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
-          <br />
-          <input
-            id="ElementBlockConfig3-2_Form_Input4_InputText"
-            type="text"
-            spellcheck="false"
-          />
-        </label>
-      </form>
-    </div>
-  </div>
-
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig4_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig4_Description"></p>
-    <select
-      id="ElementBlockConfig4_Select"
-      class="ElementBlock_Select"
-      size="8"
-      multiple
-    >
-      <option value="">-----</option>
-    </select>
-    <div>
-      <div class="ItemFrame_Border">
-        <p id="ElementBlockConfig4-2_Description"></p>
-        <select
-          id="ElementBlockConfig4-2_Select"
-          class="ElementBlock_Select"
-          size="8"
-          multiple
-        >
-          <option value="">-----</option>
+        <h1 id="ElementBlockConfig1_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig1_Description"></p>
+        <input id="ElementBlockConfig1_Input1" type="text" spellcheck="false" />
+        <select id="ElementBlockConfig1_Select" size="1" style="display: none">
+            <option value="">-----</option>
         </select>
-      </div>
+        <form id="ElementBlockConfig1_Form">
+            <label class="ElementBlock_Label">
+                <input type="radio" name="url_mode" value="wildcard" checked />
+                <span id="ElementBlockConfig1_Form_Input1_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="url_mode" value="regexp" />
+                <span id="ElementBlockConfig1_Form_Input2_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="url_mode" value="blt" />
+                <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
+            </label>
+        </form>
     </div>
-  </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig5_Description"></p>
-    <select
-      id="ElementBlockConfig5_Select"
-      class="ElementBlock_Select"
-      size="1"
-    >
-      <option id="ElementBlockConfig5_Select_Option1" value="urlonly"></option>
-      <option
-        id="ElementBlockConfig5_Select_Option2"
-        value="titleonly"
-      ></option>
-      <option id="ElementBlockConfig5_Select_Option3" value="all"></option>
-    </select>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig2_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig2_Description"></p>
+        <input id="ElementBlockConfig2_InputText" type="text" spellcheck="false" />
+        <form id="ElementBlockConfig2_Form">
+            <label>
+                <input type="radio" name="pickerMethod" value="css" checked />
+                <span id="ElementBlockConfig2_Form_Input1_SpanText"></span>
+            </label>
+            <label>
+                <input type="radio" name="pickerMethod" value="xpath" />
+                <span id="ElementBlockConfig2_Form_Input2_SpanText"></span>
+            </label>
+        </form>
+        <button id="ElementBlockConfig2_Button"></button>
+        <div class="ItemFrame_Border">
+            <form id="ElementBlockConfig2-2_From">
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="hideMethod" value="displayNone" checked />
+                    <span id="ElementBlockConfig2-2_Form_Input1_SpanText"></span>
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="hideMethod" value="remove" />
+                    <span id="ElementBlockConfig2-2_Form_Input2_SpanText"></span>
+                </label>
+            </form>
+        </div>
+    </div>
 
-  <div class="ItemFrame_Border">
-    <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
-    <p id="ElementBlockConfig6_Description"></p>
-    <form id="ElementBlockConfig6_Form">
-      <label class="ElementBlock_Label">
-        <input type="radio" name="resultShow" value="none" checked />
-        <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="resultShow" value="number" />
-        <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
-      </label>
-      <label class="ElementBlock_Label">
-        <input type="radio" name="resultShow" value="property" />
-        <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
-      </label>
-    </form>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig3_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig3_Description"></p>
+        <input id="ElementBlockConfig3_InputText" type="text" spellcheck="false" />
+        <form id="ElementBlockConfig3_Form">
+            <label>
+                <input type="radio" name="pickerMethod" value="css" checked />
+                <span id="ElementBlockConfig3_Form_Input1_SpanText"></span>
+            </label>
+            <label>
+                <input type="radio" name="pickerMethod" value="xpath" />
+                <span id="ElementBlockConfig3_Form_Input2_SpanText"></span>
+            </label>
+        </form>
+        <button id="ElementBlockConfig3_Button"></button>
+        <label class="ElementBlock_Label">
+            <input id="ElementBlockConfig3_Input1" type="checkbox" />
+            <span id="ElementBlockConfig3_Input1_SpanText"></span>
+        </label>
+        <div class="ItemFrame_Border">
+            <form id="ElementBlockConfig3-2_From" class="ItemFrame_Border">
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="text" checked />
+                    <span id="ElementBlockConfig3-2_Form_Input1_SpanText"></span>
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="href" />
+                    <span id="ElementBlockConfig3-2_Form_Input2_SpanText"></span>
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="style" />
+                    <span id="ElementBlockConfig3-2_Form_Input3_SpanText"></span>
+                    <br />
+                    <input id="ElementBlockConfig3-2_Form_Input3_InputText" type="text" spellcheck="false" />
+                </label>
+                <label class="ElementBlock_Label">
+                    <input type="radio" name="propertyMode" value="advanced" />
+                    <span id="ElementBlockConfig3-2_Form_Input4_SpanText"></span>
+                    <br />
+                    <input id="ElementBlockConfig3-2_Form_Input4_InputText" type="text" spellcheck="false" />
+                </label>
+            </form>
+        </div>
+    </div>
 
-  <div>
-    <button id="ElementBlockConfig_BackButton"></button>
-  </div>
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig4_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig4_Description"></p>
+        <select id="ElementBlockConfig4_Select" class="ElementBlock_Select" size="8" multiple>
+            <option value="">-----</option>
+        </select>
+        <div>
+            <div class="ItemFrame_Border">
+                <p id="ElementBlockConfig4-2_Description"></p>
+                <select id="ElementBlockConfig4-2_Select" class="ElementBlock_Select" size="8" multiple>
+                    <option value="">-----</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig5_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig5_Description"></p>
+        <select id="ElementBlockConfig5_Select" class="ElementBlock_Select" size="1">
+            <option id="ElementBlockConfig5_Select_Option1" value="urlonly"></option>
+            <option id="ElementBlockConfig5_Select_Option2" value="titleonly"></option>
+            <option id="ElementBlockConfig5_Select_Option3" value="all"></option>
+        </select>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig6_Description"></p>
+        <form id="ElementBlockConfig6_Form">
+            <label class="ElementBlock_Label">
+                <input type="radio" name="resultShow" value="none" checked />
+                <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="resultShow" value="number" />
+                <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="resultShow" value="property" />
+                <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
+            </label>
+        </form>
+    </div>
+
+    <div>
+        <button id="ElementBlockConfig_BackButton"></button>
+    </div>
 </div>
                     `;
                     DashboardMain_div.append(this.EditConfigPage_Ele);
@@ -3950,82 +3937,83 @@
             const DB_preference_div = document.createElement("div");
             DB_preference_div.innerHTML = `
 <style type="text/css">
-  div.PreferencesItem {
-    display: block;
-    margin: 0 0 20px 0;
-  }
-  #PreferencesPage p {
-    margin: 0;
-  }
+    div.PreferencesItem {
+        display: block;
+        margin: 0 0 20px 0;
+    }
+
+    #PreferencesPage p {
+        margin: 0;
+    }
 </style>
 
 <div id="PreferencesPage">
-  <div id="ImportAndExport" class="ItemFrame_Border">
-    <h1 id="ImportAndExport_Title" class="ItemFrame_Title"></h1>
-    <p id="ImportAndExport_Description"></p>
-    <button id="ImportAndExport_Button"></button>
-  </div>
+    <div id="ImportAndExport" class="ItemFrame_Border">
+        <h1 id="ImportAndExport_Title" class="ItemFrame_Title"></h1>
+        <p id="ImportAndExport_Description"></p>
+        <button id="ImportAndExport_Button"></button>
+    </div>
 
-  <div id="PerformanceConfig" class="ItemFrame_Border">
-    <h1 id="PerformanceConfig_Title" class="ItemFrame_Title"></h1>
-    <p id="PerformanceConfig_Description"></p>
-    <button id="PerformanceConfig_Button"></button>
-  </div>
+    <div id="PerformanceConfig" class="ItemFrame_Border">
+        <h1 id="PerformanceConfig_Title" class="ItemFrame_Title"></h1>
+        <p id="PerformanceConfig_Description"></p>
+        <button id="PerformanceConfig_Button"></button>
+    </div>
 
-  <div id="ButtonHide" class="ItemFrame_Border">
-    <h1 id="ButtonHide_Title" class="ItemFrame_Title"></h1>
-    <p id="ButtonHide_Description"></p>
-    <label>
-      <input id="ButtonHide_Input" type="checkbox" />
-      <span id="ButtonHide_Input_SpanText"></span>
-    </label>
-  </div>
+    <div id="ButtonHide" class="ItemFrame_Border">
+        <h1 id="ButtonHide_Title" class="ItemFrame_Title"></h1>
+        <p id="ButtonHide_Description"></p>
+        <label>
+            <input id="ButtonHide_Input" type="checkbox" />
+            <span id="ButtonHide_Input_SpanText"></span>
+        </label>
+    </div>
 
-  <div id="immediatelyLoadSettings" class="ItemFrame_Border">
-    <h1 id="immediatelyLoadSettings_Title" class="ItemFrame_Title"></h1>
-    <p id="immediatelyLoadSettings_Description"></p>
-    <label>
-      <input id="immediatelyLoadSettings_Input" type="checkbox" />
-      <span id="immediatelyLoadSettings_Input_SpanText"></span>
-    </label>
-  </div>
+    <div id="immediatelyLoadSettings" class="ItemFrame_Border">
+        <h1 id="immediatelyLoadSettings_Title" class="ItemFrame_Title"></h1>
+        <p id="immediatelyLoadSettings_Description"></p>
+        <label>
+            <input id="immediatelyLoadSettings_Input" type="checkbox" />
+            <span id="immediatelyLoadSettings_Input_SpanText"></span>
+        </label>
+    </div>
 
-  <div id="FetchInterval" class="ItemFrame_Border">
-    <h1 id="FetchInterval_Title" class="ItemFrame_Title"></h1>
-    <p id="FetchInterval_Description"></p>
-    <select id="FetchInterval_Select" size="1">
-      <option id="FetchInterval_Select_Option1" value="300000"></option>
-      <option id="FetchInterval_Select_Option2" value="900000"></option>
-      <option id="FetchInterval_Select_Option3" value="1800000"></option>
-      <option id="FetchInterval_Select_Option4" value="3600000"></option>
-      <option id="FetchInterval_Select_Option5" value="7200000"></option>
-      <option id="FetchInterval_Select_Option6" value="18000000"></option>
-    </select>
-  </div>
+    <div id="FetchInterval" class="ItemFrame_Border">
+        <h1 id="FetchInterval_Title" class="ItemFrame_Title"></h1>
+        <p id="FetchInterval_Description"></p>
+        <select id="FetchInterval_Select" size="1">
+            <option id="FetchInterval_Select_Option1" value="300000"></option>
+            <option id="FetchInterval_Select_Option2" value="900000"></option>
+            <option id="FetchInterval_Select_Option3" value="1800000"></option>
+            <option id="FetchInterval_Select_Option4" value="3600000"></option>
+            <option id="FetchInterval_Select_Option5" value="7200000"></option>
+            <option id="FetchInterval_Select_Option6" value="18000000"></option>
+        </select>
+    </div>
 
-  <div id="DashboardColor" class="ItemFrame_Border">
-    <h1 id="DashboardColor_Title" class="ItemFrame_Title"></h1>
-    <p id="DashboardColor_Description"></p>
-    <select id="DashboardColor_Select" size="1">
-      <option id="DashboardColor_Select_Option1" value="#FFCDCD"></option>
-      <option id="DashboardColor_Select_Option2" value="#FFFFB2"></option>
-      <option id="DashboardColor_Select_Option3" value="#D0FFCA"></option>
-      <option id="DashboardColor_Select_Option4" value="#BAD4FF"></option>
-    </select>
-  </div>
+    <div id="DashboardColor" class="ItemFrame_Border">
+        <h1 id="DashboardColor_Title" class="ItemFrame_Title"></h1>
+        <p id="DashboardColor_Description"></p>
+        <select id="DashboardColor_Select" size="1">
+            <option id="DashboardColor_Select_Option1" value="#FFCDCD"></option>
+            <option id="DashboardColor_Select_Option2" value="#FFFFB2"></option>
+            <option id="DashboardColor_Select_Option3" value="#D0FFCA"></option>
+            <option id="DashboardColor_Select_Option4" value="#BAD4FF"></option>
+        </select>
+    </div>
 
-  <div id="Language" class="ItemFrame_Border">
-    <h1 id="Language_Title" class="ItemFrame_Title"></h1>
-    <p id="Language_Description"></p>
-    <select id="Language_Select" size="1">
-      <option id="Language_Select_Option1" value="en"></option>
-      <option id="Language_Select_Option2" value="ja-jp"></option>
-    </select>
-  </div>
+    <div id="Language" class="ItemFrame_Border">
+        <h1 id="Language_Title" class="ItemFrame_Title"></h1>
+        <p id="Language_Description"></p>
+        <select id="Language_Select" size="1">
+            <option id="Language_Select_Option1" value="en"></option>
+            <option id="Language_Select_Option2" value="ja-jp"></option>
+        </select>
+    </div>
 
-  <div id="SettingMainPageBack" class="PreferencesItem">
-    <button id="PreferencesPageBack_Button"></button>
-  </div>
+    <div id="SettingMainPageBack" class="PreferencesItem">
+        <button id="PreferencesPageBack_Button"></button>
+    </div>
 </div>
             `;
             DashboardMain_div.append(DB_preference_div);
@@ -4306,59 +4294,55 @@
                 const DB_exportAndImport_div = document.createElement("div");
                 DB_exportAndImport_div.innerHTML = `
 <style type="text/css">
-  div.PreferencesItem {
-    display: block;
-    margin: 0 0 20px 0;
-  }
-  #ExportAndImportPage p {
-    margin: 0;
-  }
-  #ExportAndImportPage button {
-    display: block;
-  }
-  textarea#ExportAndImportConfig3_Textarea {
-    font-size: 16px;
-    font-family: Arial;
-    resize: none;
-    width: 100%;
-    height: 300px;
-    box-sizing: border-box;
-  }
+    div.PreferencesItem {
+        display: block;
+        margin: 0 0 20px 0;
+    }
+
+    #ExportAndImportPage p {
+        margin: 0;
+    }
+
+    textarea#ExportAndImportConfig3_Textarea {
+        font-size: 16px;
+        font-family: Arial;
+        resize: none;
+        width: 100%;
+        height: 300px;
+        box-sizing: border-box;
+    }
 </style>
 
 <div id="ExportAndImportPage">
-  <div class="ItemFrame_Border">
-    <h1 id="ExportAndImportConfig1_Title" class="ItemFrame_Title"></h1>
-    <button id="ExportAndImportConfig1_Button1"></button>
-    <button id="ExportAndImportConfig1_Button2"></button>
-    <button id="ExportAndImportConfig1_Button3"></button>
-    <span id="ExportAndImportConfig1_SpanText" style="display: none"></span>
-  </div>
-  <div class="ItemFrame_Border">
-    <h1 id="ExportAndImportConfig2_Title" class="ItemFrame_Title"></h1>
     <div class="ItemFrame_Border">
-      <span id="ExportAndImportConfig2-1_SpanText"></span>
-      <input id="ExportAndImportConfig2-1_Input" type="file" />
+        <h1 id="ExportAndImportConfig1_Title" class="ItemFrame_Title"></h1>
+        <button id="ExportAndImportConfig1_Button1"></button>
+        <button id="ExportAndImportConfig1_Button2"></button>
+        <button id="ExportAndImportConfig1_Button3"></button>
+        <span id="ExportAndImportConfig1_SpanText" style="display: none"></span>
     </div>
     <div class="ItemFrame_Border">
-      <button id="ExportAndImportConfig2-2_Button"></button>
+        <h1 id="ExportAndImportConfig2_Title" class="ItemFrame_Title"></h1>
+        <div class="ItemFrame_Border">
+            <span id="ExportAndImportConfig2-1_SpanText"></span>
+            <input id="ExportAndImportConfig2-1_Input" type="file" />
+        </div>
+        <div class="ItemFrame_Border">
+            <button id="ExportAndImportConfig2-2_Button"></button>
+        </div>
+        <div class="ItemFrame_Border">
+            <label class="ExportAndImportConfig2-3_Label">
+                <input id="ExportAndImportConfig2-3_Input" type="checkbox" />
+                <span id="ExportAndImportConfig2-3_SpanText"></span>
+            </label>
+        </div>
+        <span id="ExportAndImportConfig2_SpanText" style="display: none"></span>
     </div>
     <div class="ItemFrame_Border">
-      <label class="ExportAndImportConfig2-3_Label">
-        <input id="ExportAndImportConfig2-3_Input" type="checkbox" />
-        <span id="ExportAndImportConfig2-3_SpanText"></span>
-      </label>
+        <h1 id="ExportAndImportConfig3_Title" class="ItemFrame_Title"></h1>
+        <textarea id="ExportAndImportConfig3_Textarea" spellcheck="false"></textarea>
     </div>
-    <span id="ExportAndImportConfig2_SpanText" style="display: none"></span>
-  </div>
-  <div class="ItemFrame_Border">
-    <h1 id="ExportAndImportConfig3_Title" class="ItemFrame_Title"></h1>
-    <textarea
-      id="ExportAndImportConfig3_Textarea"
-      spellcheck="false"
-    ></textarea>
-  </div>
-  <button id="ExportAndImportConfig_BackButton"></button>
+    <button id="ExportAndImportConfig_BackButton"></button>
 </div>
                 `;
                 DashboardMain_div.append(DB_exportAndImport_div);
@@ -4483,93 +4467,88 @@
                 const DB_performanceConfig_div = document.createElement("div");
                 DB_performanceConfig_div.innerHTML = `
 <style type="text/css">
-  div.PreferencesItem {
-    display: block;
-    margin: 0 0 20px 0;
-  }
-  #PerformanceConfig p {
-    margin: 8px 0 0 0;
-  }
+    div.PreferencesItem {
+        display: block;
+        margin: 0 0 20px 0;
+    }
+
+    #PerformanceConfig p {
+        margin: 8px 0 0 0;
+    }
 </style>
 
 <div id="PerformanceConfig">
-  <div class="ItemFrame_Border">
-    <h1 id="PerformanceConfig1_Title" class="ItemFrame_Title"></h1>
-    <p id="PerformanceConfig1_Description1"></p>
-    <p id="PerformanceConfig1_Description2"></p>
-    <p id="PerformanceConfig1_Description3"></p>
-    <p id="PerformanceConfig1_Description4"></p>
-    <select id="PerformanceConfig1_Select">
-      <option id="PerformanceConfig1_Select_Option1" value="block"></option>
-      <option id="PerformanceConfig1_Select_Option2" value="balance"></option>
-      <option
-        id="PerformanceConfig1_Select_Option3"
-        value="performance1"
-      ></option>
-      <option
-        id="PerformanceConfig1_Select_Option4"
-        value="performance2"
-      ></option>
-    </select>
-  </div>
-  <div class="ItemFrame_Border">
-    <h1 id="PerformanceConfig2_Title" class="ItemFrame_Title"></h1>
-    <p id="PerformanceConfig2_Description1"></p>
-    <p id="PerformanceConfig2_Description2"></p>
-    <p id="PerformanceConfig2_Description3"></p>
     <div class="ItemFrame_Border">
-      <span id="PerformanceConfig2_input1_SpanText"></span>
-      <input id="PerformanceConfig2_input1" type="number" value="100" />
+        <h1 id="PerformanceConfig1_Title" class="ItemFrame_Title"></h1>
+        <p id="PerformanceConfig1_Description1"></p>
+        <p id="PerformanceConfig1_Description2"></p>
+        <p id="PerformanceConfig1_Description3"></p>
+        <p id="PerformanceConfig1_Description4"></p>
+        <select id="PerformanceConfig1_Select">
+            <option id="PerformanceConfig1_Select_Option1" value="block"></option>
+            <option id="PerformanceConfig1_Select_Option2" value="balance"></option>
+            <option id="PerformanceConfig1_Select_Option3" value="performance1"></option>
+            <option id="PerformanceConfig1_Select_Option4" value="performance2"></option>
+        </select>
     </div>
     <div class="ItemFrame_Border">
-      <span id="PerformanceConfig2_input2_SpanText"></span>
-      <input id="PerformanceConfig2_input2" type="number" value="10" />
+        <h1 id="PerformanceConfig2_Title" class="ItemFrame_Title"></h1>
+        <p id="PerformanceConfig2_Description1"></p>
+        <p id="PerformanceConfig2_Description2"></p>
+        <p id="PerformanceConfig2_Description3"></p>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig2_input1_SpanText"></span>
+            <input id="PerformanceConfig2_input1" type="number" value="100" />
+        </div>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig2_input2_SpanText"></span>
+            <input id="PerformanceConfig2_input2" type="number" value="10" />
+        </div>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig2_input3_SpanText"></span>
+            <input id="PerformanceConfig2_input3" type="number" value="10" />
+        </div>
     </div>
     <div class="ItemFrame_Border">
-      <span id="PerformanceConfig2_input3_SpanText"></span>
-      <input id="PerformanceConfig2_input3" type="number" value="10" />
+        <h1 id="PerformanceConfig3_Title" class="ItemFrame_Title"></h1>
+        <p id="PerformanceConfig3_Description1"></p>
+        <p id="PerformanceConfig3_Description2"></p>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig3_Select1_SpanText"></span>
+            <select id="PerformanceConfig3_Select1" size="1">
+                <option value="">-----</option>
+            </select>
+        </div>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig3_Select2_SpanText"></span>
+            <select id="PerformanceConfig3_Select2" size="1">
+                <option value="">-----</option>
+            </select>
+        </div>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig3_Select3_SpanText"></span>
+            <select id="PerformanceConfig3_Select3" size="1">
+                <option value="">-----</option>
+            </select>
+        </div>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig3_Select4_SpanText"></span>
+            <select id="PerformanceConfig3_Select4" size="1">
+                <option value="">-----</option>
+            </select>
+        </div>
+        <div class="ItemFrame_Border">
+            <span id="PerformanceConfig3_Select5_SpanText"></span>
+            <select id="PerformanceConfig3_Select5" size="1">
+                <option value="">-----</option>
+            </select>
+        </div>
     </div>
-  </div>
-  <div class="ItemFrame_Border">
-    <h1 id="PerformanceConfig3_Title" class="ItemFrame_Title"></h1>
-    <p id="PerformanceConfig3_Description1"></p>
-    <p id="PerformanceConfig3_Description2"></p>
-    <div class="ItemFrame_Border">
-      <span id="PerformanceConfig3_Select1_SpanText"></span>
-      <select id="PerformanceConfig3_Select1" size="1">
-        <option value="">-----</option>
-      </select>
+    <div>
+        <button id="PerformanceConfig_BackButton"></button>
+        <button id="PerformanceConfig_SaveButton"></button>
+        <span id="PerformanceConfig_SaveInfoText" style="display: none"></span>
     </div>
-    <div class="ItemFrame_Border">
-      <span id="PerformanceConfig3_Select2_SpanText"></span>
-      <select id="PerformanceConfig3_Select2" size="1">
-        <option value="">-----</option>
-      </select>
-    </div>
-    <div class="ItemFrame_Border">
-      <span id="PerformanceConfig3_Select3_SpanText"></span>
-      <select id="PerformanceConfig3_Select3" size="1">
-        <option value="">-----</option>
-      </select>
-    </div>
-    <div class="ItemFrame_Border">
-      <span id="PerformanceConfig3_Select4_SpanText"></span>
-      <select id="PerformanceConfig3_Select4" size="1">
-        <option value="">-----</option>
-      </select>
-    </div>
-    <div class="ItemFrame_Border">
-      <span id="PerformanceConfig3_Select5_SpanText"></span>
-      <select id="PerformanceConfig3_Select5" size="1">
-        <option value="">-----</option>
-      </select>
-    </div>
-  </div>
-  <div>
-    <button id="PerformanceConfig_BackButton"></button>
-    <button id="PerformanceConfig_SaveButton"></button>
-    <span id="PerformanceConfig_SaveInfoText" style="display: none"></span>
-  </div>
 </div>
                 `;
                 DashboardMain_div.append(DB_performanceConfig_div);
