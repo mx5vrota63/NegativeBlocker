@@ -33,7 +33,7 @@
     let observerInterval = 0;
     let dateInterval = Date.now();
 
-    const safeModeURL = "https://example.com/"
+    const safeModeURL = "https://www.example.com/"
 
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
@@ -49,6 +49,196 @@
     let fetchGlobalFlagStorage;
 
     let localeText;
+
+
+    const localeText_en = {
+        OKButton: "OK",
+        cancelButton: "Cancel",
+        backButton: "←Back",
+        DB_blockResult: {
+            sentenceBlock: "SentenceBlock Apply list",
+            sentenceBlock_tempDisableButton: "Apply temporary disable and then reload.",
+            elementBlock: "ElementBlock Apply list",
+            elementBlock_Countcase: "Case",
+            settingPageButton: "Settings page",
+            reDisplay: "Redisplay",
+            copy: "Copy properties"
+        },
+        DB_settingsTop: {
+            blockListText_title: "BlockListText",
+            blockListText_description: "You can set the text, URL, etc. to be blocked for each group.",
+            blockListText_button: "BlockListText Config",
+            sentenceBlock_title: "SentenceBlock",
+            sentenceBlock_description: "If a BlockListText is included in a Web sentence, it will replace that one sentence or word with another character.",
+            sentenceBlock_button: "SentenceBlock Config",
+            elementBlock_title: "ElementBlock",
+            elementBlock_description: "If an element's characters or properties contain BlockListText, the entire element will be blocked.",
+            elementBlock_button: "ElementBlock Config",
+            preferences_title: "Preferences",
+            preferences_description: "Configure the entire Extensions settings.",
+            preferences_button: "Preferences Config"
+        },
+        listEdit_Func: {
+            name: "Name:",
+            sort: "SortIndex:",
+            enable: "Enable:",
+            config: "Settings editing:",
+            config_button: "Settings editing",
+            new: "New",
+            delete: "Delete",
+            save: "Save",
+            editFlag_back: "You will be returned to the Top Settings page. The information currently entered will be lost, are you sure?",
+            editFlag_new: "Do you want to create a new one? The currently entered information will be lost.",
+            editFlag_change: "Do you want to change the configuration field? The currently entered information will be lost.",
+            deleteConfirm: "Are you sure you want to delete the settings?",
+            error_nameEmpty: "error: Please enter your name.",
+            error_nameDuplication: "error: The same name already exists."
+        },
+        DB_blockListText: {
+            blockListText_title: "BlockListText",
+            blockListText_URLoverWrite: "The BlockListText will be automatically overwritten because it is set to be retrieved from the URL.",
+            blockListText_show: "Show Text",
+            textFile_title: "Load a text file",
+            textFile_overWrite: "The currently entered BlockListText will be overwritten by the text in the file. Are you sure?",
+            URLget_title: "Get from URL",
+            URLget_enable: "Enable",
+            option_title: "Option",
+            option_regexp: "RegExp",
+            option_caseSensitive: "Case Sensitive",
+            option_exact: "Exact",
+            option_spaceIgnore: "Ignore white space",
+            option_notSearch: "Do a NOT search",
+            option_uBlacklist: "Use uBlacklist Format (Beta)"
+        },
+        DB_sentenceBlock: {
+            URL_title: "URL",
+            URL_description: "Specify the sites for which you want to enable this rule. If you leave this field blank, all sites will be included.",
+            URL_wildcard: "Wildcard(*)",
+            URL_regexp: "RegExp",
+            URL_BLT: "BlockListText",
+            BLT_title: "BlockListText",
+            BLT_description: "Specify the BlockListText to be used. holding down the Ctrl key (Command key on Mac) while clicking to specify multiple text.",
+            BLT_exclude: "Please select from the list below if you want to use the exclusion settings. (Can be more than one)",
+            replace_title: "Replace string",
+            replace_description: "Enter the string to be replaced.",
+            replace_sentence: "Replace with a single sentence",
+            replace_word: "Replace with a word",
+            aTag_title: "Link replacement for \"a\" tag",
+            aTag_description: "Set whether to replace the \"a\" tag link.(If you replace links in \"a\" tags, the links will not work properly.)",
+            aTag_hrefExclude: "Do not replace \"a\" tag links.",
+            aTag_hrefOnly: "Only replace links in \"a\" tags.",
+            aTag_all: "Replace all"
+        },
+        DB_elementBlock: {
+            URL_title: "URL",
+            URL_description: "Specify the sites for which you want to enable this rule.",
+            URL_wildcard: "Wildcard(*)",
+            URL_regexp: "RegExp",
+            URL_BLT: "BlockListText",
+            css: "CSS",
+            XPath: "XPath",
+            elementPicker: "Element Picker(Beta)",
+            elementPicker_message: "After pressing the OK button, click on the element.",
+            eleHide_title: "Hidden elements",
+            eleHide_description: "Specify the elements to be hidden using the CSS method [querySelectorAll] or XPath method [document.evaluate].",
+            eleHide_displayNone: "Hiding Hidden elements with CSS",
+            eleHide_remove: "Remove an Hidden elements",
+            eleSearch_title: "Search elements",
+            eleSearch_description: "Specify the elements to be searched for in order to hide them using the CSS method [querySelectorAll] or XPath method [document.evaluate]. If you leave the field blank, the hidden element will be unconditionally hidden.",
+            eleSearch_firstOnly: "If more than one element is found, search only the first element found.",
+            eleSearch_methodText: "Search the text of an element",
+            eleSearch_methodHref: "Search for links in elements (only if the search element is an [a] tag element).",
+            eleSearch_methodStyle: "Search the CSS of an element (Advanced)",
+            eleSearch_methodAdvanced: "Specifying element properties directly (Advanced)",
+            BLT_title: "BlockListText",
+            BLT_description: "Specify the BlockListText to be used. holding down the Ctrl key (Command key on Mac) while clicking to specify multiple text.",
+            BLT_exclude: "Please select from the list below if you want to use the exclusion settings. (Can be more than one)",
+            uBlacklist_title: "Types to enable when using uBlacklist",
+            uBlacklist_description: "Specifies the type to be enabled when using uBlacklist.",
+            uBlacklist_urlOnly: "URL match patterns and URL RegExp (Only valid if the value to be searched is a URL.)",
+            uBlacklist_titleOnly: "Only text in \"title/\"",
+            uBlacklist_all: "Use all types",
+            resultShow_title: "Display the Block Apply list",
+            resultShow_description: "Select how you want to view the block results on the top page of the dashboard.",
+            resultShow_none: "Hide",
+            resultShow_number: "Display by number",
+            resultShow_property: "Display the value of a property of a search element."
+        },
+        elementPicker: {
+            thisElement: "This Element"
+        },
+        DB_preference: {
+            importAndExport_title: "Export & Import",
+            importAndExport_description: "Exports or imports the settings.",
+            importAndExport_button: "Export & Import",
+            performanceConfig_title: "Performance settings",
+            performanceConfig_description: "Configure performance-related settings such as the operation interval of the Extensions.",
+            performanceConfig_button: "Performance settings",
+            buttonHide_title: "Always hide the top right button.",
+            buttonHide_description: "Always hide the button in the upper right corner. You can access the dashboard from the UserScript Manager menu screen even after hiding it.",
+            buttonHide_boxText: "Hide the button",
+            buttonHide_warning: "The menu API was not detected. If you hide it, you can access the dashboard only from \"" + safeModeURL + "\" . Are you sure you want to hide it?",
+            nowLoadSet_title: "Apply settings immediately(Beta)",
+            nowLoadSet_description: "Normally, the settings will be applied after reloading, but if you check this checkbox, the settings will be applied immediately.",
+            nowLoadSet_boxText: "Apply settings immediately",
+            fetchInterval_title: "Interval to get from URL",
+            fetchInterval_Description: "Sets the update interval when retrieving text from URL in BlockListText.",
+            fetchInterval_300000: "5 min",
+            fetchInterval_900000: "15 min",
+            fetchInterval_1800000: "30 min",
+            fetchInterval_3600000: "1 hour",
+            fetchInterval_7200000: "2 hour",
+            fetchInterval_18000000: "5 hour",
+            dashboardColor_title: "Dashboard background color",
+            dashboardColor_Description: "Specifies the color of the background color for the entire dashboard screen.",
+            dashboardColor_red: "Red",
+            dashboardColor_yellow: "Yellow",
+            dashboardColor_green: "Green",
+            dashboardColor_blue: "Blue",
+            language_title: "Dashboard language",
+            language_Description: "Specifies the display language of the dashboard screen. This will take effect after the page reload.",
+            language_en: "English",
+            language_ja_jp: "日本語"
+        },
+        DB_exportImport: {
+            export_title: "Export",
+            export_file: "Export as JSON file",
+            export_copy: "Copy to clipboard in JSON format",
+            export_textArea: "Export to textarea (JSON format)",
+            export_success: "Exported.",
+            import_title: "Import",
+            import_file: "Importing from JSON files",
+            import_textArea: "Import from textarea (JSON format)",
+            import_addImport: "Add and import the settings without overwriting them. (Preferences will not be changed.)",
+            import_success: "Imported.",
+            import_overWrite: "All current settings will be overwritten with the imported data. Are you sure?",
+            import_addImportConfirm: "Add import settings to the current settings. Are you sure?",
+            textArea_title: "text area",
+            error_export: "error: Export failed. Please refer to the console log for details.",
+            error_import: "error: Import failed, the JSON file (text) may be corrupted. Please refer to the console log for error details."
+        },
+        DB_performanceConfig: {
+            disable: "Disable",
+            blockPriority: "Block priority",
+            balance: "Balance",
+            performancePriority1: "Performance priority (Config1)",
+            performancePriority2: "Performance priority (Config2)",
+            mode_title: "Mode setting",
+            mode_description1: "Sets the mode setting for the operation interval.",
+            mode_description2: "If you set block priority, the blocking action will be taken as soon as there is a change in the page, but it may slow down the browser.",
+            mode_description3: "When you select the performance priority mode, the system will block at regular intervals to lighten the load, but there is a possibility that the blocking elements will appear momentarily.",
+            mode_description4: "If you select balanced, the page will be displayed and run with performance priority until it finishes loading, and then run with block priority after it finishes loading.",
+            interval_title: "operating interval",
+            interval_description1: "Sets the operation interval when performance priority mode or balanced mode is selected.",
+            interval_description2: "The operation interval can be set in millimeter increments. (1sec = 1000millisec)",
+            interval_description3: "The larger the value, the lighter the operation becomes, but the block processing will be delayed.",
+            overRide_title: "Site Specific Settings",
+            overRide_description1: "You can override the mode of operation with a matching site in the BlockListText.",
+            overRide_description2: "If URLs are matched in multiple settings, the top item displayed in this settings section will take precedence.",
+            save: "Save",
+            saveInfo: "Saveed."
+        }
+    }
 
     const localeText_ja_jp = {
         OKButton: "OK",
@@ -239,200 +429,6 @@
         }
     }
 
-    const localeText_en = {
-        OKButton: "OK",
-        cancelButton: "Cancel",
-        backButton: "←Back",
-        DB_blockResult: {
-            sentenceBlock: "SentenceBlock Apply list",
-            sentenceBlock_tempDisableButton: "Apply temporary disable and then reload.",
-            elementBlock: "ElementBlock Apply list",
-            elementBlock_Countcase: "Case",
-            settingPageButton: "Settings page",
-            reDisplay: "Redisplay",
-            copy: "Copy properties"
-        },
-        DB_settingsTop: {
-            blockListText_title: "BlockListText",
-            blockListText_description: "You can set the text, URL, etc. to be blocked for each group.",
-            blockListText_button: "BlockListText Config",
-            sentenceBlock_title: "SentenceBlock",
-            sentenceBlock_description: "If a BlockListText is included in a Web sentence, it will replace that one sentence or word with another character.",
-            sentenceBlock_button: "SentenceBlock Config",
-            elementBlock_title: "ElementBlock",
-            elementBlock_description: "If an element's characters or properties contain BlockListText, the entire element will be blocked.",
-            elementBlock_button: "ElementBlock Config",
-            preferences_title: "Preferences",
-            preferences_description: "Configure the entire Extensions settings.",
-            preferences_button: "Preferences Config"
-        },
-        listEdit_Func: {
-            name: "Name:",
-            sort: "SortIndex:",
-            enable: "Enable:",
-            config: "Settings editing:",
-            config_button: "Settings editing",
-            new: "New",
-            delete: "Delete",
-            save: "Save",
-            editFlag_back: "You will be returned to the Top Settings page. The information currently entered will be lost, are you sure?",
-            editFlag_new: "Do you want to create a new one? The currently entered information will be lost.",
-            editFlag_change: "Do you want to change the configuration field? The currently entered information will be lost.",
-            deleteConfirm: "Are you sure you want to delete the settings?",
-            error_nameEmpty: "error: Please enter your name.",
-            error_nameDuplication: "error: The same name already exists."
-        },
-        DB_blockListText: {
-            blockListText_title: "BlockListText",
-            blockListText_URLoverWrite: "The BlockListText will be automatically overwritten because it is set to be retrieved from the URL.",
-            blockListText_show: "Show Text",
-            textFile_title: "Load a text file",
-            textFile_overWrite: "The currently entered BlockListText will be overwritten by the text in the file. Are you sure?",
-            URLget_title: "Get from URL",
-            URLget_enable: "Enable",
-            option_title: "Option",
-            option_regexp: "RegExp",
-            option_caseSensitive: "Case Sensitive",
-            option_exact: "Exact",
-            option_spaceIgnore: "Ignore white space",
-            option_notSearch: "Do a NOT search",
-            option_uBlacklist: "Use uBlacklist Format (Beta)"
-        },
-        DB_sentenceBlock: {
-            URL_title: "URL",
-            URL_description: "Specify the sites for which you want to enable this rule. If you leave this field blank, all sites will be included.",
-            URL_wildcard: "Wildcard(*)",
-            URL_regexp: "RegExp",
-            URL_BLT: "BlockListText",
-            BLT_title: "BlockListText",
-            BLT_description: "Specify the BlockListText to be used. holding down the Ctrl key (Command key on Mac) while clicking to specify multiple text.",
-            BLT_exclude: "Please select from the list below if you want to use the exclusion settings. (Can be more than one)",
-            replace_title: "Replace string",
-            replace_description: "Enter the string to be replaced.",
-            replace_sentence: "replace with a single sentence",
-            replace_word: "Replace with a word",
-            aTag_title: "Link replacement for \"a\" tag",
-            aTag_description: "Set whether to replace the \"a\" tag link.(If you replace links in \"a\" tags, the links will not work properly.)",
-            aTag_hrefExclude: "Do not replace \"a\" tag links.",
-            aTag_hrefOnly: "Only replace links in \"a\" tags.",
-            aTag_all: "Replace all"
-        },
-        DB_elementBlock: {
-            URL_title: "URL",
-            URL_description: "Specify the sites for which you want to enable this rule.",
-            URL_wildcard: "Wildcard(*)",
-            URL_regexp: "RegExp",
-            URL_BLT: "BlockListText",
-            css: "CSS",
-            XPath: "XPath",
-            elementPicker: "Element Picker(Beta)",
-            elementPicker_message: "After pressing the OK button, click on the element.",
-            eleHide_title: "Hidden elements",
-            eleHide_description: "Specify the elements to be hidden using the CSS method [querySelectorAll] or XPath method [document.evaluate].",
-            eleHide_displayNone: "Hiding Hidden elements with CSS",
-            eleHide_remove: "Remove an Hidden elements",
-            eleSearch_title: "Search elements",
-            eleSearch_description: "Specify the elements to be searched for in order to hide them using the CSS method [querySelectorAll] or XPath method [document.evaluate]. If you leave the field blank, the hidden element will be unconditionally hidden.",
-            eleSearch_firstOnly: "If more than one element is found, search only the first element found.",
-            eleSearch_methodText: "Search the text of an element",
-            eleSearch_methodHref: "Search for links in elements (only if the search element is an [a] tag element).",
-            eleSearch_methodStyle: "Search the CSS of an element (Advanced)",
-            eleSearch_methodAdvanced: "Specifying element properties directly (Advanced)",
-            BLT_title: "BlockListText",
-            BLT_description: "Specify the BlockListText to be used. holding down the Ctrl key (Command key on Mac) while clicking to specify multiple text.",
-            BLT_exclude: "Please select from the list below if you want to use the exclusion settings. (Can be more than one)",
-            uBlacklist_title: "Types to enable when using uBlacklist",
-            uBlacklist_description: "Specifies the type to be enabled when using uBlacklist.",
-            uBlacklist_urlOnly: "URL match patterns and URL RegExp (Only valid if the value to be searched is a URL.)",
-            uBlacklist_titleOnly: "Only text in \"title/\"",
-            uBlacklist_all: "Use all types",
-            resultShow_title: "Display the Block Apply list",
-            resultShow_description: "Select how you want to view the block results on the top page of the dashboard.",
-            resultShow_none: "Hide",
-            resultShow_number: "Display by number",
-            resultShow_property: "Display the value of a property of a search element."
-        },
-        elementPicker: {
-            thisElement: "This Element"
-        },
-        DB_preference: {
-            importAndExport_title: "Export & Import",
-            importAndExport_description: "Exports or imports the settings.",
-            importAndExport_button: "Export & Import",
-            performanceConfig_title: "Performance settings",
-            performanceConfig_description: "Configure performance-related settings such as the operation interval of the Extensions.",
-            performanceConfig_button: "Performance settings",
-            buttonHide_title: "Always hide the top right button.",
-            buttonHide_description: "Always hide the button in the upper right corner. You can access the dashboard from the UserScript Manager menu screen even after hiding it.",
-            buttonHide_boxText: "Hide the button",
-            buttonHide_warning: "The menu API was not detected. If you hide it, you can access the dashboard only from \"" + safeModeURL + "\" . Are you sure you want to hide it?",
-            nowLoadSet_title: "Apply settings immediately(Beta)",
-            nowLoadSet_description: "Normally, the settings will be applied after reloading, but if you check this checkbox, the settings will be applied immediately.",
-            nowLoadSet_boxText: "Apply settings immediately",
-            fetchInterval_title: "Interval to get from URL",
-            fetchInterval_Description: "Sets the update interval when retrieving text from URL in BlockListText.",
-            fetchInterval_300000: "5 min",
-            fetchInterval_900000: "15 min",
-            fetchInterval_1800000: "30 min",
-            fetchInterval_3600000: "1 hour",
-            fetchInterval_7200000: "2 hour",
-            fetchInterval_18000000: "5 hour",
-            dashboardColor_title: "Dashboard background color",
-            dashboardColor_Description: "Specifies the color of the background color for the entire dashboard screen.",
-            dashboardColor_red: "Red",
-            dashboardColor_yellow: "Yellow",
-            dashboardColor_green: "Green",
-            dashboardColor_blue: "Blue",
-            language_title: "Dashboard language",
-            language_Description: "Specifies the display language of the dashboard screen. This will take effect after the page reload.",
-            language_en: "English",
-            language_ja_jp: "日本語"
-        },
-        DB_exportImport: {
-            export_title: "Export",
-            export_file: "Export as JSON file",
-            export_copy: "Copy to clipboard in JSON format",
-            export_textArea: "Export to textarea (JSON format)",
-            export_success: "Exported.",
-            import_title: "Import",
-            import_file: "Importing from JSON files",
-            import_textArea: "Import from textarea (JSON format)",
-            import_addImport: "Add and import the settings without overwriting them. (Preferences will not be changed.)",
-            import_success: "Imported.",
-            import_overWrite: "All current settings will be overwritten with the imported data. Are you sure?",
-            import_addImportConfirm: "Add import settings to the current settings. Are you sure?",
-            textArea_title: "text area",
-            error_export: "error: Export failed. Please refer to the console log for details.",
-            error_import: "error: Import failed, the JSON file (text) may be corrupted. Please refer to the console log for error details."
-        },
-        DB_performanceConfig: {
-            disable: "Disable",
-            blockPriority: "Block priority",
-            balance: "Balance",
-            performancePriority1: "Performance priority (Config1)",
-            performancePriority2: "Performance priority (Config2)",
-            mode_title: "Mode setting",
-            mode_description1: "Sets the mode setting for the operation interval.",
-            mode_description2: "If you set block priority, the blocking action will be taken as soon as there is a change in the page, but it may slow down the browser.",
-            mode_description3: "When you select the performance priority mode, the system will block at regular intervals to lighten the load, but there is a possibility that the blocking elements will appear momentarily.",
-            mode_description4: "If you select balanced, the page will be displayed and run with performance priority until it finishes loading, and then run with block priority after it finishes loading.",
-            interval_title: "operating interval",
-            interval_description1: "Sets the operation interval when performance priority mode or balanced mode is selected.",
-            interval_description2: "The operation interval can be set in millimeter increments. (1sec = 1000millisec)",
-            interval_description3: "The larger the value, the lighter the operation becomes, but the block processing will be delayed.",
-            overRide_title: "Site Specific Settings",
-            overRide_description1: "You can override the mode of operation with a matching site in the BlockListText.",
-            overRide_description2: "If URLs are matched in multiple settings, the top item displayed in this settings section will take precedence.",
-            save: "Save",
-            saveInfo: "Saveed."
-        }
-    }
-
-
-
-
-
-
 
     class storageAPI {
         constructor() { }
@@ -572,7 +568,7 @@
         } else {
             let languageCode = "en";
             const langCodeTemp = navigator.languages[0];
-            if (langCodeTemp == "ja") {
+            if (langCodeTemp == "ja" | "ja-jp") {
                 languageCode = "ja-jp";
             }
             PreferenceSettingStorage = {
@@ -1806,6 +1802,10 @@
     border: 1px solid black;
     box-shadow: 0 0 10px;
   }
+  div#PopupMessageBox p {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
   div#PopupBack button {
     float: right;
     margin: 5px;
@@ -1887,14 +1887,14 @@
                 this.li_EleSelect_BGColorTemp;
                 this.mode;
 
-                this.flameElement_Ele;
-                this.overlay_PositionFixed_Ele;
-                this.picker_text_Ele;
-                this.picker_button_ELe;
-                this.OK_Ele;
-                this.cancel_Ele;
-                this.ul_ELe;
-                this.li_EleSelect_Ele;
+                this.flameElement_Ele = null;
+                this.overlay_PositionFixed_Ele = null;
+                this.picker_text_Ele = null;
+                this.picker_button_ELe = null;
+                this.OK_Ele = null;
+                this.cancel_Ele = null;
+                this.ul_ELe = null;
+                this.li_EleSelect_Ele = null;
             }
 
             async init() {
@@ -2538,6 +2538,9 @@
                 this.name_Ele = null;
                 this.index_Ele = null;
                 this.enable_Ele = null;
+                this.NewObjectButton_Ele = null;
+                this.DelButton_Ele = null;
+                this.SaveButton_Ele = null;
                 this.li_cfuncArgTemp = new Array();
                 this.li_cfunchandlers = new Array();
                 this.li_cfuncinfunction = new Function();
@@ -2548,9 +2551,9 @@
                 this.currentIndex = null;
                 this.Editflag = false;
 
-                this.SaveButtonFunc = new Function();
-                this.DelButtonFunc = new Function();
                 this.NewObjectButtonFunc = new Function();
+                this.DelButtonFunc = new Function();
+                this.SaveButtonFunc = new Function();
 
                 this.ListEditPage_Ele = null;
                 this.EditConfigPage_Ele = null
@@ -2637,8 +2640,8 @@
   <div id="SettingsObject_ActionButton">
     <button id="SettingsObject_ActionButton_Back"></button>
     <button id="SettingsObject_ActionButton_NewObject"></button>
-    <button id="SettingsObject_ActionButton_DeleteObject"></button>
-    <button id="SettingsObject_ActionButton_SaveObject"></button>
+    <button id="SettingsObject_ActionButton_DeleteObject" disabled></button>
+    <button id="SettingsObject_ActionButton_SaveObject" disabled></button>
   </div>
 </div>
                 `;
@@ -2659,6 +2662,9 @@
                 this.name_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Name_Form");
                 this.index_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Sort_Form");
                 this.enable_Ele = RootShadow.getElementById("SettingsObject_ConfigItems_Enable_Form");
+                this.NewObjectButton_Ele = RootShadow.getElementById("SettingsObject_ActionButton_NewObject");
+                this.DelButton_Ele = RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject");
+                this.SaveButton_Ele = RootShadow.getElementById("SettingsObject_ActionButton_SaveObject");
 
                 for (let i = 0; i < this.ListStorage.length; i++) {
                     await this.li_Add(i);
@@ -2698,9 +2704,10 @@
                     ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
                     DashboardMain_div.scroll({ top: 0 });
                 }, false);
-                RootShadow.getElementById("SettingsObject_ActionButton_NewObject").addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
-                RootShadow.getElementById("SettingsObject_ActionButton_DeleteObject").addEventListener("click", async () => await this.DelButtonFunc(), false);
-                RootShadow.getElementById("SettingsObject_ActionButton_SaveObject").addEventListener("click", async () => await this.SaveButtonFunc(), false);
+
+                this.NewObjectButton_Ele.addEventListener("click", async (evt) => await this.NewObjectButtonFunc(evt.target), false);
+                this.DelButton_Ele.addEventListener("click", async () => await this.DelButtonFunc(), false);
+                this.SaveButton_Ele.addEventListener("click", async () => await this.SaveButtonFunc(), false);
             }
 
             async ListStoSave(StoKey, StoObj) {
@@ -2734,6 +2741,8 @@
                 }
                 this.li_Add(this.index_Ele.value);
                 this.editarea_Ele.style.display = "none";
+                this.DelButton_Ele.disabled = true;
+                this.SaveButton_Ele.disabled = true;
                 this.Editflag = false;
 
                 return true;
@@ -2751,6 +2760,8 @@
                     this.ListStorage.splice(fiindex, 1);
                     await storageAPI.write(StoKey, JSON.stringify(this.ListStorage));
                     this.editarea_Ele.style.display = "none";
+                    this.DelButton_Ele.disabled = true;
+                    this.SaveButton_Ele.disabled = true;
                     this.Editflag = false;
                     return true;
                 } else {
@@ -2770,6 +2781,8 @@
                 this.index_Ele.lastChild.style.display = "";
                 this.index_Ele.selectedIndex = this.ListStorage.length;
                 this.li_EleSelect(NewbuttonEle);
+                this.DelButton_Ele.disabled = true;
+                this.SaveButton_Ele.disabled = false;
                 this.Editflag = false;
                 return true;
             }
@@ -2818,6 +2831,8 @@
                 this.currentEle_li_BGColorTemp = Ele.style.backgroundColor;
                 Ele.style.backgroundColor = "lightskyblue";
                 this.editarea_Ele.style.display = "";
+                this.DelButton_Ele.disabled = false;
+                this.SaveButton_Ele.disabled = false;
             }
 
             async SelectOption_Add() {
@@ -3333,11 +3348,11 @@
     <p id="SentenceBlockConfig3_Description"></p>
     <input id="SentenceBlockConfig3_InputText" type="text" spellcheck="false" />
     <form id="SentenceBlockConfig3_Form">
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="replace_mode" value="sentence" checked />
         <span id="SentenceBlockConfig3_Form_Input1_SpanText"></span>
       </label>
-      <label>
+      <label class="SentenceBlock_Label">
         <input type="radio" name="replace_mode" value="word" />
         <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
       </label>
@@ -4297,6 +4312,9 @@
   }
   #ExportAndImportPage p {
     margin: 0;
+  }
+  #ExportAndImportPage button {
+    display: block;
   }
   textarea#ExportAndImportConfig3_Textarea {
     font-size: 16px;
