@@ -33,7 +33,7 @@
     let observerInterval = 0;
     let dateInterval = Date.now();
 
-    const safeModeURL = "https://www.example.com/"
+    const safeModeURL = "https://www.example.com/";
 
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
@@ -588,7 +588,7 @@
                 fetchInterval: 3600000,
                 dashboardColor: "#FFFFB2",
                 language: languageCode
-            };
+            }
             await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
         }
 
@@ -608,7 +608,7 @@
                 globalFetchTime: Date.now(),
                 fetchRetryIntervalTime: Date.now(),
                 retryFlag: false
-            };
+            }
             await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
         }
     }
@@ -726,7 +726,7 @@
                         }
                         if (urlhitarray.some(RegExp.prototype.test, new RegExp(pathSimpleSeatch_regexp))) return true;
 
-                        const pathWildcardSearch_regexp = "^[^/]*/.*(?=[^/]*\\*[^/]+(/|$)|[^/]+\\*[^/]*(/|$)).*"
+                        const pathWildcardSearch_regexp = "^[^/]*/.*(?=[^/]*\\*[^/]+(/|$)|[^/]+\\*[^/]*(/|$)).*";
                         const pathWildcardSearch_Result = urlhitarray.filter(RegExp.prototype.test, new RegExp(pathWildcardSearch_regexp));
                         return pathWildcardSearch_Result.some((str) => {
                             str = str.replace(/^[^/]*(\/.*)$/g, "$1");
@@ -904,7 +904,7 @@
                             if (searchResult === null) return;
                             searchResult.forEach((hitText) => {
                                 hitArray.push(hitText);
-                            })
+                            });
                         });
                     } else {
                         if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
@@ -934,7 +934,7 @@
                                 if (this.BlockListText_loadObj[BLT_name].regexp) {
                                     reHittext = new RegExp(this.escapeRegExp(reHittext), regexpFlag);
                                 }
-                                rehitArray.push(reHittext)
+                                rehitArray.push(reHittext);
                             });
                         });
                     }
@@ -1217,7 +1217,7 @@
                     try {
                         firstblockflag = ElementBlock_executeResultList[eleBlockSet.name].some((arr) => {
                             return arr.element === elementObj;
-                        })
+                        });
                     } catch (e) {
                         firstblockflag = false;
                     }
@@ -1429,7 +1429,7 @@
                 characterDataOldValue: false,
                 childList: true,
                 subtree: true
-            })
+            });
         }
     }
 
@@ -1515,7 +1515,7 @@
     if (location.href != safeModeURL) {
         const BG_perModeObj = new BG_performanceMode;
         await BG_perModeObj.init();
-        const globalFetchTimeDiff = Date.now() - fetchGlobalFlagStorage.globalFetchTime
+        const globalFetchTimeDiff = Date.now() - fetchGlobalFlagStorage.globalFetchTime;
         const fetchRetryIntervalTimeDiff = Date.now() - fetchGlobalFlagStorage.fetchRetryIntervalTime;
         if (globalFetchTimeDiff >= PreferenceSettingStorage.fetchInterval) {
             fetchGlobalFlagStorage.globalFetchTime = Date.now();
@@ -1616,7 +1616,7 @@
                     characterDataOldValue: false,
                     childList: true,
                     subtree: true
-                })
+                });
             }
 
         } else {
@@ -2025,7 +2025,7 @@
         </div>
     </div>
 </div>
-    `;
+                `;
                 RootShadow.append(this.flameElement_Ele);
 
                 this.overlay_PositionFixed_Ele = RootShadow.getElementById("ElementPicker_PositionFixed");
@@ -2415,7 +2415,7 @@
                     if (ele.checked) {
                         tempDisable.push(ele.name);
                     }
-                })
+                });
                 await storageAPI.write("SentenceBlock_TempDisable", JSON.stringify(tempDisable));
                 location.reload();
             }, false);
@@ -2451,7 +2451,7 @@
                             div_button1.textContent = localeText.DB_blockResult.reDisplay;
                             div_button1.addEventListener("click", () => {
                                 arr.element.style.display = "";
-                            })
+                            });
                             div.append(div_button1);
                         }
 
@@ -2577,7 +2577,7 @@
                 this.SaveButtonFunc = new Function();
 
                 this.ListEditPage_Ele = null;
-                this.EditConfigPage_Ele = null
+                this.EditConfigPage_Ele = null;
             }
 
             async init() {
@@ -2955,6 +2955,10 @@
         height: calc(100% - 110px);
     }
 
+    button#BlockListText_Textarea_Disable_ShowButton {
+        display: block;
+    }
+
     textarea#BlockListText_Textarea {
         font-size: 16px;
         font-family: Arial;
@@ -3024,7 +3028,7 @@
         <button id="BlockListText_BackButton"></button>
     </div>
 </div>
-            `;
+                    `;
                     DashboardMain_div.append(this.EditConfigPage_Ele);
                     Dashboard_Window_Ele_stack.push(this.EditConfigPage_Ele);
 
@@ -4175,8 +4179,8 @@
                         try {
                             const importset = JSON.parse(importjson);
                             const BlockListTextTemp = JSON.parse(importset.BlockListText);
-                            const SentenceBlockTemp = JSON.parse(importset.SentenceBlock)
-                            const ElementBlockTemp = JSON.parse(importset.ElementBlock)
+                            const SentenceBlockTemp = JSON.parse(importset.SentenceBlock);
+                            const ElementBlockTemp = JSON.parse(importset.ElementBlock);
                             const nameDuplicateRename = (name, currentSetting, newSetting) => {
                                 let nameDuplicate_Name = name;
                                 let nameDuplicate_loopFlag = false;
