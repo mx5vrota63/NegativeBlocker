@@ -2287,14 +2287,14 @@
                     if (el.id && !firstFlag) {
                         names.unshift('#' + el.id);
                         break;
+                    }
+                    else if (className) {
+                        names.unshift(el.tagName.toLowerCase() + "." + className.split(" ").join("."));
+                        break;
                     } else {
                         if (el == el.ownerDocument.documentElement) names.unshift(el.tagName.toLowerCase());
                         else if (firstFlag) {
-                            if (className) {
-                                names.unshift(el.tagName.toLowerCase() + "." + className.split(" ").join("."));
-                            } else {
-                                names.unshift(el.tagName.toLowerCase());
-                            }
+                            names.unshift(el.tagName.toLowerCase());
                         }
                         else {
                             let nthChildCount = 1;
@@ -2594,7 +2594,7 @@
 
     div#ObjectLists_Frame {
         width: auto;
-        height: calc(100% - 154px);
+        height: calc(100% - 160px);
         overflow: auto;
         border: 2px solid black;
     }
@@ -2617,12 +2617,16 @@
         word-break: break-all;
     }
 
-    div#SettingsObject_ConfigItems_Name {
-        display: flex;
+    div#SettingsObject_ConfigItems {
+        margin: 0 13px 0 0;
     }
 
     div#SettingsObject_ConfigItems div {
-        margin: 2px 0 2px 0;
+        margin: 2px 0 4px 0;
+    }
+
+    div#SettingsObject_ConfigItems_Name {
+        display: flex;
     }
 
     input#SettingsObject_ConfigItems_Name_Form {
@@ -2955,8 +2959,7 @@
         font-size: 16px;
         font-family: Arial;
         resize: none;
-        margin-left: -10px;
-        width: calc(100% + 20px);
+        width: 100%;
         height: 100%;
         box-sizing: border-box;
     }
