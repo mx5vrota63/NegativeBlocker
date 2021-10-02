@@ -1,9 +1,12 @@
 // ==UserScript==
 // @name           NegativeBlocker
-// @namespace      mx5vrota63
-// @version        0.1.0
-// @description    Use the configured negative word or url to replace the sentence or block the element.
-// @description:ja 設定した ネガティブワード または URL を使用して、文章を置換えたり、要素をブロックします。
+// @namespace      https://github.com/mx5vrota63/NegativeBlocker
+// @version        1.0.0
+// @description    Blocks information on the Web based on the negative and sensitive words you set.
+// @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
+// @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
+// @downloadURL    https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js
+// @updateURL      https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js
 // @author         mx5vrota63
 // @match          *://*/*
 // @run-at         document-start
@@ -57,7 +60,7 @@
         backButton: "←Back",
         DB_blockResult: {
             sentenceBlock: "SentenceBlock Apply list",
-            sentenceBlock_tempDisableButton: "Apply temporary disable and then reload.",
+            sentenceBlock_tempDisableButton: "Apply temporary disable and then reload",
             elementBlock: "ElementBlock Apply list",
             elementBlock_Countcase: "Case",
             settingPageButton: "Settings page",
@@ -107,7 +110,7 @@
             option_caseSensitive: "Case Sensitive",
             option_exact: "Exact",
             option_spaceIgnore: "Ignore white space",
-            option_notSearch: "Do a NOT search",
+            option_notSearch: "NOT(Invert) search",
             option_uBlacklist: "Use uBlacklist Format (Beta)"
         },
         DB_sentenceBlock: {
@@ -296,7 +299,7 @@
             option_caseSensitive: "大文字と小文字を区別する",
             option_exact: "完全一致",
             option_spaceIgnore: "空白スペースを無視する",
-            option_notSearch: "NOT検索をする",
+            option_notSearch: "NOT(反転)検索をする",
             option_uBlacklist: "uBlacklist形式を使用する(Beta)"
         },
         DB_sentenceBlock: {
@@ -567,8 +570,8 @@
             PreferenceSettingStorage = JSON.parse(PreferenceSettingStorage);
         } else {
             let languageCode = "en";
-            const langCodeTemp = navigator.languages[0];
-            if (langCodeTemp == "ja" | "ja-jp") {
+            const langCodeTemp = navigator.languages[0].toLowerCase();
+            if (langCodeTemp == "ja" || langCodeTemp == "ja-jp") {
                 languageCode = "ja-jp";
             }
             PreferenceSettingStorage = {
@@ -890,7 +893,7 @@
 
         async BlockListTextSearch(BLT_name, sourceText, uBlacklistMode) {
             let hitTextReturn = new Array();
-            if (sourceText == null | undefined) return new Array();
+            if (sourceText == null || sourceText == undefined) return new Array();
             if (this.BlockListText_loadObj[BLT_name]) {
                 if (this.BlockListText_loadObj[BLT_name].uBlacklist) {
                     hitTextReturn = await this.uBlacklistFormatSearch(this.BlockListText_loadObj[BLT_name].text, sourceText, uBlacklistMode);
