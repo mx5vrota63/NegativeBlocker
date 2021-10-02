@@ -87,7 +87,7 @@
             new: "New",
             delete: "Delete",
             save: "Save",
-            editFlag_back: "You will be returned to the Top Settings page. The information currently entered will be lost, are you sure?",
+            editFlag_back: "You will be returned to the Top Settings page. The information currently entered will be lost.",
             editFlag_new: "Do you want to create a new one? The currently entered information will be lost.",
             editFlag_change: "Do you want to change the configuration field? The currently entered information will be lost.",
             deleteConfirm: "Are you sure you want to delete the settings?",
@@ -99,7 +99,7 @@
             blockListText_URLoverWrite: "The BlockListText will be automatically overwritten because it is set to be retrieved from the URL.",
             blockListText_show: "Show Text",
             textFile_title: "Load a text file",
-            textFile_overWrite: "The currently entered BlockListText will be overwritten by the text in the file. Are you sure?",
+            textFile_overWrite: "The currently entered BlockListText will be overwritten by the text in the file.",
             URLget_title: "Get from URL",
             URLget_enable: "Enable",
             option_title: "Option",
@@ -1642,6 +1642,10 @@
         position: fixed;
         top: 0;
         right: 1px;
+        width: calc(100vw - 7px);
+        max-width: 407px;
+        height: calc(100vh - 20px);
+        max-height: 650px;
         z-index: 2147483647;
         padding: 1px 2px;
         background-color: #ffffff;
@@ -1649,7 +1653,6 @@
         border-radius: 10px;
         text-align: center;
         margin: 0em auto;
-        height: calc(100vh - 150px);
         color: #000000;
         font-size: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
@@ -1711,13 +1714,13 @@
     }
 
     div#DashboardMain input[type="text"] {
-        width: 100%;
+        width: calc(100% - 10px);
         height: 26px;
         box-sizing: border-box;
     }
 
     div#DashboardMain input[type="number"] {
-        width: 100%;
+        width: calc(100% - 10px);
         height: 26px;
         box-sizing: border-box;
     }
@@ -1758,33 +1761,15 @@
             RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", "#ffffb2");
         }
 
-        function DashboardFrameBackWidthLimit() {
-            const DashboardFrameBack = RootShadow.getElementById("FrameBack");
-            if (window.innerWidth <= 407) {
-                DashboardFrameBack.style.width = "calc(100vw - 7px)";
-            } else {
-                DashboardFrameBack.style.width = "400px";
-            }
-            if (window.innerHeight <= 650) {
-                DashboardFrameBack.style.height = "calc(100vh - 20px)";
-            } else {
-                DashboardFrameBack.style.height = "630px";
-            }
-        }
-        DashboardFrameBackWidthLimit();
-        window.addEventListener("resize", DashboardFrameBackWidthLimit);
-
         RootShadow.getElementById("FrameBackHeaderButton1").addEventListener("click", () => {
             Dashboard_Element.remove();
             Dashboard_Element = null;
-            window.removeEventListener("resize", DashboardFrameBackWidthLimit);
             if (DashboardButtonEle) DashboardButtonEle.style.display = "";
         })
 
         RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
             Dashboard_Element.remove();
             Dashboard_Element = null;
-            window.removeEventListener("resize", DashboardFrameBackWidthLimit);
             if (DashboardButtonEle) DashboardButtonEle.remove();
         })
 
@@ -2594,7 +2579,7 @@
 
     div#ObjectLists_Frame {
         width: auto;
-        height: calc(100% - 160px);
+        height: calc(100% - 162px);
         overflow: auto;
         border: 2px solid black;
     }
@@ -2618,7 +2603,7 @@
     }
 
     div#SettingsObject_ConfigItems {
-        margin: 0 13px 0 0;
+        margin: 0 23px 0 0;
     }
 
     div#SettingsObject_ConfigItems div {
@@ -2963,7 +2948,7 @@
         font-size: 16px;
         font-family: Arial;
         resize: none;
-        width: 100%;
+        width: calc(100% - 10px);
         height: 100%;
         box-sizing: border-box;
     }
@@ -4192,7 +4177,16 @@
                                 do {
                                     nameDuplicate_loopFlag = false;
                                     const dupCheckCurrent = currentSetting.some(currentSetObj => nameDuplicate_Name == currentSetObj.name);
-                                    const dupCheckNew = newSetting.some(currentSetObj => nameDuplicate_Name == currentSetObj.name);
+
+                                    const fiindex = newSetting.findIndex(newSetObj => newSetObj.name == name);
+                                    let dupcheckNewTemp;
+                                    if (fiindex !== -1) {
+                                        dupcheckNewTemp = newSetting.filter(newSetObj => newSetObj != newSetting[fiindex]);
+                                    } else {
+                                        dupcheckNewTemp = newSetting;
+                                    }
+                                    const dupCheckNew = dupcheckNewTemp.some(newSetObj => newSetObj.name == nameDuplicate_Name);
+
                                     if (dupCheckCurrent || dupCheckNew) {
                                         nameDuplicate_loopFlag = true;
                                         nameDuplicate_renameNumber++;
@@ -4319,7 +4313,7 @@
         font-size: 16px;
         font-family: Arial;
         resize: none;
-        width: 100%;
+        width: calc(100% - 10px);
         height: 300px;
         box-sizing: border-box;
     }
@@ -4382,7 +4376,7 @@
                     const setJSON = await DB_ExportImport_JSONFormat("export");
                     if (setJSON) {
                         const d = new Date();
-                        const filename = "NagativeBlockerBackup_" + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "_" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + ".json";
+                        const filename = "NegativeBlockerBackup_" + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "_" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + ".json";
 
                         const blob = new Blob([setJSON], { type: 'text/plain' });
                         const a = document.createElement("a");
