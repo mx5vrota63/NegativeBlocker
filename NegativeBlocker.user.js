@@ -438,7 +438,6 @@
         static async read(keyName) {
             let StorageValue = undefined;
             try {
-                // eslint-disable-next-line no-undef
                 StorageValue = await GM.getValue(keyName);
             } catch (e) {
                 console.error(e);
@@ -448,7 +447,6 @@
         }
         static async write(keyName, setValue) {
             try {
-                // eslint-disable-next-line no-undef
                 await GM.setValue(keyName, setValue);
                 return true;
             } catch (e) {
@@ -459,7 +457,6 @@
         }
         static async delete(keyName) {
             try {
-                // eslint-disable-next-line no-undef
                 await GM.deleteValue(keyName);
                 return true;
             } catch (e) {
@@ -470,7 +467,6 @@
         }
         static async keynameList() {
             try {
-                // eslint-disable-next-line no-undef
                 return await GM.listValues();
             } catch (e) {
                 console.error(e);
@@ -658,7 +654,6 @@
     }
 
 
-    // BackGround Fuction Start
     class BackGround_Func {
         constructor() {
             this.BlockListText_loadObj = new Object();
@@ -1406,7 +1401,6 @@
             }
 
             try {
-                // eslint-disable-next-line no-undef
                 GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
                 return;
             } catch (e) {
@@ -1513,7 +1507,6 @@
         observer.observe(document, observerConfig);
     }
 
-    // Background Processing Start
     await StorageLoad();
     if (location.href != safeModeURL) {
         const BG_perModeObj = new BG_performanceMode;
@@ -1628,7 +1621,6 @@
     } else {
         DashboardButtonInsertOnly();
     }
-    // Background Processing End
 
 
     async function DashboardWindow() {
@@ -4064,7 +4056,6 @@
                 const targetElement = evt.target;
                 if (targetElement.checked) {
                     try {
-                        // eslint-disable-next-line no-undef
                         GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
                     } catch (e) {
                         console.error(e);
@@ -4146,7 +4137,6 @@
                         try {
                             const importset = JSON.parse(importjson);
                             const ExistKeyList = await storageAPI.keynameList();
-                            // JSON.parse Test
                             await Promise.all(Object.keys(importset).map(async (keyName) => {
                                 JSON.parse(importset[keyName]);
                             }));
