@@ -2582,7 +2582,7 @@
 
     div#ObjectLists_Frame {
         width: auto;
-        height: calc(100% - 162px);
+        height: calc(100% - 164px);
         overflow: auto;
         border: 2px solid black;
     }
