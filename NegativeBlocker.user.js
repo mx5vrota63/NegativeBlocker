@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.0.1
+// @version        1.0.2
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
@@ -980,7 +980,7 @@
         }
         async init() {
             this.SentenceBlock_filter1 = SentenceBlockStorage.filter((setObj) => {
-                if (setObj.url === "" && setObj.enable === true && setObj.url_mode === "wildcard" || setObj.url_mode === "regexp") return true;
+                if (setObj.url === "" && setObj.enable === true && (setObj.url_mode === "wildcard" || setObj.url_mode === "regexp")) return true;
                 else if (setObj.url_BLT === "" && setObj.enable === true && setObj.url_mode === "blt") return true;
                 else return false;
             });
@@ -1140,7 +1140,7 @@
         async init() {
             const CurrentURL = location.href;
             this.ElementBlock_filter1 = ElementBlockStorage.filter((setObj) => {
-                if (setObj.url === "" && setObj.url_mode === "wildcard" || setObj.url_mode === "regexp") return false;
+                if (setObj.url === "" && (setObj.url_mode === "wildcard" || setObj.url_mode === "regexp")) return false;
                 if (setObj.url_mode === "regexp" && setObj.enable === true) {
                     try {
                         const result = new RegExp(setObj.url, 'g').test(CurrentURL);
