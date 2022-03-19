@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.0.2
+// @version        1.1.0
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
@@ -18,6 +18,8 @@
 // @grant          GM_deleteValue
 // @grant          GM.listValues
 // @grant          GM_listValues
+// @grant          GM.info
+// @grant          GM_info
 // @grant          GM.registerMenuCommand
 // @grant          GM_registerMenuCommand
 // @grant          unsafeWindow
@@ -37,6 +39,9 @@
     let dateInterval = Date.now();
 
     const safeModeURL = "https://www.example.com/";
+    const strLimit = 50000;
+    let storageAPIWriteDelay = 0;
+    let storageAPIWriteDelay2 = 0;
 
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
@@ -53,6 +58,14 @@
 
     let localeText;
 
+    try {
+        if (GM.info.scriptHandler == "AdGuard") {
+            storageAPIWriteDelay = 20;
+            storageAPIWriteDelay2 = 500;
+        }
+    } catch (e) {
+        console.error(e);
+    }
 
     const localeText_en = {
         OKButton: "OK",
@@ -111,7 +124,8 @@
             option_exact: "Exact",
             option_spaceIgnore: "Ignore white space",
             option_notSearch: "NOT(Invert) search",
-            option_uBlacklist: "Use uBlacklist Format (Beta)"
+            option_uBlacklist: "Use uBlacklist Format (Beta)",
+            save_wait: "Saving..."
         },
         DB_sentenceBlock: {
             URL_title: "URL",
@@ -214,6 +228,7 @@
             import_textArea: "Import from textarea (JSON format)",
             import_addImport: "Add and import the settings without overwriting them. (Preferences will not be changed.)",
             import_success: "Imported.",
+            import_Wait: "Importing...",
             import_overWrite: "All current settings will be overwritten with the imported data. Are you sure?",
             import_addImportConfirm: "Add import settings to the current settings. Are you sure?",
             textArea_title: "text area",
@@ -300,7 +315,8 @@
             option_exact: "完全一致",
             option_spaceIgnore: "空白スペースを無視する",
             option_notSearch: "NOT(反転)検索をする",
-            option_uBlacklist: "uBlacklist形式を使用する(Beta)"
+            option_uBlacklist: "uBlacklist形式を使用する(Beta)",
+            save_wait: "保存中..."
         },
         DB_sentenceBlock: {
             URL_title: "URL",
@@ -403,6 +419,7 @@
             import_textArea: "テキストエリアからインポート(JSON形式)",
             import_addImport: "インポートする際、上書きせず設定を追加してインポートする(環境設定は変更されません)",
             import_success: "インポートしました。",
+            import_Wait: "インポート中...",
             import_overWrite: "現在の設定内容をインポートしたデータですべて上書きします。よろしいですか？",
             import_addImportConfirm: "現在の設定内容にインポートする設定を追加します。よろしいですか？",
             textArea_title: "テキストエリア",
@@ -616,23 +633,66 @@
         const fetchResultArray = await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
             if (BlockListText_Obj.fetch_enable) {
                 let errorFlag = false;
-                let BlockListText_textObj = await storageAPI.read("BLT_" + BlockListText_Obj.name);
+                const BLT_name = "BLT_" + BlockListText_Obj.name;
+                let BlockListText_textObj = await storageAPI.read(BLT_name);
                 try {
-                    BlockListText_textObj = JSON.parse(BlockListText_textObj);
+                    try {
+                        BlockListText_textObj = JSON.parse(BlockListText_textObj);
+                    } catch (e) {
+                        console.error(e);
+                        console.error("NegativeBlocker: BlockListText SaveObject Broken: [ " + BLT_name + " ]");
+                        BlockListText_textObj = {
+                            text: "",
+                            fetch_timeStamp: 0,
+                            longTextSplit: 0
+                        }
+                    }
                     if (Date.now() - BlockListText_textObj.fetch_timeStamp >= PreferenceSettingStorage.fetchInterval) {
                         await fetch(BlockListText_Obj.fetch_url).then(async (response) => {
                             if (response.ok) {
                                 BlockListText_textObj.text = await response.text();
                             } else {
-                                throw new Error("NegativeBlocker: FetchAPI Failure: [ " + BlockListText_Obj.name + " ] status: " + response.status);
+                                throw new Error("NegativeBlocker: FetchAPI Failure: [ " + BLT_name + " ] status: " + response.status);
                             }
                         }).catch((e) => {
                             console.error(e);
                             errorFlag = true;
                         });
                         if (errorFlag) return false;
+
+                        const strSplitArray = new Array();
+                        const textSplitOldLength = BlockListText_textObj.longTextSplit;
+                        if (BlockListText_textObj.text.length > strLimit) {
+                            let strConut = 0;
+                            do {
+                                strSplitArray.push(BlockListText_textObj.text.substr(strConut, strLimit));
+                                strConut += strLimit;
+                            } while (BlockListText_textObj.text.length > strConut);
+                            BlockListText_textObj.longTextSplit = strSplitArray.length;
+                            BlockListText_textObj.text = "";
+                        }
+
+                        for (let i = strSplitArray.length; i < textSplitOldLength; i++) {
+                            const BLT_name_index = BLT_name + "_" + i;
+                            await storageAPI.delete(BLT_name_index);
+                        }
+
+                        if (strSplitArray.length > 0) {
+                            await storageAPI.write(BLT_name, JSON.stringify(BlockListText_textObj));
+                            await pauseSleep(storageAPIWriteDelay);
+                        }
+                        for (let i = 0; i < strSplitArray.length; i++) {
+                            const BlockListText_Keyname_SplitIndex = BLT_name + "_" + i;
+                            const StoObj_Text_Split = {
+                                text: strSplitArray[i]
+                            }
+                            await storageAPI.write(BlockListText_Keyname_SplitIndex, JSON.stringify(StoObj_Text_Split));
+                            await pauseSleep(storageAPIWriteDelay);
+                        }
+
                         BlockListText_textObj.fetch_timeStamp = Date.now();
-                        await storageAPI.write("BLT_" + BlockListText_Obj.name, JSON.stringify(BlockListText_textObj));
+                        await storageAPI.write(BLT_name, JSON.stringify(BlockListText_textObj));
+                        await pauseSleep(storageAPIWriteDelay);
                         return true;
                     } else {
                         return undefined;
@@ -822,6 +882,15 @@
             let BlockListText_Obj = await storageAPI.read(BlockListText_Keyname);
             try {
                 BlockListText_Obj = JSON.parse(BlockListText_Obj);
+
+                if (BlockListText_Obj.longTextSplit > 0) {
+                    BlockListText_Obj.text = ""
+                    for (let i = 0; i < BlockListText_Obj.longTextSplit; i++) {
+                        const BlockListText_Keyname_SplitIndex = BlockListText_Keyname + "_" + i;
+                        BlockListText_Obj.text += JSON.parse(await storageAPI.read(BlockListText_Keyname_SplitIndex)).text;
+                    }
+                }
+
                 const indexBLTSet = BlockListTextStorage.findIndex(({ name }) => name === keyName);
                 Object.assign(BlockListText_Obj, BlockListTextStorage[indexBLTSet]);
             } catch (e) {
@@ -1830,6 +1899,7 @@
             async alert(message) {
                 this.message_Ele.textContent = message;
                 this.popup_Element.style.display = "";
+                RootShadow.getElementById("PopupMessageBox_OK").style.display = "";
                 RootShadow.getElementById("PopupMessageBox_Cancel").style.display = "none";
 
                 return new Promise((resolve) => {
@@ -1846,6 +1916,7 @@
             async confirm(message) {
                 this.message_Ele.textContent = message;
                 this.popup_Element.style.display = "";
+                RootShadow.getElementById("PopupMessageBox_OK").style.display = "";
                 RootShadow.getElementById("PopupMessageBox_Cancel").style.display = "";
 
                 return new Promise((resolve) => {
@@ -1866,6 +1937,17 @@
                     RootShadow.getElementById("PopupMessageBox_OK").addEventListener("click", okClick, false);
                     RootShadow.getElementById("PopupMessageBox_Cancel").addEventListener("click", cancelClick, false);
                 });
+            }
+
+            async wait(message) {
+                this.message_Ele.textContent = message;
+                this.popup_Element.style.display = "";
+                RootShadow.getElementById("PopupMessageBox_OK").style.display = "none";
+                RootShadow.getElementById("PopupMessageBox_Cancel").style.display = "none";
+            }
+
+            async waitEnd() {
+                this.popup_Element.style.display = "none";
             }
         }
 
@@ -2398,6 +2480,7 @@
                     }
                 });
                 await storageAPI.write("SentenceBlock_TempDisable", JSON.stringify(tempDisable));
+                await pauseSleep(storageAPIWriteDelay2);
                 location.reload();
             }, false);
 
@@ -2896,6 +2979,13 @@
                         let BlockListText_Obj = await storageAPI.read(BlockListText_Keyname);
                         try {
                             BlockListText_Obj = JSON.parse(BlockListText_Obj);
+                            if (BlockListText_Obj.longTextSplit > 0) {
+                                BlockListText_Obj.text = ""
+                                for (let i = 0; i < BlockListText_Obj.longTextSplit; i++) {
+                                    const BlockListText_Keyname_SplitIndex = BlockListText_Keyname + "_" + i;
+                                    BlockListText_Obj.text += JSON.parse(await storageAPI.read(BlockListText_Keyname_SplitIndex)).text;
+                                }
+                            }
                         } catch (e) {
                             console.error(e);
                             BlockListText_Obj = undefined;
@@ -3187,19 +3277,59 @@
                     }
                     const StoObj_Text = {
                         text: this.textarea_Ele.value,
-                        fetch_timeStamp: 0
+                        fetch_timeStamp: 0,
+                        longTextSplit: 0
                     }
-                    if (await this.ListStoSave("BlockListText", StoObj)) {
-                        const BlockListText_Keyname_Old = "BLT_" + this.currentName;
-                        if (this.currentName !== "") {
+
+                    await popup.wait(localeText.DB_blockListText.save_wait);
+                    const BlockListText_Keyname_Old = "BLT_" + this.currentName;
+                    const BlockListText_Keyname_New = "BLT_" + StoObj.name;
+                    const strSplitArray = new Array();
+
+                    if (StoObj_Text.text.length > strLimit) {
+                        let strConut = 0;
+                        do {
+                            strSplitArray.push(StoObj_Text.text.substr(strConut, strLimit));
+                            strConut += strLimit;
+                        } while (StoObj_Text.text.length > strConut);
+                        StoObj_Text.longTextSplit = strSplitArray.length;
+                        StoObj_Text.text = "";
+                    }
+
+                    if (this.currentName !== "") {
+                        let splitOldIndex = 0
+                        let BLT_Keyname_Old = JSON.parse(await storageAPI.read(BlockListText_Keyname_Old));
+                        if (BlockListText_Keyname_Old == BlockListText_Keyname_New) {
+                            splitOldIndex = strSplitArray.length
+                        } else {
+                            splitOldIndex = 0;
+                        }
+                        for (; splitOldIndex < BLT_Keyname_Old.longTextSplit; splitOldIndex++) {
+                            const BlockListText_Keyname_Old_SplitIndex = BlockListText_Keyname_Old + "_" + splitOldIndex;
+                            await storageAPI.delete(BlockListText_Keyname_Old_SplitIndex);
+                        }
+                        if (BlockListText_Keyname_Old != BlockListText_Keyname_New) {
                             await storageAPI.delete(BlockListText_Keyname_Old);
                         }
-                        const BlockListText_Keyname_New = "BLT_" + StoObj.name;
+                    }
+
+                    if (await this.ListStoSave("BlockListText", StoObj)) {
                         await storageAPI.write(BlockListText_Keyname_New, JSON.stringify(StoObj_Text));
+                        await pauseSleep(storageAPIWriteDelay);
+                        for (let i = 0; i < strSplitArray.length; i++) {
+                            const BlockListText_Keyname_New_SplitIndex = BlockListText_Keyname_New + "_" + i;
+                            const StoObj_Text_Split = {
+                                text: strSplitArray[i]
+                            }
+                            await storageAPI.write(BlockListText_Keyname_New_SplitIndex, JSON.stringify(StoObj_Text_Split));
+                            await pauseSleep(storageAPIWriteDelay);
+                        }
+                        await pauseSleep(storageAPIWriteDelay2);
                         if (this.currentName !== "") {
                             this.BlockListText_storageUpdateOtherSetting(this.currentName, StoObj.name);
                         }
                     }
+                    await popup.waitEnd();
                     await BlockListText_feathLoad();
                     this.immediatelyLoadSettings();
                 }
@@ -3207,6 +3337,15 @@
                 async BlockListText_storageDelete() {
                     if (await this.ListStoDel("BlockListText")) {
                         const BlockListText_keyName = "BLT_" + this.currentName;
+
+                        const StoObj_Text = JSON.parse(await storageAPI.read(BlockListText_keyName));
+                        if (StoObj_Text.longTextSplit > 0) {
+                            for (let i = 0; i < StoObj_Text.longTextSplit; i++) {
+                                const BlockListText_Keyname_SplitIndex = BlockListText_keyName + "_" + i;
+                                await storageAPI.delete(BlockListText_Keyname_SplitIndex);
+                            }
+                        }
+
                         await storageAPI.delete(BlockListText_keyName);
                         this.BlockListText_storageUpdateOtherSetting(this.currentName, "");
                     }
@@ -4135,26 +4274,47 @@
                             return undefined;
                         }
                     } else if (mode === "import") {
+                        await popup.wait(localeText.DB_exportImport.import_Wait);
                         try {
                             const importset = JSON.parse(importjson);
                             const ExistKeyList = await storageAPI.keynameList();
                             await Promise.all(Object.keys(importset).map(async (keyName) => {
                                 JSON.parse(importset[keyName]);
                             }));
-                            await Promise.all(ExistKeyList.map(async (ExistKey) => {
-                                await storageAPI.delete(ExistKey);
-                            }));
-                            await Promise.all(Object.keys(importset).map(async (keyName) => {
-                                await storageAPI.write(keyName, importset[keyName]);
-                            }));
+
+                            if (storageAPIWriteDelay == 0) {
+                                await Promise.all(ExistKeyList.map(async (ExistKey) => {
+                                    await storageAPI.delete(ExistKey);
+                                }));
+
+                                await Promise.all(Object.keys(importset).map(async (keyName) => {
+                                    await storageAPI.write(keyName, importset[keyName]);
+                                }));
+                            } else {
+                                const importKeynames = Object.keys(importset);
+                                await Promise.all(ExistKeyList.map(async (ExistKey) => {
+                                    if (!importKeynames.includes(ExistKey)) {
+                                        await storageAPI.delete(ExistKey);
+                                    }
+                                }));
+    
+                                for (let i = 0; i < importKeynames.length; i++) {
+                                   await storageAPI.write(importKeynames[i], importset[importKeynames[i]]);
+                                   await pauseSleep(storageAPIWriteDelay);
+                                }
+                            }
+                            await pauseSleep(storageAPIWriteDelay2);
+                            await popup.waitEnd();
                             StorageLoad();
                             return true;
                         } catch (e) {
                             console.error(e);
+                            await popup.waitEnd();
                             await popup.alert(localeText.DB_exportImport.error_import);
                             return false;
                         }
                     } else if (mode === "addimport") {
+                        await popup.wait(localeText.DB_exportImport.import_Wait);
                         try {
                             const importset = JSON.parse(importjson);
                             const BlockListTextTemp = JSON.parse(importset.BlockListText);
@@ -4198,6 +4358,15 @@
                                     keyName: "BLT_" + newName,
                                     setValue: importset["BLT_" + oldName]
                                 });
+                                const BLT_Import_TextSplit = JSON.parse(importset["BLT_" + oldName]).longTextSplit
+                                if (BLT_Import_TextSplit > 0) {
+                                    for (let i = 0; i < BLT_Import_TextSplit; i++) {
+                                        BLTStorageTemp.push({
+                                            keyName: "BLT_" + newName + "_" + i,
+                                            setValue: importset["BLT_" + oldName + "_" + i]
+                                        });
+                                    }
+                                }
                                 if (oldName != newName) {
                                     settingObj.name = newName;
 
@@ -4266,16 +4435,29 @@
                             });
                             const ElementBlockStorage_writeReady = [...ElementBlockStorage, ...ElementBlockTemp];
 
-                            await Promise.all(BLTStorageTemp.map(async (writeObj) => {
-                                await storageAPI.write(writeObj.keyName, writeObj.setValue);
-                            }));
+                            if (storageAPIWriteDelay == 0) {
+                                await Promise.all(BLTStorageTemp.map(async (writeObj) => {
+                                    await storageAPI.write(writeObj.keyName, writeObj.setValue);
+                                }));
+                            } else {
+                                for (let i = 0; i < BLTStorageTemp.length; i++) {
+                                    await storageAPI.write(BLTStorageTemp[i].keyName, BLTStorageTemp[i].setValue);
+                                    await pauseSleep(storageAPIWriteDelay);
+                                }
+                            }
                             await storageAPI.write("BlockListText", JSON.stringify(BlockListTextStorage_writeReady));
+                            await pauseSleep(storageAPIWriteDelay);
                             await storageAPI.write("SentenceBlock", JSON.stringify(SentenceBlockStorage_writeReady));
+                            await pauseSleep(storageAPIWriteDelay);
                             await storageAPI.write("ElementBlock", JSON.stringify(ElementBlockStorage_writeReady));
+                            await pauseSleep(storageAPIWriteDelay);
+                            await pauseSleep(storageAPIWriteDelay2);
+                            await popup.waitEnd();
                             StorageLoad();
                             return true;
                         } catch (e) {
                             console.error(e);
+                            await popup.waitEnd();
                             await popup.alert(localeText.DB_exportImport.error_import);
                             return false;
                         }
