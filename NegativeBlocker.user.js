@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.1.0
+// @version        1.2.0
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
@@ -22,6 +22,8 @@
 // @grant          GM_info
 // @grant          GM.registerMenuCommand
 // @grant          GM_registerMenuCommand
+// @grant          GM.xmlHttpRequest
+// @grant          GM_xmlhttpRequest
 // @grant          unsafeWindow
 // ==/UserScript==
 
@@ -57,15 +59,6 @@
     let fetchGlobalFlagStorage;
 
     let localeText;
-
-    try {
-        if (GM.info.scriptHandler == "AdGuard") {
-            storageAPIWriteDelay = 20;
-            storageAPIWriteDelay2 = 500;
-        }
-    } catch (e) {
-        console.error(e);
-    }
 
     const localeText_en = {
         OKButton: "OK",
@@ -493,6 +486,51 @@
         }
     }
 
+    class GMAPI {
+        constructor() { }
+        static async menu() {
+            try {
+                await GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        static async info() {
+            try {
+                return GM.info;
+            } catch (e) {
+                return undefined;
+            }
+        }
+        static async xhr(url) {
+            try {
+                return new Promise((resolve) => {
+                    GM.xmlHttpRequest({
+                        method: "GET",
+                        url: url,
+                        timeout: 10000,
+                        onload: (response) => {
+                            return resolve(response);
+                        },
+                        onerror: (response) => {
+                            return resolve(response);
+                        },
+                        ontimeout: (response) => {
+                            return resolve(response);
+                        },
+                        onabort: (response) => {
+                            return resolve(response);
+                        }
+                    });
+                });
+            } catch (e) {
+                console.error(e);
+                return undefined;
+            }
+        }
+    }
+
     const ArrayLast = array => array[array.length - 1];
 
     function XPathSelectorAll(expression, parentElement) {
@@ -648,16 +686,27 @@
                         }
                     }
                     if (Date.now() - BlockListText_textObj.fetch_timeStamp >= PreferenceSettingStorage.fetchInterval) {
-                        await fetch(BlockListText_Obj.fetch_url).then(async (response) => {
-                            if (response.ok) {
-                                BlockListText_textObj.text = await response.text();
+                        const response = await GMAPI.xhr(BlockListText_Obj.fetch_url);
+                        if (response) {
+                            if (response.statusText == "OK") {
+                                BlockListText_textObj.text = response.responseText;
                             } else {
-                                throw new Error("NegativeBlocker: FetchAPI Failure: [ " + BLT_name + " ] status: " + response.status);
+                                errorFlag = true;
+                                console.error("NegativeBlocker: GM.xmlHttpRequest API Failure: [ " + BLT_name + " ] status: " + response.status);
                             }
-                        }).catch((e) => {
-                            console.error(e);
-                            errorFlag = true;
-                        });
+                        } else {
+                            await fetch(BlockListText_Obj.fetch_url).then(async (response) => {
+                                if (response.ok) {
+                                    BlockListText_textObj.text = await response.text();
+                                } else {
+                                    errorFlag = true;
+                                    console.error("NegativeBlocker: FetchAPI Failure: [ " + BLT_name + " ] status: " + response.status);
+                                }
+                            }).catch((e) => {
+                                errorFlag = true;
+                                console.error(e);
+                            });
+                        }
                         if (errorFlag) return false;
 
                         const strSplitArray = new Array();
@@ -1470,12 +1519,7 @@
                 }
             }
 
-            try {
-                GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
-                return;
-            } catch (e) {
-                console.error(e);
-            }
+            GMAPI.menu();
         }
     }
 
@@ -1577,6 +1621,20 @@
         observer.observe(document, observerConfig);
     }
 
+
+
+
+
+
+
+
+    const gmInfo = await GMAPI.info();
+    if (gmInfo) {
+        if (gmInfo.scriptHandler == "AdGuard") {
+            storageAPIWriteDelay = 20;
+            storageAPIWriteDelay2 = 500;
+        }
+    }
     await StorageLoad();
     if (location.href != safeModeURL) {
         const BG_perModeObj = new BG_performanceMode;
@@ -1691,6 +1749,12 @@
     } else {
         DashboardButtonInsertOnly();
     }
+
+
+
+
+
+
 
 
     async function DashboardWindow() {
@@ -4195,10 +4259,7 @@
             ButtonHide_Setting_Input.addEventListener("change", async (evt) => {
                 const targetElement = evt.target;
                 if (targetElement.checked) {
-                    try {
-                        GM.registerMenuCommand("Dashboard", DashboardWindow, "D");
-                    } catch (e) {
-                        console.error(e);
+                    if (!await GMAPI.menu()) {
                         targetElement.checked = false;
                         const res = await popup.confirm(localeText.DB_preference.buttonHide_warning);
                         if (res) {
@@ -4297,10 +4358,10 @@
                                         await storageAPI.delete(ExistKey);
                                     }
                                 }));
-    
+
                                 for (let i = 0; i < importKeynames.length; i++) {
-                                   await storageAPI.write(importKeynames[i], importset[importKeynames[i]]);
-                                   await pauseSleep(storageAPIWriteDelay);
+                                    await storageAPI.write(importKeynames[i], importset[importKeynames[i]]);
+                                    await pauseSleep(storageAPIWriteDelay);
                                 }
                             }
                             await pauseSleep(storageAPIWriteDelay2);
