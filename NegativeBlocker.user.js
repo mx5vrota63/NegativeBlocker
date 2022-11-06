@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.2.0
+// @version        1.3.0
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
@@ -44,6 +44,7 @@
     const strLimit = 50000;
     let storageAPIWriteDelay = 0;
     let storageAPIWriteDelay2 = 0;
+    let isSafari = false;
 
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
@@ -126,6 +127,7 @@
             URL_wildcard: "Wildcard(*)",
             URL_regexp: "RegExp",
             URL_BLT: "BlockListText",
+            URL_insert: "Insert URL from current page",
             BLT_title: "BlockListText",
             BLT_description: "Specify the BlockListText to be used. holding down the Ctrl key (Command key on Mac) while clicking to specify multiple text.",
             BLT_exclude: "Please select from the list below if you want to use the exclusion settings. (Can be more than one)",
@@ -137,7 +139,14 @@
             aTag_description: "Set whether to replace the \"a\" tag link.(If you replace links in \"a\" tags, the links will not work properly.)",
             aTag_hrefExclude: "Do not replace \"a\" tag links.",
             aTag_hrefOnly: "Only replace links in \"a\" tags.",
-            aTag_all: "Replace all"
+            aTag_all: "Replace all",
+            alertMsg_title: "Alerts when blocked",
+            alertMsg_description: "You can set an alert window to be displayed when blocking. The alert window is displayed only once per page. The message of the alert can be set to any string.",
+            alertMsg_enable: "Enable",
+            resultShow_title: "Display the Block Apply list",
+            resultShow_description: "Select how you want to view the block results on the top page of the dashboard.",
+            resultShow_show: "Show",
+            resultShow_none: "Hide"
         },
         DB_elementBlock: {
             URL_title: "URL",
@@ -145,6 +154,7 @@
             URL_wildcard: "Wildcard(*)",
             URL_regexp: "RegExp",
             URL_BLT: "BlockListText",
+            URL_insert: "Insert URL from current page",
             css: "CSS",
             XPath: "XPath",
             elementPicker: "Element Picker(Beta)",
@@ -317,6 +327,7 @@
             URL_wildcard: "ワイルドカード(*)",
             URL_regexp: "正規表現",
             URL_BLT: "ブロックリストテキスト",
+            URL_insert: "現在のページからURLを挿入",
             BLT_title: "ブロックリストテキスト",
             BLT_description: "使用するブロックリストテキストを指定します。Ctrlキー(MacはCommandキー）を押しながらクリックすると複数指定ができます。",
             BLT_exclude: "除外設定を使用する場合は下のリストから選択してください。(複数可)",
@@ -328,7 +339,14 @@
             aTag_description: "aタグのリンクを置換をするかどうか設定します。(aタグのリンクを置換するとリンクが正常に機能しなくなります。)",
             aTag_hrefExclude: "aタグのリンクは置換えない",
             aTag_hrefOnly: "aタグのリンクのみ置換える",
-            aTag_all: "すべて置換する"
+            aTag_all: "すべて置換する",
+            alertMsg_title: "ブロック時にアラートを表示",
+            alertMsg_description: "ブロック時にアラートウィンドウを表示を設定できます。アラートの表示はそのページ中1回のみ表示されます。アラートのメッセージは任意の文字列を設定できます。",
+            alertMsg_enable: "有効",
+            resultShow_title: "ブロック適用リストの表示",
+            resultShow_description: "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。",
+            resultShow_show: "表示",
+            resultShow_none: "非表示"
         },
         DB_elementBlock: {
             URL_title: "URL",
@@ -336,6 +354,7 @@
             URL_wildcard: "ワイルドカード(*)",
             URL_regexp: "正規表現",
             URL_BLT: "ブロックリストテキスト",
+            URL_insert: "現在のページからURLを挿入",
             css: "CSS",
             XPath: "XPath",
             elementPicker: "要素を選択する(Beta)",
@@ -873,7 +892,9 @@
 
             let textURLArray = new Array();
             if (mode === "hrefandtext") {
-                textURLArray = source.match(/(?:(?:https|http|ttp(?<!http)|ttps(?<!https)):\/\/)\S+\b\/?/g);
+                // iOS Safari NotWorking
+                // textURLArray = source.match(/(?:(?:https|http|ttp(?<!http)|ttps(?<!https)):\/\/)\S+\b\/?/g);
+                textURLArray = source.match(/(?:(?:https|http|ttp|ttps):\/\/)\S+\b\/?/g);
                 if (textURLArray === null) textURLArray = new Array();
                 const resultArray = await Promise.all([(async () => {
                     const resultTextArray = await Promise.all(textURLArray.map(async (textURL) => {
@@ -1037,7 +1058,9 @@
                     if (hitArray.length) {
                         hitArray.forEach((reSearchStr) => {
                             const escapeRegExpReSearchSpecial = (str) => {
-                                return str.replace(/(?!(?<!^|\\s\*))[/.*+?^${}()|[\]\\]/g, '\\$&');
+                                // iOS Safari NotWorking
+                                // return str.replace(/(?!(?<!^|\\s\*))[/.*+?^${}()|[\]\\]/g, '\\$&');
+                                return str.replace(/(?=.\\s\*|.$)[/.*+?^${}()|[\]\\]/g, '\\$&');
                             }
                             let regexpFlag = 'g';
                             if (!this.BlockListText_loadObj[BLT_name].caseSensitive) {
@@ -1235,8 +1258,10 @@
                             } else {
                                 SentenceBlock_ExecuteResultList.push({
                                     name: SB_Obj.name,
-                                    count: 1
+                                    count: 1,
+                                    resultShow: SB_Obj.resultShow
                                 });
+                                if (SB_Obj.alertMsg_enable) alert(SB_Obj.alertMsg_str);
                             }
                             BlockCounter++;
                             BlockCounterUpdate();
@@ -1635,6 +1660,12 @@
             storageAPIWriteDelay2 = 500;
         }
     }
+    try {
+        isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    } catch(e) {
+        console.error(e);
+        isSafari = false;
+    }
     await StorageLoad();
     if (location.href != safeModeURL) {
         const BG_perModeObj = new BG_performanceMode;
@@ -1890,16 +1921,28 @@
             RootShadow.getElementById("FrameBack").style.setProperty("--CustomBackgroundColor", "#ffffb2");
         }
 
+        const FrameBackMaxHeightResize = () => {
+            if (window.innerHeight < 650) {
+                RootShadow.getElementById("FrameBack").style.maxHeight = window.innerHeight + "px";
+            } else {
+                RootShadow.getElementById("FrameBack").style.maxHeight = "650px";
+            }
+        }
+        FrameBackMaxHeightResize();
+        window.addEventListener("resize", FrameBackMaxHeightResize, false);
+
         RootShadow.getElementById("FrameBackHeaderButton1").addEventListener("click", () => {
             Dashboard_Element.remove();
             Dashboard_Element = null;
             if (DashboardButtonEle) DashboardButtonEle.style.display = "";
+            window.removeEventListener("resize", FrameBackMaxHeightResize, false);
         })
 
         RootShadow.getElementById("FrameBackHeaderButton2").addEventListener("click", () => {
             Dashboard_Element.remove();
             Dashboard_Element = null;
             if (DashboardButtonEle) DashboardButtonEle.remove();
+            window.removeEventListener("resize", FrameBackMaxHeightResize, false);
         })
 
 
@@ -2154,6 +2197,13 @@
 </div>
                 `;
                 RootShadow.append(this.flameElement_Ele);
+
+                if (isSafari) {
+                    RootShadow.getElementById("ElementPicker_Header").querySelectorAll("button").forEach((buttonEle) => {
+                        buttonEle.style.minWidth = "50px";
+                    });
+                    RootShadow.getElementById("ElementPicker_Text_Input").style.width = "calc(100% - 55px)";
+                }
 
                 this.overlay_PositionFixed_Ele = RootShadow.getElementById("ElementPicker_PositionFixed");
                 this.overlay_FrameBack_Ele = RootShadow.getElementById("ElementPicker_FrameBack");
@@ -2518,6 +2568,7 @@
                 const SentenceBlock_div = RootShadow.getElementById("ItemFrame_SentenceBlock_Result");
 
                 for (let i = 0; i < SentenceBlock_ExecuteResultList.length; i++) {
+                    if (SentenceBlock_ExecuteResultList[i].resultShow === "none") continue;
                     const label = document.createElement("label");
                     label.style.display = "block";
                     label.style.margin = "0 0 5px 0";
@@ -3450,14 +3501,17 @@
                     this.replace_string_Ele = null;
                     this.replace_mode_Ele = null;
                     this.aTag_replace_mode_ELe = null;
+                    this.alertMsg_enable_Ele = null;
+                    this.alertMsg_str_Ele = null;
+                    this.resultShow_Ele = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
                         this.enable_Ele.checked = applylist.enable;
                         this.url_Ele.value = applylist.url;
                         this.url_BLT_Ele.value = applylist.url_BLT;
-                        this.url_mode_Ele.url_mode.value = applylist.url_mode;
+                        this.url_mode_Ele.querySelector(`input[name="url_mode"][value="${applylist.url_mode}"]`).checked = true;
                         this.replace_string_Ele.value = applylist.replace_string;
-                        this.replace_mode_Ele.replace_mode.value = applylist.replace_mode;
+                        this.replace_mode_Ele.querySelector(`input[name="replace_mode"][value="${applylist.replace_mode}"]`).checked = true;
                         this.aTag_replace_mode_ELe.value = applylist.aTag_replace_mode;
 
                         this.urlModeChange();
@@ -3476,6 +3530,16 @@
                                 htmlOption.selected = false;
                             }
                         });
+
+                        if(applylist.alertMsg_enable === undefined) this.alertMsg_enable_Ele.checked = false;
+                        else this.alertMsg_enable_Ele.checked = applylist.alertMsg_enable;
+
+                        if(applylist.alertMsg_str === undefined) this.alertMsg_str_Ele.value = "";
+                        else this.alertMsg_str_Ele.value = applylist.alertMsg_str;
+
+                        if(applylist.resultShow === undefined) this.resultShow_Ele.querySelector(`input[name="resultShow"][value="show"]`).checked = true;
+                        else this.resultShow_Ele.querySelector(`input[name="resultShow"][value="${applylist.resultShow}"]`).checked = true;
+
                     }
 
                     this.SaveButtonFunc = this.SentenceBlock_ListStoSave.bind(this);
@@ -3533,6 +3597,7 @@
                 <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
             </label>
         </form>
+        <button id="SentenceBlockConfig1_Button"></button>
     </div>
 
     <div class="ItemFrame_Border">
@@ -3570,11 +3635,36 @@
     <div class="ItemFrame_Border">
         <h1 id="SentenceBlockConfig4_Title" class="ItemFrame_Title"></h1>
         <p id="SentenceBlockConfig4_Description"></p>
-        <select id="SentenceBlockConfig4_Select" class="ElementBlock_Select" size="1">
+        <select id="SentenceBlockConfig4_Select" class="SentenceBlock_Select" size="1">
             <option id="SentenceBlockConfig4_Select_Option1" value="hrefexclude"></option>
             <option id="SentenceBlockConfig4_Select_Option2" value="hrefonly"></option>
             <option id="SentenceBlockConfig4_Select_Option3" value="all"></option>
         </select>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig5_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig5_Description"></p>
+        <label class="SentenceBlock_Label">
+            <input id="SentenceBlockConfig5_InputCheckbox" type="checkbox" />
+            <span id="SentenceBlockConfig5_InputCheckbox_SpanText"></span>
+        </label>
+        <input id="SentenceBlockConfig5_InputText" type="text" spellcheck="false" />
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="SentenceBlockConfig6_Title" class="ItemFrame_Title"></h1>
+        <p id="SentenceBlockConfig6_Description"></p>
+        <form id="SentenceBlockConfig6_Form">
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="resultShow" value="show" checked />
+                <span id="SentenceBlockConfig6_Form_Input1_SpanText"></span>
+            </label>
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="resultShow" value="none" />
+                <span id="SentenceBlockConfig6_Form_Input2_SpanText"></span>
+            </label>
+        </form>
     </div>
 
     <div>
@@ -3590,6 +3680,7 @@
                     RootShadow.getElementById("SentenceBlockConfig1_Form_Input1_SpanText").textContent = localeText.DB_sentenceBlock.URL_wildcard;
                     RootShadow.getElementById("SentenceBlockConfig1_Form_Input2_SpanText").textContent = localeText.DB_sentenceBlock.URL_regexp;
                     RootShadow.getElementById("SentenceBlockConfig1_Form_Input3_SpanText").textContent = localeText.DB_sentenceBlock.URL_BLT;
+                    RootShadow.getElementById("SentenceBlockConfig1_Button").textContent = localeText.DB_sentenceBlock.URL_insert;
                     RootShadow.getElementById("SentenceBlockConfig2_Title").textContent = localeText.DB_sentenceBlock.BLT_title;
                     RootShadow.getElementById("SentenceBlockConfig2_Description").textContent = localeText.DB_sentenceBlock.BLT_description;
                     RootShadow.getElementById("SentenceBlockConfig2-2_Description").textContent = localeText.DB_sentenceBlock.BLT_exclude;
@@ -3602,6 +3693,13 @@
                     RootShadow.getElementById("SentenceBlockConfig4_Select_Option1").textContent = localeText.DB_sentenceBlock.aTag_hrefExclude;
                     RootShadow.getElementById("SentenceBlockConfig4_Select_Option2").textContent = localeText.DB_sentenceBlock.aTag_hrefOnly;
                     RootShadow.getElementById("SentenceBlockConfig4_Select_Option3").textContent = localeText.DB_sentenceBlock.aTag_all;
+                    RootShadow.getElementById("SentenceBlockConfig5_Title").textContent = localeText.DB_sentenceBlock.alertMsg_title;
+                    RootShadow.getElementById("SentenceBlockConfig5_Description").textContent = localeText.DB_sentenceBlock.alertMsg_description;
+                    RootShadow.getElementById("SentenceBlockConfig5_InputCheckbox_SpanText").textContent = localeText.DB_sentenceBlock.alertMsg_enable;
+                    RootShadow.getElementById("SentenceBlockConfig6_Title").textContent = localeText.DB_sentenceBlock.resultShow_title;
+                    RootShadow.getElementById("SentenceBlockConfig6_Description").textContent = localeText.DB_sentenceBlock.resultShow_description;
+                    RootShadow.getElementById("SentenceBlockConfig6_Form_Input1_SpanText").textContent = localeText.DB_sentenceBlock.resultShow_show;
+                    RootShadow.getElementById("SentenceBlockConfig6_Form_Input2_SpanText").textContent = localeText.DB_sentenceBlock.resultShow_none;
                     RootShadow.getElementById("SentenceBlockConfig_BackButton").textContent = localeText.backButton;
 
                     this.url_Ele = RootShadow.getElementById("SentenceBlockConfig1_Input1");
@@ -3612,6 +3710,9 @@
                     this.replace_string_Ele = RootShadow.getElementById("SentenceBlockConfig3_InputText");
                     this.replace_mode_Ele = RootShadow.getElementById("SentenceBlockConfig3_Form");
                     this.aTag_replace_mode_ELe = RootShadow.getElementById("SentenceBlockConfig4_Select");
+                    this.alertMsg_enable_Ele = RootShadow.getElementById("SentenceBlockConfig5_InputCheckbox");
+                    this.alertMsg_str_Ele = RootShadow.getElementById("SentenceBlockConfig5_InputText");
+                    this.resultShow_Ele = RootShadow.getElementById("SentenceBlockConfig6_Form");
 
                     for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
@@ -3627,6 +3728,10 @@
                         this.urlModeChange();
                     }, false);
 
+                    RootShadow.getElementById("SentenceBlockConfig1_Button").addEventListener("click", () => {
+                        RootShadow.getElementById("SentenceBlockConfig1_Input1").value = location.href;
+                    }, false);
+
                     RootShadow.getElementById("SentenceBlockConfig_BackButton").addEventListener("click", () => {
                         this.ListEditPage_Ele.style.display = "";
                         this.EditConfigPage_Ele.style.display = "none";
@@ -3635,7 +3740,7 @@
                 }
 
                 async urlModeChange() {
-                    if (RootShadow.getElementById("SentenceBlockConfig1_Form").url_mode.value === "blt") {
+                    if (RootShadow.getElementById("SentenceBlockConfig1_Form").querySelector(`input[name="url_mode"]:checked`).value === "blt") {
                         this.url_Ele.style.display = "none";
                         this.url_BLT_Ele.style.display = "";
                     } else {
@@ -3656,12 +3761,15 @@
                         enable: this.enable_Ele.checked,
                         url: this.url_Ele.value,
                         url_BLT: this.url_BLT_Ele.value,
-                        url_mode: this.url_mode_Ele.url_mode.value,
+                        url_mode: this.url_mode_Ele.querySelector(`input[name="url_mode"]:checked`).value,
                         BlockListText_list: BLT_list_map,
                         BlockListText_exclude_list: BLT_exclude_list_map,
                         replace_string: this.replace_string_Ele.value,
-                        replace_mode: this.replace_mode_Ele.replace_mode.value,
-                        aTag_replace_mode: this.aTag_replace_mode_ELe.value
+                        replace_mode: this.replace_mode_Ele.querySelector(`input[name="replace_mode"]:checked`).value,
+                        aTag_replace_mode: this.aTag_replace_mode_ELe.value,
+                        alertMsg_enable: this.alertMsg_enable_Ele.checked,
+                        alertMsg_str: this.alertMsg_str_Ele.value,
+                        resultShow: this.resultShow_Ele.querySelector(`input[name="resultShow"]:checked`).value
                     }
                     await this.ListStoSave("SentenceBlock", StoObj);
                     this.immediatelyLoadSettings();
@@ -3676,12 +3784,15 @@
                     if (await this.NewEditButton(NewbuttonEle)) {
                         this.url_Ele.value = "";
                         this.url_BLT_Ele.value = "";
-                        this.url_mode_Ele.url_mode.value = "wildcard";
+                        this.url_mode_Ele.querySelector(`input[name="url_mode"][value="wildcard"]`).checked = true;
                         this.BlockListText_list_Ele.value = "";
                         this.BlockListText_exclude_list_Ele.value = "";
                         this.replace_string_Ele.value = "";
-                        this.replace_mode_Ele.replace_mode.value = "sentence";
+                        this.replace_mode_Ele.querySelector(`input[name="replace_mode"][value="sentence"]`).checked = true;
                         this.aTag_replace_mode_ELe.value = "hrefexclude";
+                        this.alertMsg_enable_Ele.checked = false;
+                        this.alertMsg_str_Ele.value = "";
+                        this.resultShow_Ele.querySelector(`input[name="resultShow"][value="show"]`).checked = true;
 
                         this.enable_Ele.checked = true;
 
@@ -3719,18 +3830,18 @@
                         this.enable_Ele.checked = applylist.enable;
                         this.url_Ele.value = applylist.url;
                         this.url_BLT_Ele.value = applylist.url_BLT;
-                        this.url_mode_Ele.url_mode.value = applylist.url_mode;
+                        this.url_mode_Ele.querySelector(`input[name="url_mode"][value="${applylist.url_mode}"]`).checked = true;
                         this.elementHide_Ele.value = applylist.elementHide;
-                        this.elementHide_method_Ele.pickerMethod.value = applylist.elementHide_method;
-                        this.elementHide_hideMethod_Ele.hideMethod.value = applylist.elementHide_hideMethod;
+                        this.elementHide_method_Ele.querySelector(`input[name="pickerMethod"][value="${applylist.elementHide_method}"]`).checked = true;
+                        this.elementHide_hideMethod_Ele.querySelector(`input[name="hideMethod"][value="${applylist.elementHide_hideMethod}"]`).checked = true;
                         this.elementSearch_Ele.value = applylist.elementSearch;
-                        this.elementSearch_method_Ele.pickerMethod.value = applylist.elementSearch_method;
+                        this.elementSearch_method_Ele.querySelector(`input[name="pickerMethod"][value="${applylist.elementSearch_method}"]`).checked = true;
                         this.elementSearch_firstOnly_Ele.checked = applylist.elementSearch_firstOnly;
-                        this.elementSearch_property_Ele.propertyMode.value = applylist.elementSearch_property;
+                        this.elementSearch_property_Ele.querySelector(`input[name="propertyMode"][value="${applylist.elementSearch_property}"]`).checked = true;
                         this.elementSearch_property_style_Ele.value = applylist.elementSearch_property_style;
                         this.elementSearch_property_advanced_Ele.value = applylist.elementSearch_property_advanced;
                         this.uBlacklist_method_Ele.value = applylist.uBlacklist_method;
-                        this.resultShow_Ele.resultShow.value = applylist.resultShow;
+                        this.resultShow_Ele.querySelector(`input[name="resultShow"][value="${applylist.resultShow}"]`).checked = true;
 
                         this.urlModeChange();
 
@@ -3813,6 +3924,7 @@
                 <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
             </label>
         </form>
+        <button id="ElementBlockConfig1_Button"></button>
     </div>
 
     <div class="ItemFrame_Border">
@@ -3947,6 +4059,7 @@
                     RootShadow.getElementById("ElementBlockConfig1_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.URL_wildcard;
                     RootShadow.getElementById("ElementBlockConfig1_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.URL_regexp;
                     RootShadow.getElementById("ElementBlockConfig1_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.URL_BLT;
+                    RootShadow.getElementById("ElementBlockConfig1_Button").textContent = localeText.DB_elementBlock.URL_insert;
                     RootShadow.getElementById("ElementBlockConfig2_Title").textContent = localeText.DB_elementBlock.eleHide_title;
                     RootShadow.getElementById("ElementBlockConfig2_Description").textContent = localeText.DB_elementBlock.eleHide_description;
                     RootShadow.getElementById("ElementBlockConfig2_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.css;
@@ -3977,7 +4090,7 @@
                     RootShadow.getElementById("ElementBlockConfig6_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.resultShow_none;
                     RootShadow.getElementById("ElementBlockConfig6_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.resultShow_number;
                     RootShadow.getElementById("ElementBlockConfig6_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.resultShow_property;
-                    RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = "←戻る";
+                    RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = localeText.backButton;
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
                     this.url_BLT_Ele = RootShadow.getElementById("ElementBlockConfig1_Select");
@@ -4010,11 +4123,15 @@
                         this.urlModeChange();
                     }, false);
 
+                    RootShadow.getElementById("ElementBlockConfig1_Button").addEventListener("click", () => {
+                        RootShadow.getElementById("ElementBlockConfig1_Input1").value = location.href;
+                    }, false);
+
                     RootShadow.getElementById("ElementBlockConfig2_Button").addEventListener("click", async () => {
                         await popup.alert(localeText.DB_elementBlock.elementPicker_message);
                         Dashboard_Element.style.display = "none";
                         const pickerObj = new ElementPicker();
-                        const pickerMethod = this.elementHide_method_Ele.pickerMethod.value;
+                        const pickerMethod = this.elementHide_method_Ele.querySelector(`input[name="pickerMethod"]:checked`).value;
                         await pickerObj.init();
                         const selectorString = await pickerObj.Start(pickerMethod);
                         Dashboard_Element.style.display = "";
@@ -4027,9 +4144,9 @@
                         await popup.alert(localeText.DB_elementBlock.elementPicker_message);
                         Dashboard_Element.style.display = "none";
                         const pickerObj = new ElementPicker();
-                        const pickerMethod = this.elementSearch_method_Ele.pickerMethod.value;
+                        const pickerMethod = this.elementSearch_method_Ele.querySelector(`input[name="pickerMethod"]:checked`).value;
                         const elementHide_pickerString = this.elementHide_Ele.value;
-                        const elementHide_pickerMethod = this.elementHide_method_Ele.pickerMethod.value
+                        const elementHide_pickerMethod = this.elementHide_method_Ele.querySelector(`input[name="pickerMethod"]:checked`).value;
                         await pickerObj.init();
                         const selectorString = await pickerObj.Start(pickerMethod, elementHide_pickerString, elementHide_pickerMethod);
                         Dashboard_Element.style.display = "";
@@ -4046,7 +4163,7 @@
                 }
 
                 async urlModeChange() {
-                    if (RootShadow.getElementById("ElementBlockConfig1_Form").url_mode.value === "blt") {
+                    if (RootShadow.getElementById("ElementBlockConfig1_Form").querySelector(`input[name="url_mode"]:checked`).value === "blt") {
                         this.url_Ele.style.display = "none";
                         this.url_BLT_Ele.style.display = "";
                     } else {
@@ -4067,20 +4184,20 @@
                         enable: this.enable_Ele.checked,
                         url: this.url_Ele.value,
                         url_BLT: this.url_BLT_Ele.value,
-                        url_mode: this.url_mode_Ele.url_mode.value,
+                        url_mode: this.url_mode_Ele.querySelector(`input[name="url_mode"]:checked`).value,
                         elementHide: this.elementHide_Ele.value,
-                        elementHide_method: this.elementHide_method_Ele.pickerMethod.value,
-                        elementHide_hideMethod: this.elementHide_hideMethod_Ele.hideMethod.value,
+                        elementHide_method: this.elementHide_method_Ele.querySelector(`input[name="pickerMethod"]:checked`).value,
+                        elementHide_hideMethod: this.elementHide_hideMethod_Ele.querySelector(`input[name="hideMethod"]:checked`).value,
                         elementSearch: this.elementSearch_Ele.value,
-                        elementSearch_method: this.elementSearch_method_Ele.pickerMethod.value,
+                        elementSearch_method: this.elementSearch_method_Ele.querySelector(`input[name="pickerMethod"]:checked`).value,
                         elementSearch_firstOnly: this.elementSearch_firstOnly_Ele.checked,
-                        elementSearch_property: this.elementSearch_property_Ele.propertyMode.value,
+                        elementSearch_property: this.elementSearch_property_Ele.querySelector(`input[name="propertyMode"]:checked`).value,
                         elementSearch_property_style: this.elementSearch_property_style_Ele.value,
                         elementSearch_property_advanced: this.elementSearch_property_advanced_Ele.value,
                         BlockListText_list: BLT_list_map,
                         BlockListText_exclude_list: BLT_exclude_list_map,
                         uBlacklist_method: this.uBlacklist_method_Ele.value,
-                        resultShow: this.resultShow_Ele.resultShow.value
+                        resultShow: this.resultShow_Ele.querySelector(`input[name="resultShow"]:checked`).value
                     }
                     await this.ListStoSave("ElementBlock", StoObj);
                     this.immediatelyLoadSettings();
@@ -4096,20 +4213,20 @@
                         this.enable_Ele.checked = false;
                         this.url_Ele.value = "";
                         this.url_BLT_Ele.value = "";
-                        this.url_mode_Ele.url_mode.value = "wildcard";
+                        this.url_mode_Ele.querySelector(`input[name="url_mode"][value="wildcard"]`).checked = true;
                         this.elementHide_Ele.value = "";
-                        this.elementHide_method_Ele.pickerMethod.value = "css";
-                        this.elementHide_hideMethod_Ele.hideMethod.value = "displayNone";
+                        this.elementHide_method_Ele.querySelector(`input[name="pickerMethod"][value="css"]`).checked = true;
+                        this.elementHide_hideMethod_Ele.querySelector(`input[name="hideMethod"][value="displayNone"]`).checked = true;
                         this.elementSearch_Ele.value = "";
-                        this.elementSearch_method_Ele.pickerMethod.value = "css";
+                        this.elementSearch_method_Ele.querySelector(`input[name="pickerMethod"][value="css"]`).checked = true;
                         this.elementSearch_firstOnly_Ele.checked = false;
-                        this.elementSearch_property_Ele.propertyMode.value = "text";
+                        this.elementSearch_property_Ele.querySelector(`input[name="propertyMode"][value="text"]`).checked = true;
                         this.elementSearch_property_style_Ele.value = "";
                         this.elementSearch_property_advanced_Ele.value = "";
                         this.BlockListText_list_Ele.value = "";
                         this.BlockListText_exclude_list_Ele.value = "";
                         this.uBlacklist_method_Ele.value = "urlonly";
-                        this.resultShow_Ele.resultShow.value = "number";
+                        this.resultShow_Ele.querySelector(`input[name="resultShow"][value="number"]`).checked = true;
 
                         this.enable_Ele.checked = true;
 

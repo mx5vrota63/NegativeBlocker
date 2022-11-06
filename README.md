@@ -9,7 +9,7 @@ URLs can also be registered, and it is compatible with the uBlacklist format (Be
 
 ## How to install
 
-### Windows、Mac、ChromeOS、Linux
+### Windows, Mac, ChromeOS, Linux
 
 1. Install the user script manager that corresponds to the browser you are using.
 
@@ -55,9 +55,24 @@ Tap Install to display the installation confirmation screen, and follow the inst
 
 ### iOS & iPadOS
 
-Since this user script uses inherent storage APIs such as GM.setValue, there are currently no browsers that support them, to my knowledge.  
-We will update this content when a user script manager that supports GM functions is available in the App Store, as iOS 15 now supports the extension.
+~~Since this user script uses inherent storage APIs such as GM.setValue, there are currently no browsers that support them, to my knowledge.  
+We will update this content when a user script manager that supports GM functions is available in the App Store, as iOS 15 now supports the extension.~~  
+2022/11/6 Update  
+The User Script Manager is now supported in Safari on iOS 15 or later, and the installation procedure is described below.
 
+1. Install "Userscripts" from the AppStore.  
+https://itunes.apple.com/us/app/userscripts/id1463298887
+2. Refer to the next page to enable the use of user scripts.  
+https://github.com/quoid/userscripts#usage
+3. Tap the following link strongly and tap "Download Linked File".  
+
+[Download](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)  
+
+4. From the home screen, launch the "Files" app, locate the downloads folder,  
+Move the "NegativeBlocker.user.js" to the "Set Userscripts Directory" folder that you set up in the "Userscripts" app.
+5. Launch Safari and load the page to use it.
+
+Note: Safari on iOS and iPadOS has not been fully tested. Therefore, there may be Safari-specific bugs.  
 
 ## Usage
 
@@ -183,8 +198,24 @@ Install をタップするとインストール確認画面が表示されます
 
 ### iOS & iPadOS
 
-このユーザースクリプトには、GM.setValue などの固有のストレージ API を使用しているため、現在のところ、それらをサポートするブラウザは私の知る限り、存在しません。  
-iOS 15 で拡張機能がサポートされたため、GM 関数をサポートするユーザースクリプトマネージャーが App Store で配信されたら、この内容をアップデートします。
+~~このユーザースクリプトには、GM.setValue などの固有のストレージ API を使用しているため、現在のところ、それらをサポートするブラウザは私の知る限り、存在しません。  
+iOS 15 で拡張機能がサポートされたため、GM 関数をサポートするユーザースクリプトマネージャーが App Store で配信されたら、この内容をアップデートします。~~  
+2022/11/6 追記  
+iOS 15以降のSafariでユーザースクリプトマネージャーに対応しましたのでインストール手順を解説します。
+
+1. AppStoreから "Userscripts" をインストールします。  
+https://itunes.apple.com/us/app/userscripts/id1463298887
+2. 次のページ（英語）を参考にユーザースクリプトを使用できるようにします。  
+https://github.com/quoid/userscripts#usage
+3. 次のリンクを強くタップし、"リンク先のファイルをダウンロード"をタップしてください。  
+
+[ダウンロード](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)  
+
+4. ホーム画面から "ファイル" アプリを起動し、ダウンロードフォルダを探し、"NegativeBlocker.user.js"を  
+"Userscripts"アプリで設定した"Set Userscripts Directory"のフォルダに移動します。
+5. Safariを起動してページを読み込むと、使用できるようになります。
+
+注意：iOS及びiPadOSのSafariは十分な動作テストをしていません。そのためSafari固有のバグがある可能性があります。
 
 ## 使い方
 
