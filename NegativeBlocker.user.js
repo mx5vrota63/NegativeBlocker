@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.3.0
+// @version        1.3.1
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
@@ -40,7 +40,7 @@
     let observerInterval = 0;
     let dateInterval = Date.now();
 
-    const safeModeURL = "https://www.example.com/";
+    const safeModeURL = "https://example.com/";
     const strLimit = 50000;
     let storageAPIWriteDelay = 0;
     let storageAPIWriteDelay2 = 0;
@@ -1261,7 +1261,7 @@
                                     count: 1,
                                     resultShow: SB_Obj.resultShow
                                 });
-                                if (SB_Obj.alertMsg_enable) alert(SB_Obj.alertMsg_str);
+                                if (SB_Obj.alertMsg_enable) setTimeout(() => {alert(SB_Obj.alertMsg_str)}, 1);
                             }
                             BlockCounter++;
                             BlockCounterUpdate();
@@ -3154,6 +3154,10 @@
         box-sizing: border-box;
     }
 
+    button.BlockListText_Button {
+        margin: 10px 0 5px 0;
+    }
+
     label.BlockListText_Label {
         display: block;
         margin: 5px 0 0 0;
@@ -3211,7 +3215,7 @@
         </div>
     </div>
     <div>
-        <button id="BlockListText_BackButton"></button>
+        <button id="BlockListText_BackButton" class="BlockListText_Button"></button>
     </div>
 </div>
                     `;
@@ -3568,6 +3572,10 @@
         box-sizing: border-box;
     }
 
+    button.SentenceBlock_Button {
+        margin: 10px 0 5px 0;
+    }
+
     label.SentenceBlock_Label {
         display: block;
         margin: 5px 0 0 0;
@@ -3597,7 +3605,7 @@
                 <span id="SentenceBlockConfig1_Form_Input3_SpanText"></span>
             </label>
         </form>
-        <button id="SentenceBlockConfig1_Button"></button>
+        <button id="SentenceBlockConfig1_Button" class="SentenceBlock_Button"></button>
     </div>
 
     <div class="ItemFrame_Border">
@@ -3668,7 +3676,7 @@
     </div>
 
     <div>
-        <button id="SentenceBlockConfig_BackButton"></button>
+        <button id="SentenceBlockConfig_BackButton" class="SentenceBlock_Button"></button>
     </div>
 </div>
                     `;
@@ -3888,6 +3896,10 @@
         box-sizing: border-box;
     }
 
+    button.ElementBlock_Button {
+        margin: 10px 0 5px 0;
+    }
+
     label.ElementBlock_Label {
         display: block;
         margin: 5px 0 0 0;
@@ -3924,7 +3936,7 @@
                 <span id="ElementBlockConfig1_Form_Input3_SpanText"></span>
             </label>
         </form>
-        <button id="ElementBlockConfig1_Button"></button>
+        <button id="ElementBlockConfig1_Button" class="ElementBlock_Button"></button>
     </div>
 
     <div class="ItemFrame_Border">
@@ -3941,7 +3953,7 @@
                 <span id="ElementBlockConfig2_Form_Input2_SpanText"></span>
             </label>
         </form>
-        <button id="ElementBlockConfig2_Button"></button>
+        <button id="ElementBlockConfig2_Button" class="ElementBlock_Button"></button>
         <div class="ItemFrame_Border">
             <form id="ElementBlockConfig2-2_From">
                 <label class="ElementBlock_Label">
@@ -3970,7 +3982,7 @@
                 <span id="ElementBlockConfig3_Form_Input2_SpanText"></span>
             </label>
         </form>
-        <button id="ElementBlockConfig3_Button"></button>
+        <button id="ElementBlockConfig3_Button" class="ElementBlock_Button"></button>
         <label class="ElementBlock_Label">
             <input id="ElementBlockConfig3_Input1" type="checkbox" />
             <span id="ElementBlockConfig3_Input1_SpanText"></span>
@@ -4047,7 +4059,7 @@
     </div>
 
     <div>
-        <button id="ElementBlockConfig_BackButton"></button>
+        <button id="ElementBlockConfig_BackButton" class="ElementBlock_Button"></button>
     </div>
 </div>
                     `;

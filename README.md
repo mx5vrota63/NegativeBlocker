@@ -70,7 +70,8 @@ https://github.com/quoid/userscripts#usage
 
 4. From the home screen, launch the "Files" app, locate the downloads folder,  
 Move the "NegativeBlocker.user.js" to the "Set Userscripts Directory" folder that you set up in the "Userscripts" app.
-5. Launch Safari and load the page to use it.
+5. Launch Safari and load the page to use it.  
+(If NegativeBlocker does not load, exit Safari from the App Switcher and launch it again.)
 
 Note: Safari on iOS and iPadOS has not been fully tested. Therefore, there may be Safari-specific bugs.  
 
@@ -100,11 +101,11 @@ To import the JSON file, click the button in the upper right corner of the scree
 
 ## Q&A
 
-- It does not work on https://www.example.com/.  
+- It does not work on https://example.com/.  
   The button disappears and I can't access the dashboard anymore.
 
-https://www.example.com/ is a page that runs in safe mode, which means that it will not run outside of the dashboard screen.  
-In the unlikely event that you are unable to access the dashboard screen due to a configuration error, you can go to https://www.example.com/ and delete the offending configuration.  
+https://example.com/ is a page that runs in safe mode, which means that it will not run outside of the dashboard screen.  
+In the unlikely event that you are unable to access the dashboard screen due to a configuration error, you can go to https://example.com/ and delete the offending configuration.  
 Note that due to a bug in the user script, it may not work even in safe mode, so we recommend that you export and back up your data periodically. (If it doesn't work even in safe mode, you need to uninstall NegativeBlocker once and erase all data.)
 
 - No block operation is performed.
@@ -213,7 +214,8 @@ https://github.com/quoid/userscripts#usage
 
 4. ホーム画面から "ファイル" アプリを起動し、ダウンロードフォルダを探し、"NegativeBlocker.user.js"を  
 "Userscripts"アプリで設定した"Set Userscripts Directory"のフォルダに移動します。
-5. Safariを起動してページを読み込むと、使用できるようになります。
+5. Safariを起動してページを読み込むと、使用できるようになります。  
+(NegativeBlockerが読み込まれない場合はマルチタスク画面(App Switcher)からSafariを一度終了させて再度起動してください。)
 
 注意：iOS及びiPadOSのSafariは十分な動作テストをしていません。そのためSafari固有のバグがある可能性があります。
 
@@ -243,11 +245,11 @@ https://github.com/quoid/userscripts#usage
 
 ## Q&A
 
-- https://www.example.com/ では動作しません。  
+- https://example.com/ では動作しません。  
   ボタンが消えてしまい、ダッシュボードにアクセスできなくなりました。
 
-https://www.example.com/ はセーフモード動作するページとなっており、ダッシュボード画面以外の動作はしないようになっています。  
-万が一設定ミスなどで、ダッシュボード画面にアクセスできなくなった場合は、 https://www.example.com/ にアクセスし、問題のある設定を削除することができます。  
+https://example.com/ はセーフモード動作するページとなっており、ダッシュボード画面以外の動作はしないようになっています。  
+万が一設定ミスなどで、ダッシュボード画面にアクセスできなくなった場合は、 https://example.com/ にアクセスし、問題のある設定を削除することができます。  
 なお、ユーザースクリプトのバグにより、セーフモードでも動作しない場合もありますので、定期的にエクスポートして、バックアップすることをおすすめします。(セーフモードでも動作しない場合は一度 NegativeBlocker をアンインストールし、すべてのデータを消去する必要があります。)
 
 - ブロック動作が行われません。
