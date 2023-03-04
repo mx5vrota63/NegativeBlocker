@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.3.1
+// @version        1.4.0
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
-// @downloadURL    https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js
-// @updateURL      https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js
+// @downloadURL    https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js
+// @updateURL      https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js
 // @author         mx5vrota63
 // @match          *://*/*
 // @run-at         document-start
@@ -113,6 +113,7 @@
             URLget_title: "Get from URL",
             URLget_enable: "Enable",
             option_title: "Option",
+            option_commentBlock: "Comment out lines beginning with ##",
             option_regexp: "RegExp",
             option_caseSensitive: "Case Sensitive",
             option_exact: "Exact",
@@ -135,6 +136,7 @@
             replace_description: "Enter the string to be replaced.",
             replace_sentence: "Replace with a single sentence",
             replace_word: "Replace with a word",
+            replace_none: "not to be replaced",
             aTag_title: "Link replacement for \"a\" tag",
             aTag_description: "Set whether to replace the \"a\" tag link.(If you replace links in \"a\" tags, the links will not work properly.)",
             aTag_hrefExclude: "Do not replace \"a\" tag links.",
@@ -209,6 +211,8 @@
             fetchInterval_3600000: "1 hour",
             fetchInterval_7200000: "2 hour",
             fetchInterval_18000000: "5 hour",
+            fetchInterval_custom: "Custom",
+            fetchInterval_custom_Description: "Set the number of seconds between updates. If it is less than 300 seconds, it will be set as 300 seconds to prevent load on the destination server.",
             dashboardColor_title: "Dashboard background color",
             dashboardColor_Description: "Specifies the color of the background color for the entire dashboard screen.",
             dashboardColor_red: "Red",
@@ -218,7 +222,12 @@
             language_title: "Dashboard language",
             language_Description: "Specifies the display language of the dashboard screen. This will take effect after the page reload.",
             language_en: "English",
-            language_ja_jp: "日本語"
+            language_ja_jp: "日本語",
+            AboutInfo_title: "About NegativeBlocker",
+            AboutInfo_description: "Information about this is displayed.",
+            AboutInfo_button: "About NegativeBlocker",
+            save: "Save",
+            saveInfo: "Saveed."
         },
         DB_exportImport: {
             export_title: "Export",
@@ -313,6 +322,7 @@
             URLget_title: "URLから取得する",
             URLget_enable: "有効",
             option_title: "オプション",
+            option_commentBlock: "## で始まる行をコメントアウトする",
             option_regexp: "正規表現",
             option_caseSensitive: "大文字と小文字を区別する",
             option_exact: "完全一致",
@@ -335,6 +345,7 @@
             replace_description: "置換する文字列を入力します。",
             replace_sentence: "一文章で置換える",
             replace_word: "単語で置換える",
+            replace_none: "置換しない",
             aTag_title: "aタグのリンク置換",
             aTag_description: "aタグのリンクを置換をするかどうか設定します。(aタグのリンクを置換するとリンクが正常に機能しなくなります。)",
             aTag_hrefExclude: "aタグのリンクは置換えない",
@@ -409,6 +420,8 @@
             fetchInterval_3600000: "1時間",
             fetchInterval_7200000: "2時間",
             fetchInterval_18000000: "5時間",
+            fetchInterval_custom: "カスタム",
+            fetchInterval_custom_Description: "更新間隔の秒数を設定してください。接続先サーバーの負荷防止のため、300秒未満にした場合300秒として設定されます。",
             dashboardColor_title: "ダッシュボード背景色",
             dashboardColor_Description: "ダッシュボード画面全体の背景色の色を指定します。",
             dashboardColor_red: "赤色",
@@ -418,7 +431,12 @@
             language_title: "ダッシュボードの言語",
             language_Description: "ダッシュボード画面の表示言語を指定します。ページのリロード後に有効になります。",
             language_en: "English",
-            language_ja_jp: "日本語"
+            language_ja_jp: "日本語",
+            AboutInfo_title: "バージョン情報",
+            AboutInfo_description: "バージョン情報を表示します。",
+            AboutInfo_button: "バージョン情報",
+            save: "保存",
+            saveInfo: "保存しました。"
         },
         DB_exportImport: {
             export_title: "エクスポート",
@@ -801,7 +819,7 @@
                 let urlhitarray = new Array();
 
                 try {
-                    const URLSplit = SourceUrl.match(/(.*):\/\/([\w.-]+)(.*)/);
+                    const URLSplit = SourceUrl.match(/(.*?):\/\/([\w.-]+)(.*)/);
                     if (URLSplit === null) return false;
                     const [URLAll, URLProtocol, URLDomain, URLPath] = URLSplit;
                     if (URLAll === "") return false;
@@ -882,7 +900,8 @@
             const regexpTitleAsync = async (regexpArray, source) => {
                 return regexpArray.filter((str) => {
                     try {
-                        return new RegExp(str).test(source);
+                        const lastSlash = str.lastIndexOf("/");
+                        return new RegExp(str.slice(1, lastSlash), str.slice(lastSlash + 1)).test(source);
                     } catch (e) {
                         console.error(e);
                         return false;
@@ -915,7 +934,10 @@
                     let regexpTitlefilter = await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
                     return regexpTitlefilter.map((str) => {
                         try {
-                            return new RegExp(str, "gi");
+                            const lastSlash = str.lastIndexOf("/");
+                            let regexpFlag = str.slice(lastSlash + 1);
+                            if (!regexpFlag.includes("g")) regexpFlag += "g";
+                            return new RegExp(str.slice(1, lastSlash), regexpFlag);
                         } catch (e) {
                             console.error(e);
                             return new RegExp("(?!)", "gi");
@@ -937,7 +959,10 @@
                 let regexpTitlefilter = await regexpTitleAsync(BLT_uBL_Obj.titleRegexp, source);
                 return regexpTitlefilter.map((str) => {
                     try {
-                        return new RegExp(str, "gi");
+                        const lastSlash = str.lastIndexOf("/");
+                        let regexpFlag = str.slice(lastSlash + 1);
+                        if (!regexpFlag.includes("g")) regexpFlag += "g";
+                        return new RegExp(str.slice(1, lastSlash), regexpFlag);
                     } catch (e) {
                         console.error(e);
                         return new RegExp("(?!)", "gi");
@@ -968,10 +993,18 @@
                 return false;
             }
             if (BlockListText_Obj) {
-                BlockListText_Obj.text = BlockListText_Obj.text.split("\n").filter(str => str !== "");
+                BlockListText_Obj.text = BlockListText_Obj.text.split("\n").filter((str) => {
+                    if (str !== "") {
+                        if (BlockListText_Obj.commentBlock && !BlockListText_Obj.uBlacklist && str.slice(0, 2) === "##") {
+                            return false;
+                        }
+                        return true;
+                    }
+                    return false;
+                });
                 if (BlockListText_Obj.uBlacklist) {
                     const uBlacklist_matchPatterns = BlockListText_Obj.text.filter((str) => {
-                        if (!(str.slice(-1) === "/" && (str.slice(0, 1) === "/" || str.slice(0, 6) === "title/"))) return true;
+                        if (!(str.slice(-1) === "/" && (str.slice(0, 1) === "/")) && !(str.slice(0, 6) === "title/") && !(str.slice(0, 1) === "#")) return true;
                     });
 
                     const uBlacklist_regexp = BlockListText_Obj.text.filter((str) => {
@@ -981,9 +1014,9 @@
                     });
 
                     const uBlacklist_titleRegexp = BlockListText_Obj.text.filter((str) => {
-                        if (str.slice(0, 6) === "title/" && str.slice(-1) === "/") return true;
+                        if (str.slice(0, 6) === "title/") return true;
                     }).map((str) => {
-                        return str.slice(6).slice(0, -1);
+                        return str.slice(5);
                     });
                     BlockListText_Obj.text = {
                         matchPatterns: uBlacklist_matchPatterns,
@@ -1656,7 +1689,7 @@
     const gmInfo = await GMAPI.info();
     if (gmInfo) {
         if (gmInfo.scriptHandler == "AdGuard") {
-            storageAPIWriteDelay = 20;
+            storageAPIWriteDelay = 30;
             storageAPIWriteDelay2 = 500;
         }
     }
@@ -3073,6 +3106,7 @@
                     this.textareaDisable_Ele = null;
                     this.fetch_enable_Ele = null;
                     this.fetch_url_Ele = null;
+                    this.commentBlock_Ele = null;
                     this.regexp_Ele = null;
                     this.caseSensitive_Ele = null;
                     this.exact_Ele = null;
@@ -3083,6 +3117,10 @@
                         const applylist = this.ListStorage[this.currentIndex];
                         this.fetch_enable_Ele.checked = applylist.fetch_enable;
                         this.fetch_url_Ele.value = applylist.fetch_url;
+
+                        if(applylist.commentBlock === undefined) this.commentBlock_Ele.checked = false;
+                        else this.commentBlock_Ele.checked = applylist.commentBlock;
+
                         this.regexp_Ele.checked = applylist.regexp;
                         this.caseSensitive_Ele.checked = applylist.caseSensitive;
                         this.exact_Ele.checked = applylist.exact;
@@ -3189,6 +3227,10 @@
         <h1 id="BlockListText_Config_Title" class="ItemFrame_Title"></h1>
         <div id="BlockListText_Config_Div">
             <label class="BlockListText_Label">
+                <input id="BlockListText_Config7_Input" type="checkbox" />
+                <span id="BlockListText_Config7_SpanText"></span>
+            </label>
+            <label class="BlockListText_Label">
                 <input id="BlockListText_Config1_Input" type="checkbox" />
                 <span id="BlockListText_Config1_SpanText"></span>
             </label>
@@ -3229,6 +3271,7 @@
                     RootShadow.getElementById("BlockListText_Fetch_Title").textContent = localeText.DB_blockListText.URLget_title;
                     RootShadow.getElementById("BlockListText_Fetch_InputCheckbox_SpanText").textContent = localeText.DB_blockListText.URLget_enable;
                     RootShadow.getElementById("BlockListText_Config_Title").textContent = localeText.DB_blockListText.option_title;
+                    RootShadow.getElementById("BlockListText_Config7_SpanText").textContent = localeText.DB_blockListText.option_commentBlock;
                     RootShadow.getElementById("BlockListText_Config1_SpanText").textContent = localeText.DB_blockListText.option_regexp;
                     RootShadow.getElementById("BlockListText_Config2_SpanText").textContent = localeText.DB_blockListText.option_caseSensitive;
                     RootShadow.getElementById("BlockListText_Config3_SpanText").textContent = localeText.DB_blockListText.option_exact;
@@ -3242,6 +3285,7 @@
                     this.textarea_Ele = RootShadow.getElementById("BlockListText_Textarea");
                     this.fetch_enable_Ele = RootShadow.getElementById("BlockListText_Fetch_InputCheckbox");
                     this.fetch_url_Ele = RootShadow.getElementById("BlockListText_Fetch_InputText");
+                    this.commentBlock_Ele = RootShadow.getElementById("BlockListText_Config7_Input");
                     this.regexp_Ele = RootShadow.getElementById("BlockListText_Config1_Input");
                     this.caseSensitive_Ele = RootShadow.getElementById("BlockListText_Config2_Input");
                     this.exact_Ele = RootShadow.getElementById("BlockListText_Config3_Input");
@@ -3287,6 +3331,8 @@
 
                 async optionCheckboxDisableChange() {
                     if (this.uBlacklist_Ele.checked) {
+                        this.commentBlock_Ele.disabled = true;
+                        this.commentBlock_Ele.parentElement.style.textDecoration = "line-through";
                         this.regexp_Ele.disabled = true;
                         this.regexp_Ele.parentElement.style.textDecoration = "line-through";
                         this.caseSensitive_Ele.disabled = true;
@@ -3296,6 +3342,8 @@
                         this.spaceIgnore_Ele.disabled = true;
                         this.spaceIgnore_Ele.parentElement.style.textDecoration = "line-through";
                     } else {
+                        this.commentBlock_Ele.disabled = false;
+                        this.commentBlock_Ele.parentElement.style.textDecoration = "";
                         this.regexp_Ele.disabled = false;
                         this.regexp_Ele.parentElement.style.textDecoration = "";
                         this.caseSensitive_Ele.disabled = false;
@@ -3387,6 +3435,7 @@
                         name: this.name_Ele.value,
                         fetch_enable: this.fetch_enable_Ele.checked,
                         fetch_url: this.fetch_url_Ele.value,
+                        commentBlock: this.commentBlock_Ele.checked,
                         regexp: this.regexp_Ele.checked,
                         caseSensitive: this.caseSensitive_Ele.checked,
                         exact: this.exact_Ele.checked,
@@ -3476,6 +3525,7 @@
                         this.textarea_Ele.value = "";
                         this.fetch_enable_Ele.checked = false;
                         this.fetch_url_Ele.value = "";
+                        this.commentBlock_Ele.checked = true;
                         this.regexp_Ele.checked = false;
                         this.caseSensitive_Ele.checked = false;
                         this.exact_Ele.checked = false;
@@ -3637,6 +3687,10 @@
                 <input type="radio" name="replace_mode" value="word" />
                 <span id="SentenceBlockConfig3_Form_Input2_SpanText"></span>
             </label>
+            <label class="SentenceBlock_Label">
+                <input type="radio" name="replace_mode" value="none" />
+                <span id="SentenceBlockConfig3_Form_Input3_SpanText"></span>
+            </label>
         </form>
     </div>
 
@@ -3696,6 +3750,7 @@
                     RootShadow.getElementById("SentenceBlockConfig3_Description").textContent = localeText.DB_sentenceBlock.replace_description;
                     RootShadow.getElementById("SentenceBlockConfig3_Form_Input1_SpanText").textContent = localeText.DB_sentenceBlock.replace_sentence;
                     RootShadow.getElementById("SentenceBlockConfig3_Form_Input2_SpanText").textContent = localeText.DB_sentenceBlock.replace_word;
+                    RootShadow.getElementById("SentenceBlockConfig3_Form_Input3_SpanText").textContent = localeText.DB_sentenceBlock.replace_none;
                     RootShadow.getElementById("SentenceBlockConfig4_Title").textContent = localeText.DB_sentenceBlock.aTag_title;
                     RootShadow.getElementById("SentenceBlockConfig4_Description").textContent = localeText.DB_sentenceBlock.aTag_description;
                     RootShadow.getElementById("SentenceBlockConfig4_Select_Option1").textContent = localeText.DB_sentenceBlock.aTag_hrefExclude;
@@ -4265,6 +4320,10 @@
     #PreferencesPage p {
         margin: 0;
     }
+
+    input#FetchInterval_Custom_input {
+        width: calc(100% - 65px) !important;
+    }
 </style>
 
 <div id="PreferencesPage">
@@ -4308,7 +4367,12 @@
             <option id="FetchInterval_Select_Option4" value="3600000"></option>
             <option id="FetchInterval_Select_Option5" value="7200000"></option>
             <option id="FetchInterval_Select_Option6" value="18000000"></option>
+            <option id="FetchInterval_Select_Option7" value="custom"></option>
         </select>
+        <p id="FetchInterval_Custom_Description" style="display: none"></p>
+        <input id="FetchInterval_Custom_input" type="number" value="" style="display: none" />
+        <button id="FetchInterval_Custom_SaveButton" style="display: none"></button>
+        <span id="FetchInterval_Custom_SaveInfoText" style="display: none"></span>
     </div>
 
     <div id="DashboardColor" class="ItemFrame_Border">
@@ -4329,6 +4393,12 @@
             <option id="Language_Select_Option1" value="en"></option>
             <option id="Language_Select_Option2" value="ja-jp"></option>
         </select>
+    </div>
+
+    <div id="AboutInfo" class="ItemFrame_Border">
+        <h1 id="AboutInfo_Title" class="ItemFrame_Title"></h1>
+        <p id="AboutInfo_Description"></p>
+        <button id="AboutInfo_Button"></button>
     </div>
 
     <div id="SettingMainPageBack" class="PreferencesItem">
@@ -4360,6 +4430,10 @@
             RootShadow.getElementById("FetchInterval_Select_Option4").textContent = localeText.DB_preference.fetchInterval_3600000;
             RootShadow.getElementById("FetchInterval_Select_Option5").textContent = localeText.DB_preference.fetchInterval_7200000;
             RootShadow.getElementById("FetchInterval_Select_Option6").textContent = localeText.DB_preference.fetchInterval_18000000;
+            RootShadow.getElementById("FetchInterval_Select_Option7").textContent = localeText.DB_preference.fetchInterval_custom;
+            RootShadow.getElementById("FetchInterval_Custom_Description").textContent = localeText.DB_preference.fetchInterval_custom_Description;
+            RootShadow.getElementById("FetchInterval_Custom_SaveButton").textContent = localeText.DB_preference.save;
+            RootShadow.getElementById("FetchInterval_Custom_SaveInfoText").textContent = localeText.DB_preference.saveInfo;
 
             RootShadow.getElementById("DashboardColor_Title").textContent = localeText.DB_preference.dashboardColor_title;
             RootShadow.getElementById("DashboardColor_Description").textContent = localeText.DB_preference.dashboardColor_Description;
@@ -4373,11 +4447,16 @@
             RootShadow.getElementById("Language_Select_Option1").textContent = localeText.DB_preference.language_en;
             RootShadow.getElementById("Language_Select_Option2").textContent = localeText.DB_preference.language_ja_jp;
 
+            RootShadow.getElementById("AboutInfo_Title").textContent = localeText.DB_preference.AboutInfo_title;
+            RootShadow.getElementById("AboutInfo_Description").textContent = localeText.DB_preference.AboutInfo_description;
+            RootShadow.getElementById("AboutInfo_Button").textContent = localeText.DB_preference.AboutInfo_button;
+
             RootShadow.getElementById("PreferencesPageBack_Button").textContent = localeText.backButton;
 
 
             RootShadow.getElementById("ImportAndExport_Button").addEventListener("click", DB_ExportImport, false);
             RootShadow.getElementById("PerformanceConfig_Button").addEventListener("click", DB_performanceConfig, false);
+            RootShadow.getElementById("AboutInfo_Button").addEventListener("click", DB_aboutInfo, false);
 
             const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Input");
             if (PreferenceSettingStorage.hideButton) {
@@ -4422,11 +4501,44 @@
                 }
             });
 
-            RootShadow.getElementById("FetchInterval_Select").value = PreferenceSettingStorage.fetchInterval;
+            const FetchIntervalCustomEle1 = RootShadow.getElementById("FetchInterval_Custom_Description");
+            const FetchIntervalCustomEle2 = RootShadow.getElementById("FetchInterval_Custom_input");
+            const FetchIntervalCustomEle3 = RootShadow.getElementById("FetchInterval_Custom_SaveButton");
+            const FetchIntervalCustomEle4 = RootShadow.getElementById("FetchInterval_Custom_SaveInfoText");
+            if ([300000, 900000, 1800000, 3600000, 7200000, 18000000].includes(PreferenceSettingStorage.fetchInterval)) {
+                RootShadow.getElementById("FetchInterval_Select").value = PreferenceSettingStorage.fetchInterval;
+            } else {
+                RootShadow.getElementById("FetchInterval_Select").value = "custom";
+                FetchIntervalCustomEle1.style.display = "";
+                FetchIntervalCustomEle2.style.display = "";
+                FetchIntervalCustomEle3.style.display = "";
+                FetchIntervalCustomEle2.value = PreferenceSettingStorage.fetchInterval / 1000;
+            }
             RootShadow.getElementById("FetchInterval_Select").addEventListener("change", async (evt) => {
-                PreferenceSettingStorage.fetchInterval = parseInt(evt.target.value);
-                await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                if(evt.target.value == "custom") {
+                    FetchIntervalCustomEle1.style.display = "";
+                    FetchIntervalCustomEle2.style.display = "";
+                    FetchIntervalCustomEle3.style.display = "";
+                } else {
+                    FetchIntervalCustomEle1.style.display = "none";
+                    FetchIntervalCustomEle2.style.display = "none";
+                    FetchIntervalCustomEle3.style.display = "none";
+                    FetchIntervalCustomEle4.style.display = "none";
+                    PreferenceSettingStorage.fetchInterval = parseInt(evt.target.value);
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                }
             });
+            RootShadow.getElementById("FetchInterval_Custom_SaveButton").addEventListener("click", async () => {
+                const fetchIntervalSec = parseInt(RootShadow.getElementById("FetchInterval_Custom_input").value) * 1000;
+                if (fetchIntervalSec < 300000) {
+                    PreferenceSettingStorage.fetchInterval = 300000;
+                    FetchIntervalCustomEle2.value = 300;
+                } else {
+                    PreferenceSettingStorage.fetchInterval = fetchIntervalSec;
+                }
+                await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                FetchIntervalCustomEle4.style.display = "";
+            }, false);
 
             RootShadow.getElementById("DashboardColor_Select").value = PreferenceSettingStorage.dashboardColor;
             RootShadow.getElementById("DashboardColor_Select").addEventListener("change", async (evt) => {
@@ -4446,6 +4558,9 @@
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
                 DashboardMain_div.scroll({ top: 0 });
             }, false);
+
+
+
 
 
             async function DB_ExportImport() {
@@ -4742,7 +4857,7 @@
                     const setJSON = await DB_ExportImport_JSONFormat("export");
                     if (setJSON) {
                         const d = new Date();
-                        const filename = "NegativeBlockerBackup_" + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "_" + d.getHours() + "-" + d.getMinutes() + "-" + d.getSeconds() + ".json";
+                        const filename = "NegativeBlockerBackup_" + d.getFullYear() + "-" + new String(d.getMonth() + 1).padStart(2, '0') + "-" + new String(d.getDate()).padStart(2, '0') + "_" + new String(d.getHours()).padStart(2, '0') + "-" + new String(d.getMinutes()).padStart(2, '0') + "-" + new String(d.getSeconds()).padStart(2, '0') + ".json";
 
                         const blob = new Blob([setJSON], { type: 'text/plain' });
                         const a = document.createElement("a");
@@ -5049,6 +5164,49 @@
                 }, false);
             }
 
+            async function DB_aboutInfo() {
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+                DashboardMain_div.scroll({ top: 0 });
+                const DB_performanceConfig_div = document.createElement("div");
+                DB_performanceConfig_div.innerHTML = `
+<style type="text/css">
+    #PreferencesPage p {
+        margin: 0;
+    }
+</style>
+
+<div id="PreferencesPage">
+    <div id="AboutInfoPage" class="ItemFrame_Border">
+        <h1 id="AboutInfoPage_Title" class="ItemFrame_Title"></h1>
+        <p id="AboutInfoPage_Description"></p>
+    </div>
+
+    <div>
+        <button id="AboutInfoPage_BackButton"></button>
+    </div>
+</div>
+                `;
+                DashboardMain_div.append(DB_performanceConfig_div);
+                Dashboard_Window_Ele_stack.push(DB_performanceConfig_div);
+
+                RootShadow.getElementById("AboutInfoPage_Title").textContent = localeText.DB_preference.AboutInfo_title;
+                RootShadow.getElementById("AboutInfoPage_Description").innerHTML = `
+NegativeBlocker<br>
+© 2021-2023 mx5vrota63<br><br>
+Version 1.4.0<br>
+MIT License<br><br>
+GitHub Repository URL:<br>
+<a href="https://github.com/mx5vrota63/NegativeBlocker" target="_blank" rel="noopener noreferrer">https://github.com/mx5vrota63/NegativeBlocker</a>
+                `;
+
+                RootShadow.getElementById("AboutInfoPage_BackButton").textContent = localeText.backButton;
+
+                RootShadow.getElementById("AboutInfoPage_BackButton").addEventListener("click", () => {
+                    Dashboard_Window_Ele_stack.pop().remove();
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
+                    DashboardMain_div.scroll({ top: 0 });
+                }, false);
+            }
 
         }
     }

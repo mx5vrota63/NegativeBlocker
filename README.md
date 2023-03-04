@@ -23,19 +23,19 @@ URLs can also be registered, and it is compatible with the uBlacklist format (Be
 
 2. Click on the installation link below.
 
-[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)
+[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js)
 
 Click Install to display the installation confirmation screen, and follow the instructions to install the user script.
 
-### Android (Firefox Nightly & Fennec & Iceraven)
+### Android (Firefox Beta & Fennec & Iceraven)
 
-[Firefox Nightly](https://play.google.com/store/apps/details?id=org.mozilla.fenix) is not recommended as it is very unstable.  
+[Firefox Beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta) is somewhat unstable.  
 [Fennec](https://f-droid.org/packages/org.mozilla.fennec_fdroid) is an F-Droid application outside of Google Play.  
 [Iceraven](https://github.com/fork-maintainers/iceraven-browser) is a non-Google Play application. We recommend that you install it from [FFUpdater](https://f-droid.org/packages/de.marmaro.krt.ffupdater) on F-Droid. It is easy to install and will notify you when there is an update.
 
 1. Configure to use any add-on.([Reference](https://blog.mozilla.org/addons/2020/09/29/expanded-extension-support-in-firefox-for-android-nightly)) (Iceraven does not require any operation.)
    1. Tap on the three dot menu and select "Settings".
-   2. Select "About Fennec" (About Firefox Nightly) at the bottom.
+   2. Select "About Fennec" (About Firefox Beta) at the bottom.
    3. Tap the logo icon five times in succession. When the "Debug menu enabled" message appears, go back to the previous screen.
    4. "Custom Add-on collection" will appear in the "Advanced" column, select it.
    5. Enter the following information in the input field and tap "OK".
@@ -49,7 +49,7 @@ Click Install to display the installation confirmation screen, and follow the in
 3. Select Add-ons in the "Advanced" column and install the user script manager of your choice from the list. (One of Tampermonkey or Violentmonkey).
 4. Tap on the installation link below.
 
-[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)
+[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js)
 
 Tap Install to display the installation confirmation screen, and follow the instructions to install the user script.
 
@@ -66,7 +66,7 @@ https://itunes.apple.com/us/app/userscripts/id1463298887
 https://github.com/quoid/userscripts#usage
 3. Tap the following link strongly and tap "Download Linked File".  
 
-[Download](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)  
+[Download](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js)  
 
 4. From the home screen, launch the "Files" app, locate the downloads folder,  
 Move the "NegativeBlocker.user.js" to the "Set Userscripts Directory" folder that you set up in the "Userscripts" app.
@@ -96,8 +96,8 @@ To import the JSON file, click the button in the upper right corner of the scree
 (The settings are current as of October 9 2021, in the author's environment. The sample settings may not work due to changes in the site specifications.)  
 (If you are using a Firefox-based browser on Android, you will need to have the [Google Search Fixer](https://addons.mozilla.org/firefox/addon/google-search-fixer) add-on installed.)
 
-[Sample settings (for desktop)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/SampleJSON/NagativeBlocker_Sample_en_Desktop.json)  
-[Sample settings (for mobile)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/SampleJSON/NagativeBlocker_Sample_en_Mobile.json)  
+[Sample settings (for desktop)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/SampleJSON/NagativeBlocker_Sample_en_Desktop.json)  
+[Sample settings (for mobile)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/SampleJSON/NagativeBlocker_Sample_en_Mobile.json)  
 
 ## Q&A
 
@@ -166,19 +166,19 @@ URL も登録可能で、uBlacklist 形式と互換性があります(Beta)。
 
 2. 下にあるインストールのリンクをクリックしてください。
 
-[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)
+[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js)
 
 Install をクリックするとインストール確認画面が表示されますので、指示に従ってインストールしてください。
 
-### Android (Firefox Nightly & Fennec & Iceraven)
+### Android (Firefox Beta & Fennec & Iceraven)
 
-[Firefox Nightly](https://play.google.com/store/apps/details?id=org.mozilla.fenix) は非常に不安定ですので推奨しません。  
+[Firefox Beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta) は動作がやや不安定です。  
 [Fennec](https://f-droid.org/packages/org.mozilla.fennec_fdroid) は Google Play 外の F-Droid アプリケーションとなります。  
 [Iceraven](https://github.com/fork-maintainers/iceraven-browser) は Google Play 外のアプリケーションです。インストールする際は、 F-Droid にある [FFUpdater](https://f-droid.org/packages/de.marmaro.krt.ffupdater) からインストールすることをおすすめします。インストールが簡単にでき、アップデートがあった際に通知をしてくれます。
 
 1. 任意のアドオンを使えるよう設定します。([参考](https://blog.mozilla.org/addons/2020/09/29/expanded-extension-support-in-firefox-for-android-nightly)) (Iceravenは操作不要)
    1. 3 つのドットメニューをタップし、「設定」を選択します。
-   2. 一番下にある「Fennec について」(Firefox Nightly について)を選択します。
+   2. 一番下にある「Fennec について」(Firefox Beta について)を選択します。
    3. ロゴアイコンを 5 回連続タップします。「デバッグメニューが有効です」が表示されたら、1 つ前の画面に戻ります。
    4. 「詳細設定」の欄に「カスタムアドオンコレクション」が表示されるので、選択します。
    5. 入力欄に次の内容を入力して「OK」をタップします。
@@ -192,7 +192,7 @@ Install をクリックするとインストール確認画面が表示されま
 3. 「詳細設定」欄にあるアドオンを選択し、一覧から好みのユーザースクリプトマネージャーをインストールします。(Tampermonkey、Violentmonkey のどれか一つ)
 4. 下にあるインストールのリンクをタップしてください。
 
-[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)
+[Install](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js)
 
 Install をタップするとインストール確認画面が表示されますので、指示に従ってインストールしてください。  
 (Fennec を使用している場合、アドオンの設定画面などが英語で表示されてしまう問題がありますが、NegativeBlocker は Settings page → Preferences Config → Dashboard language から日本語で表示できます。)
@@ -210,7 +210,7 @@ https://itunes.apple.com/us/app/userscripts/id1463298887
 https://github.com/quoid/userscripts#usage
 3. 次のリンクを強くタップし、"リンク先のファイルをダウンロード"をタップしてください。  
 
-[ダウンロード](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/NegativeBlocker.user.js)  
+[ダウンロード](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js)  
 
 4. ホーム画面から "ファイル" アプリを起動し、ダウンロードフォルダを探し、"NegativeBlocker.user.js"を  
 "Userscripts"アプリで設定した"Set Userscripts Directory"のフォルダに移動します。
@@ -240,8 +240,8 @@ https://github.com/quoid/userscripts#usage
 (設定内容は作者の環境で、 2021/10/9 現在の物になります。サイト側の仕様変更などにより、サンプルの設定が動作しない場合があります。)  
 (AndroidのFirefox系のブラウザを使用している場合、 [Google Search Fixer](https://addons.mozilla.org/firefox/addon/google-search-fixer) アドオンがインストールされている必要があります。)
 
-[設定サンプル(デスクトップ用)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/SampleJSON/NagativeBlocker_Sample_ja_Desktop.json)  
-[設定サンプル(モバイル用)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/master/SampleJSON/NagativeBlocker_Sample_ja_Mobile.json)  
+[設定サンプル(デスクトップ用)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/SampleJSON/NagativeBlocker_Sample_ja_Desktop.json)  
+[設定サンプル(モバイル用)](https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/SampleJSON/NagativeBlocker_Sample_ja_Mobile.json)  
 
 ## Q&A
 
