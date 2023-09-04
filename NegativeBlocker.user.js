@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.4.0
+// @version        1.5.0
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
@@ -10,6 +10,7 @@
 // @author         mx5vrota63
 // @match          *://*/*
 // @run-at         document-start
+// @sandbox        JavaScript
 // @grant          GM.getValue
 // @grant          GM_getValue
 // @grant          GM.setValue
@@ -24,7 +25,6 @@
 // @grant          GM_registerMenuCommand
 // @grant          GM.xmlHttpRequest
 // @grant          GM_xmlhttpRequest
-// @grant          unsafeWindow
 // ==/UserScript==
 
 (async () => {
@@ -46,6 +46,8 @@
     let storageAPIWriteDelay2 = 0;
     let isSafari = false;
 
+    const iframeSearchArray = new Array();
+
     const SentenceBlock_ExecuteResultList = new Array();
     const ElementBlock_executeResultList = new Object();
 
@@ -65,6 +67,8 @@
         OKButton: "OK",
         cancelButton: "Cancel",
         backButton: "←Back",
+        save: "Save",
+        saveInfo: "Saveed.",
         DB_blockResult: {
             sentenceBlock: "SentenceBlock Apply list",
             sentenceBlock_tempDisableButton: "Apply temporary disable and then reload",
@@ -180,6 +184,9 @@
             uBlacklist_urlOnly: "URL match patterns and URL RegExp (Only valid if the value to be searched is a URL.)",
             uBlacklist_titleOnly: "Only text in \"title/\"",
             uBlacklist_all: "Use all types",
+            iframeOnly_title: "Applies only to elements in iframes",
+            iframeOnly_description: "This rule applies only to elements within iframes. To include iframe elements of the same origin, you must enable \"Include iframe elements of the same origin\" in the preferences.",
+            iframeOnly_enable: "Enable",
             resultShow_title: "Display the Block Apply list",
             resultShow_description: "Select how you want to view the block results on the top page of the dashboard.",
             resultShow_none: "Hide",
@@ -196,6 +203,9 @@
             performanceConfig_title: "Performance settings",
             performanceConfig_description: "Configure performance-related settings such as the operation interval of the Extensions.",
             performanceConfig_button: "Performance settings",
+            blankScreenConfig_title: "Blank screen settings",
+            blankScreenConfig_description: "Some pages may momentarily display blocking content even when the performance setting is set to block priority. This problem can be alleviated by temporarily displaying a blank screen immediately after the page starts loading.",
+            blankScreenConfig_button: "Blank screen settings",
             buttonHide_title: "Always hide the top right button.",
             buttonHide_description: "Always hide the button in the upper right corner. You can access the dashboard from the UserScript Manager menu screen even after hiding it.",
             buttonHide_boxText: "Hide the button",
@@ -213,6 +223,9 @@
             fetchInterval_18000000: "5 hour",
             fetchInterval_custom: "Custom",
             fetchInterval_custom_Description: "Set the number of seconds between updates. If it is less than 300 seconds, it will be set as 300 seconds to prevent load on the destination server.",
+            iframeSameoriginTarget_title: "Include iframe elements of the same origin",
+            iframeSameoriginTarget_description: "By default, elements in iframes of the same origin are not blocked. By enabling this setting, elements in iframes of the same origin can also be blocked. (Experimental)",
+            iframeSameoriginTarget_boxText: "Included",
             dashboardColor_title: "Dashboard background color",
             dashboardColor_Description: "Specifies the color of the background color for the entire dashboard screen.",
             dashboardColor_red: "Red",
@@ -225,9 +238,7 @@
             language_ja_jp: "日本語",
             AboutInfo_title: "About NegativeBlocker",
             AboutInfo_description: "Information about this is displayed.",
-            AboutInfo_button: "About NegativeBlocker",
-            save: "Save",
-            saveInfo: "Saveed."
+            AboutInfo_button: "About NegativeBlocker"
         },
         DB_exportImport: {
             export_title: "Export",
@@ -264,9 +275,25 @@
             interval_description3: "The larger the value, the lighter the operation becomes, but the block processing will be delayed.",
             overRide_title: "Site Specific Settings",
             overRide_description1: "You can override the mode of operation with a matching site in the BlockListText.",
-            overRide_description2: "If URLs are matched in multiple settings, the top item displayed in this settings section will take precedence.",
-            save: "Save",
-            saveInfo: "Saveed."
+            overRide_description2: "If URLs are matched in multiple settings, the top item displayed in this settings section will take precedence."
+        },
+        DB_blankScreenConfig: {
+            enableMode_title: "Blank screen enable mode",
+            enableMode_description: "Sets the mode in which the blank screen is displayed.",
+            enableMode_allSite: "All Sites",
+            enableMode_BLT: "Site specified by BlockListText",
+            enableMode_disable: "Disabled",
+            endTiming_title: "Blank screen exit timing",
+            endTiming_description: "Specifies when to exit the blank screen.",
+            endTiming_bodyIn: "html starts loading + additional display time",
+            endTiming_loadComplete: "Page loading complete + additional display time",
+            blackTime_title: "Additional blank screen display time",
+            blackTime_description: "Specify the time in milliseconds to display an additional blank screen.",
+            darkMode_title: "Blank screen dark mode",
+            darkMode_description: "Change the blank screen background.",
+            darkMode_light: "Light",
+            darkMode_dark: "Dark",
+            darkMode_system: "adjust to the OS"
         }
     }
 
@@ -274,6 +301,8 @@
         OKButton: "OK",
         cancelButton: "キャンセル",
         backButton: "←戻る",
+        save: "保存",
+        saveInfo: "保存しました。",
         DB_blockResult: {
             sentenceBlock: "文章ブロック 適用リスト",
             sentenceBlock_tempDisableButton: "一時無効を適用してリロード",
@@ -389,6 +418,9 @@
             uBlacklist_urlOnly: "URLマッチパターンとURL正規表現(検索対象の値がURLだけのみ有効)",
             uBlacklist_titleOnly: "\"title/\" のテキストのみ",
             uBlacklist_all: "すべての種類を使用する",
+            iframeOnly_title: "iframe内の要素のみ適用",
+            iframeOnly_description: "iframe内の要素のみにこのルールを適用します。同一オリジンのiframe要素も対象にするには、環境設定から「同一オリジンのiframe要素も対象にする」を有効にする必要があります。",
+            iframeOnly_enable: "有効",
             resultShow_title: "ブロック適用リストの表示",
             resultShow_description: "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。",
             resultShow_none: "非表示",
@@ -405,6 +437,9 @@
             performanceConfig_title: "パフォーマンス設定",
             performanceConfig_description: "拡張機能の動作間隔などのパフォーマンス関係の設定をします。",
             performanceConfig_button: "パフォーマンス設定",
+            blankScreenConfig_title: "ブランク画面設定",
+            blankScreenConfig_description: "一部のページではパフォーマンス設定をブロック優先にしていても一瞬ブロックする内容が表示されてしまう場合があります。ページがロード開始直後、何もない画面を一時的に表示することでこの問題を軽減します。",
+            blankScreenConfig_button: "ブランク画面設定",
             buttonHide_title: "右上のボタンを常時非表示にする",
             buttonHide_description: "右上のボタンを常時非表示にします。非表示後もUserScriptマネージャーのメニュー画面からダッシュボードにアクセスできます。",
             buttonHide_boxText: "ボタンを非表示にする",
@@ -422,6 +457,9 @@
             fetchInterval_18000000: "5時間",
             fetchInterval_custom: "カスタム",
             fetchInterval_custom_Description: "更新間隔の秒数を設定してください。接続先サーバーの負荷防止のため、300秒未満にした場合300秒として設定されます。",
+            iframeSameoriginTarget_title: "同一オリジンのiframe要素も対象にする",
+            iframeSameoriginTarget_description: "初期状態では同一オリジンのiframe内要素はブロック対象になっていません。この設定を有効にすると同一オリジンのiframe内の要素もブロック対象にできます。（実験的）",
+            iframeSameoriginTarget_boxText: "対象にする",
             dashboardColor_title: "ダッシュボード背景色",
             dashboardColor_Description: "ダッシュボード画面全体の背景色の色を指定します。",
             dashboardColor_red: "赤色",
@@ -434,9 +472,7 @@
             language_ja_jp: "日本語",
             AboutInfo_title: "バージョン情報",
             AboutInfo_description: "バージョン情報を表示します。",
-            AboutInfo_button: "バージョン情報",
-            save: "保存",
-            saveInfo: "保存しました。"
+            AboutInfo_button: "バージョン情報"
         },
         DB_exportImport: {
             export_title: "エクスポート",
@@ -473,9 +509,25 @@
             interval_description3: "数値を大きくするほど動作が軽くなりますが、ブロック処理がその分遅れます。",
             overRide_title: "サイト別設定",
             overRide_description1: "ブロックリストテキストのマッチするサイトで動作モードを上書きすることができます。",
-            overRide_description2: "複数の設定でURLがマッチした場合、この設定項目に表示されている項目の一番上が優先されます。",
-            save: "保存",
-            saveInfo: "保存しました。"
+            overRide_description2: "複数の設定でURLがマッチした場合、この設定項目に表示されている項目の一番上が優先されます。"
+        },
+        DB_blankScreenConfig: {
+            enableMode_title: "ブランク画面有効化設定",
+            enableMode_description: "ブランク画面表示するモードを設定します。",
+            enableMode_allSite: "すべてのサイト",
+            enableMode_BLT: "ブロックリストテキストで指定したサイト",
+            enableMode_disable: "無効",
+            endTiming_title: "ブランク画面の終了タイミング",
+            endTiming_description: "ブランク画面を終了するタイミングを指定します。",
+            endTiming_bodyIn: "htmlが読み込み開始+追加表示時間",
+            endTiming_loadComplete: "ページの読み込みが完了+追加表示時間",
+            blackTime_title: "ブランク画面の追加表示時間",
+            blackTime_description: "ブランク画面を追加で表示する時間をミリ秒単位で指定します。",
+            darkMode_title: "ブランク画面のダークモード",
+            darkMode_description: "ブランク画面の背景を変更します。",
+            darkMode_light: "ライト",
+            darkMode_dark: "ダーク",
+            darkMode_system: "OSに合わせる"
         }
     }
 
@@ -672,11 +724,19 @@
                     overRide_performancePriority1: "",
                     overRide_performancePriority2: "",
                     overRide_blockPriority: "",
-                    overRide_balance: "",
+                    overRide_balance: ""
+                },
+                blankScreenConfig: {
+                    enableMode: "disable",
+                    enableMode_BLT: "",
+                    endTiming: "bodyIn",
+                    blankTime: 0,
+                    darkMode: "light"
                 },
                 hideButton: false,
                 nowLoadSet: false,
                 fetchInterval: 3600000,
+                iframeSameoriginTarget: false,
                 dashboardColor: "#FFFFB2",
                 language: languageCode
             }
@@ -705,98 +765,102 @@
     }
 
     async function BlockListText_feathLoad() {
-        const fetchResultArray = await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
-            if (BlockListText_Obj.fetch_enable) {
-                let errorFlag = false;
-                const BLT_name = "BLT_" + BlockListText_Obj.name;
-                let BlockListText_textObj = await storageAPI.read(BLT_name);
-                try {
+        if(!inIframeDetect()) {
+            const fetchResultArray = await Promise.all(BlockListTextStorage.map(async (BlockListText_Obj) => {
+                if (BlockListText_Obj.fetch_enable) {
+                    let errorFlag = false;
+                    const BLT_name = "BLT_" + BlockListText_Obj.name;
+                    let BlockListText_textObj = await storageAPI.read(BLT_name);
                     try {
-                        BlockListText_textObj = JSON.parse(BlockListText_textObj);
-                    } catch (e) {
-                        console.error(e);
-                        console.error("NegativeBlocker: BlockListText SaveObject Broken: [ " + BLT_name + " ]");
-                        BlockListText_textObj = {
-                            text: "",
-                            fetch_timeStamp: 0,
-                            longTextSplit: 0
-                        }
-                    }
-                    if (Date.now() - BlockListText_textObj.fetch_timeStamp >= PreferenceSettingStorage.fetchInterval) {
-                        const response = await GMAPI.xhr(BlockListText_Obj.fetch_url);
-                        if (response) {
-                            if (response.statusText == "OK") {
-                                BlockListText_textObj.text = response.responseText;
-                            } else {
-                                errorFlag = true;
-                                console.error("NegativeBlocker: GM.xmlHttpRequest API Failure: [ " + BLT_name + " ] status: " + response.status);
+                        try {
+                            BlockListText_textObj = JSON.parse(BlockListText_textObj);
+                        } catch (e) {
+                            console.error(e);
+                            console.error("NegativeBlocker: BlockListText SaveObject Broken: [ " + BLT_name + " ]");
+                            BlockListText_textObj = {
+                                text: "",
+                                fetch_timeStamp: 0,
+                                longTextSplit: 0
                             }
-                        } else {
-                            await fetch(BlockListText_Obj.fetch_url).then(async (response) => {
-                                if (response.ok) {
-                                    BlockListText_textObj.text = await response.text();
+                        }
+                        if (Date.now() - BlockListText_textObj.fetch_timeStamp >= PreferenceSettingStorage.fetchInterval) {
+                            const response = await GMAPI.xhr(BlockListText_Obj.fetch_url);
+                            if (response) {
+                                if (response.statusText == "OK") {
+                                    BlockListText_textObj.text = response.responseText;
                                 } else {
                                     errorFlag = true;
-                                    console.error("NegativeBlocker: FetchAPI Failure: [ " + BLT_name + " ] status: " + response.status);
+                                    console.error("NegativeBlocker: GM.xmlHttpRequest API Failure: [ " + BLT_name + " ] status: " + response.status);
                                 }
-                            }).catch((e) => {
-                                errorFlag = true;
-                                console.error(e);
-                            });
-                        }
-                        if (errorFlag) return false;
+                            } else {
+                                await fetch(BlockListText_Obj.fetch_url).then(async (response) => {
+                                    if (response.ok) {
+                                        BlockListText_textObj.text = await response.text();
+                                    } else {
+                                        errorFlag = true;
+                                        console.error("NegativeBlocker: FetchAPI Failure: [ " + BLT_name + " ] status: " + response.status);
+                                    }
+                                }).catch((e) => {
+                                    errorFlag = true;
+                                    console.error(e);
+                                });
+                            }
+                            if (errorFlag) return false;
 
-                        const strSplitArray = new Array();
-                        const textSplitOldLength = BlockListText_textObj.longTextSplit;
-                        if (BlockListText_textObj.text.length > strLimit) {
-                            let strConut = 0;
-                            do {
-                                strSplitArray.push(BlockListText_textObj.text.substr(strConut, strLimit));
-                                strConut += strLimit;
-                            } while (BlockListText_textObj.text.length > strConut);
-                            BlockListText_textObj.longTextSplit = strSplitArray.length;
-                            BlockListText_textObj.text = "";
-                        }
+                            const strSplitArray = new Array();
+                            const textSplitOldLength = BlockListText_textObj.longTextSplit;
+                            if (BlockListText_textObj.text.length > strLimit) {
+                                let strConut = 0;
+                                do {
+                                    strSplitArray.push(BlockListText_textObj.text.substr(strConut, strLimit));
+                                    strConut += strLimit;
+                                } while (BlockListText_textObj.text.length > strConut);
+                                BlockListText_textObj.longTextSplit = strSplitArray.length;
+                                BlockListText_textObj.text = "";
+                            }
 
-                        for (let i = strSplitArray.length; i < textSplitOldLength; i++) {
-                            const BLT_name_index = BLT_name + "_" + i;
-                            await storageAPI.delete(BLT_name_index);
-                        }
+                            for (let i = strSplitArray.length; i < textSplitOldLength; i++) {
+                                const BLT_name_index = BLT_name + "_" + i;
+                                await storageAPI.delete(BLT_name_index);
+                            }
 
-                        if (strSplitArray.length > 0) {
+                            if (strSplitArray.length > 0) {
+                                await storageAPI.write(BLT_name, JSON.stringify(BlockListText_textObj));
+                                await pauseSleep(storageAPIWriteDelay);
+                            }
+                            for (let i = 0; i < strSplitArray.length; i++) {
+                                const BlockListText_Keyname_SplitIndex = BLT_name + "_" + i;
+                                const StoObj_Text_Split = {
+                                    text: strSplitArray[i]
+                                }
+                                await storageAPI.write(BlockListText_Keyname_SplitIndex, JSON.stringify(StoObj_Text_Split));
+                                await pauseSleep(storageAPIWriteDelay);
+                            }
+
+                            BlockListText_textObj.fetch_timeStamp = Date.now();
                             await storageAPI.write(BLT_name, JSON.stringify(BlockListText_textObj));
                             await pauseSleep(storageAPIWriteDelay);
+                            return true;
+                        } else {
+                            return undefined;
                         }
-                        for (let i = 0; i < strSplitArray.length; i++) {
-                            const BlockListText_Keyname_SplitIndex = BLT_name + "_" + i;
-                            const StoObj_Text_Split = {
-                                text: strSplitArray[i]
-                            }
-                            await storageAPI.write(BlockListText_Keyname_SplitIndex, JSON.stringify(StoObj_Text_Split));
-                            await pauseSleep(storageAPIWriteDelay);
-                        }
-
-                        BlockListText_textObj.fetch_timeStamp = Date.now();
-                        await storageAPI.write(BLT_name, JSON.stringify(BlockListText_textObj));
-                        await pauseSleep(storageAPIWriteDelay);
-                        return true;
-                    } else {
+                    } catch (e) {
+                        console.error(e);
                         return undefined;
                     }
-                } catch (e) {
-                    console.error(e);
-                    return undefined;
                 }
+                return undefined;
+            }));
+            if (fetchResultArray.every(arr => arr !== false)) {
+                console.log("NegativeBlocker: Fetch All Update");
+                fetchGlobalFlagStorage.retryFlag = false;
+            } else {
+                fetchGlobalFlagStorage.retryFlag = false;
+                // RetryDisable 
+                // fetchGlobalFlagStorage.retryFlag = true;
             }
-            return undefined;
-        }));
-        if (fetchResultArray.every(arr => arr !== false)) {
-            console.log("NegativeBlocker: Fetch All Update");
-            fetchGlobalFlagStorage.retryFlag = false;
-        } else {
-            fetchGlobalFlagStorage.retryFlag = true;
+            await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
         }
-        await storageAPI.write("FetchGlobalFlag", JSON.stringify(fetchGlobalFlagStorage));
     }
 
 
@@ -1175,7 +1239,7 @@
                         }
                     } else if (setObj.url_mode === "wildcard") {
                         try {
-                            const result = new RegExp(this.escapeRegExpExcludewildcard(setObj.url), 'gi').test(CurrentURL);
+                            const result = new RegExp("^" + this.escapeRegExpExcludewildcard(setObj.url) + "$", 'gi').test(CurrentURL);
                             if (result) {
                                 return true;
                             }
@@ -1312,6 +1376,9 @@
             super();
             this.ElementBlock_filter1;
             this.ElementBlock_filter2;
+            this.ElementBlock_filter1_iframe;
+            this.ElementBlock_filter2_iframe;
+            this.iframeCrossOriginFlag;
         }
         async init() {
             const CurrentURL = location.href;
@@ -1329,7 +1396,7 @@
                     }
                 } else if (setObj.url_mode === "wildcard" && setObj.enable === true) {
                     try {
-                        const result = new RegExp(this.escapeRegExpExcludewildcard(setObj.url), 'g').test(CurrentURL);
+                        const result = new RegExp("^" + this.escapeRegExpExcludewildcard(setObj.url) + "$", 'g').test(CurrentURL);
                         if (result) {
                             return true;
                         }
@@ -1354,9 +1421,35 @@
             }));
             this.ElementBlock_filter2 = BLT2ndCheck.filter((setObj) => setObj !== null);
             await this.BlockListText_StorageLoad(this.ElementBlock_filter2);
+
+            this.ElementBlock_filter1_iframe = this.ElementBlock_filter1.filter((setObj) => {
+                if (setObj.iframeOnly == true) return true;
+                else return false;
+            });
+            this.ElementBlock_filter2_iframe = this.ElementBlock_filter2.filter((setObj) => {
+                if (setObj.iframeOnly == true) return true;
+                else return false;
+            });
+            this.ElementBlock_filter1 = this.ElementBlock_filter1.filter((setObj) => {
+                if (setObj.iframeOnly == false || setObj.iframeOnly == undefined) return true;
+                else return false;
+            });
+            this.ElementBlock_filter2 = this.ElementBlock_filter2.filter((setObj) => {
+                if (setObj.iframeOnly == false || setObj.iframeOnly == undefined) return true;
+                else return false;
+            });
+
+            this.iframeCrossoriginFlag = inIframeDetect();
+
         }
-        async Start(node) {
-            await Promise.all([this.ElementBlockExecute(node, this.ElementBlock_filter1), this.ElementBlockExecute(node, this.ElementBlock_filter2)]);
+        async Start(node, iframeSameoriginFlag) {
+            if (iframeSameoriginFlag == true) {
+                await Promise.all([this.ElementBlockExecute(node, this.ElementBlock_filter1_iframe), this.ElementBlockExecute(node, this.ElementBlock_filter2_iframe)]);
+            } else if (this.iframeCrossoriginFlag == true) {
+                await Promise.all([this.ElementBlockExecute(node, this.ElementBlock_filter1), this.ElementBlockExecute(node, this.ElementBlock_filter2), this.ElementBlockExecute(node, this.ElementBlock_filter1_iframe), this.ElementBlockExecute(node, this.ElementBlock_filter2_iframe)]);
+            } else {
+                await Promise.all([this.ElementBlockExecute(node, this.ElementBlock_filter1), this.ElementBlockExecute(node, this.ElementBlock_filter2)]);
+            }
         }
         async ElementBlockExecute(node, EleBlock_SettingArray) {
             await Promise.all(EleBlock_SettingArray.map(async (eleBlockSet) => {
@@ -1543,6 +1636,134 @@
         }
     }
 
+    class BG_blankScreen extends BackGround_Func {
+        constructor() {
+            super();
+            this.enableMode;
+            this.enableMode_BLT;
+            this.endTiming;
+            this.blankTime;
+            this.darkMode;
+
+            if(PreferenceSettingStorage.blankScreenConfig === undefined) {
+                this.enableMode = "disable";
+                this.enableMode_BLT = "";
+                this.endTiming = "bodyIn";
+                this.blankTime = 0;
+                this.darkMode = "light";
+            } else {
+                this.enableMode = PreferenceSettingStorage.blankScreenConfig.enableMode;
+                this.enableMode_BLT = PreferenceSettingStorage.blankScreenConfig.enableMode_BLT;
+                this.endTiming = PreferenceSettingStorage.blankScreenConfig.endTiming;
+                this.blankTime = parseInt(PreferenceSettingStorage.blankScreenConfig.blankTime);
+                this.darkMode = PreferenceSettingStorage.blankScreenConfig.darkMode;
+            }
+        }
+        async BLTCheck(BLT_name) {
+            if (BLT_name === "") return false;
+            const CurrentURL = location.href;
+            await this.BLT_loadFunction(BLT_name);
+            const result = await this.BlockListTextSearch(BLT_name, CurrentURL, "href");
+            if (result.length) return true;
+            else return false;
+        }
+        async blankScreen() {
+            const divElement_RootShadow = document.createElement("div");
+            divElement_RootShadow.style.all = "initial";
+            divElement_RootShadow.attachShadow({ mode: "open" });
+        
+            const blankElement = document.createElement("div");
+            blankElement.style.position = "fixed";
+            blankElement.style.top = 0;
+            blankElement.style.width = "calc(100vw - (100vw - 100%))";
+            blankElement.style.height = "calc(100vh - (100vh - 100%))";
+            blankElement.style.zIndex = 2147483647;
+            if (this.darkMode === "light") {
+                blankElement.style.backgroundColor = "rgba(255, 255, 255, 1)";
+            } else if (this.darkMode === "dark") {
+                blankElement.style.backgroundColor = "rgba(42, 42, 46, 1)";
+            } else if (this.darkMode === "system") {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    blankElement.style.backgroundColor = "rgba(42, 42, 46, 1)";
+                } else {
+                    blankElement.style.backgroundColor = "rgba(255, 255, 255, 1)";
+                }
+            }
+
+
+            const blankElementInsert = async () => {
+                document.body.append(divElement_RootShadow);
+                divElement_RootShadow.shadowRoot.append(blankElement);
+            }
+
+            const blankElementRemove = async () => {
+                await pauseSleep(this.blankTime);
+                blankElement.remove();
+            }
+
+            if (document.body != null) {
+                if (this.endTiming == "bodyIn") {
+                    await blankElementInsert();
+                    await blankElementRemove();
+                } else {
+                    if (!(document.readyState == "complete" && this.blankTime == 0)) {
+                        await blankElementInsert();
+                    } else {
+                        return;
+                    }
+                }
+            } else {
+                const observer = new MutationObserver(async () => {
+                    if (document.body != null) {
+                        observer.disconnect();
+                        if (this.endTiming == "bodyIn") {
+                            await blankElementInsert();
+                            await blankElementRemove();
+                        } else {
+                            if (!(document.readyState == "complete" && this.blankTime == 0)) {
+                                await blankElementInsert();
+                            } else {
+                                await blankElementInsert();
+                                await blankElementRemove();
+                            }
+                        }
+                    }
+                });
+                observer.observe(document, {
+                    attributes: false,
+                    attributeOldValue: false,
+                    characterData: true,
+                    characterDataOldValue: false,
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            if (this.endTiming == "loadComplete") {
+                if (document.readyState == "complete") {
+                    blankElementRemove();
+                } else {
+                    const readyCompleteFunc = async (evt) => {
+                        switch (evt.target.readyState) {
+                            case "complete":
+                                document.removeEventListener("readystatechange", readyCompleteFunc, { capture: true });
+                                blankElementRemove();
+                                break;
+                        }
+                    }
+                    document.addEventListener("readystatechange", readyCompleteFunc, { capture: true });
+                }
+            }
+        }
+        async init() {
+            if (this.enableMode === "allSite") {
+                this.blankScreen();
+            } else if (this.enableMode === "blt" && await this.BLTCheck(this.enableMode_BLT)) {
+                this.blankScreen();
+            }
+        }
+    }
+
     async function localeTextSetFunction() {
         const langCode = PreferenceSettingStorage.language;
         if (langCode == "ja-jp") {
@@ -1613,20 +1834,22 @@
 
     async function firstStartExecute() {
         await BG_elementBlock_Obj.Start(document);
-        await BG_sentenceBlock_obj.Start(document);
-    }
-
-    async function SentenceBlock_textNodeArrayPush(mutationList) {
-        if (mutationList[0].type == "characterData") {
-            Promise.all(mutationList.map(async (mutation) => {
-                const textNode = mutation.target;
-                if (textNode.parentElement) {
-                    if (textNode.parentElement.tagName !== "STYLE" && textNode.parentElement.tagName !== "TEXTAREA" && textNode.parentElement.tagName !== "SCRIPT") {
-                        BG_sentenceBlock_obj.textNodeArray.push(textNode);
-                    }
+        BG_sentenceBlock_obj.Start(document);
+        if (PreferenceSettingStorage.iframeSameoriginTarget == true) {
+            const iframeList = Array.from(document.getElementsByTagName("iframe")).filter(iframeNode => !iframeSearchArray.includes(iframeNode));
+            Promise.all(iframeList.map(async (node) => {
+                try {
+                    const iframeDocumentNest = node.contentWindow.document;
+                    await BG_elementBlock_Obj.Start(iframeDocumentNest, true);
+                    BG_sentenceBlock_obj.Start(iframeDocumentNest);
+                } catch(e) {
+                    // None Code
                 }
             }));
         }
+    }
+
+    async function SentenceBlock_textNodeArrayPush(mutationList) {
         if (mutationList[0].type == "childList") {
             Promise.all(mutationList.map(async (mutation) => {
                 const candidates1 = document.evaluate('.//text()[not(parent::style) and not(parent::textarea) and not(parent::script)]',
@@ -1647,7 +1870,7 @@
         const observerConfig = {
             attributes: false,
             attributeOldValue: false,
-            characterData: true,
+            characterData: false,
             characterDataOldValue: false,
             childList: true,
             subtree: true
@@ -1677,6 +1900,46 @@
             }
         });
         observer.observe(document, observerConfig);
+
+        const observerIframeNestFunc = async (mutationList) => {
+            await SentenceBlock_textNodeArrayPush(mutationList);
+            BG_elementBlock_Obj.Start(mutationList[0].target.ownerDocument, true);
+            BG_sentenceBlock_obj.Start();
+
+            const iframeNotDupList = Array.from(mutationList[0].target.ownerDocument.getElementsByTagName("iframe")).filter(iframeNode => !iframeSearchArray.includes(iframeNode));
+            iframeSearchArray.push(...iframeNotDupList);
+            Promise.all(iframeNotDupList.map(async (node) => {
+                try {
+                    const iframeDocumentNest = node.contentWindow.document;
+                    const observerNew = new MutationObserver(observerIframeNestFunc);
+                    observerNew.observe(iframeDocumentNest, observerConfig);
+                    await BG_elementBlock_Obj.Start(iframeDocumentNest, true);
+                    BG_sentenceBlock_obj.Start(iframeDocumentNest);
+                } catch(e) {
+                    // None Code
+                }
+            }));
+        };
+        const observerIframe = new MutationObserver(async () => {
+            const iframeNotDupList = Array.from(document.getElementsByTagName("iframe")).filter(iframeNode => !iframeSearchArray.includes(iframeNode));
+            iframeSearchArray.push(...iframeNotDupList);
+            Promise.all(iframeNotDupList.map(async (node) => {
+                try {
+                    const iframeDocumentNest = node.contentWindow.document;
+                    const observerNew = new MutationObserver(observerIframeNestFunc);
+                    observerNew.observe(iframeDocumentNest, observerConfig);
+                    await BG_elementBlock_Obj.Start(iframeDocumentNest, true);
+                    BG_sentenceBlock_obj.Start(iframeDocumentNest);
+                } catch(e) {
+                    // None Code
+                }
+            }));
+        });
+        if (PreferenceSettingStorage.iframeSameoriginTarget == true) {
+            observerIframe.observe(document, observerConfig);
+        }
+
+
     }
 
 
@@ -1689,7 +1952,7 @@
     const gmInfo = await GMAPI.info();
     if (gmInfo) {
         if (gmInfo.scriptHandler == "AdGuard") {
-            storageAPIWriteDelay = 30;
+            storageAPIWriteDelay = 50;
             storageAPIWriteDelay2 = 500;
         }
     }
@@ -1703,6 +1966,8 @@
     if (location.href != safeModeURL) {
         const BG_perModeObj = new BG_performanceMode;
         await BG_perModeObj.init();
+        const BG_blankScreenObj = new BG_blankScreen;
+        BG_blankScreenObj.init();
         const globalFetchTimeDiff = Date.now() - fetchGlobalFlagStorage.globalFetchTime;
         const fetchRetryIntervalTimeDiff = Date.now() - fetchGlobalFlagStorage.fetchRetryIntervalTime;
         if (globalFetchTimeDiff >= PreferenceSettingStorage.fetchInterval) {
@@ -3425,6 +3690,9 @@
                     if (PreferenceSettingStorageTemp.performanceConfig.overRide_balance === oldName) {
                         PreferenceSettingStorageTemp.performanceConfig.overRide_balance = newName;
                     }
+                    if (PreferenceSettingStorageTemp.blankScreenConfig.enableMode_BLT === oldName) {
+                        PreferenceSettingStorageTemp.blankScreenConfig.enableMode_BLT = newName;
+                    }
                     await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorageTemp));
 
                     StorageLoad();
@@ -3887,6 +4155,7 @@
                     this.BlockListText_list_Ele = null;
                     this.BlockListText_exclude_list_Ele = null;
                     this.uBlacklist_method_Ele = null;
+                    this.iframeOnly_Ele = null;
                     this.resultShow_Ele = null;
                     this.li_cfuncinfunction = async () => {
                         const applylist = this.ListStorage[this.currentIndex];
@@ -3905,6 +4174,9 @@
                         this.elementSearch_property_advanced_Ele.value = applylist.elementSearch_property_advanced;
                         this.uBlacklist_method_Ele.value = applylist.uBlacklist_method;
                         this.resultShow_Ele.querySelector(`input[name="resultShow"][value="${applylist.resultShow}"]`).checked = true;
+
+                        if(applylist.iframeOnly === undefined) this.iframeOnly_Ele.checked = false;
+                        else this.iframeOnly_Ele.checked = applylist.iframeOnly;
 
                         this.urlModeChange();
 
@@ -4097,18 +4369,27 @@
     <div class="ItemFrame_Border">
         <h1 id="ElementBlockConfig6_Title" class="ItemFrame_Title"></h1>
         <p id="ElementBlockConfig6_Description"></p>
-        <form id="ElementBlockConfig6_Form">
+        <label class="ElementBlock_Label">
+            <input id="ElementBlockConfig6_Input" type="checkbox" />
+            <span id="ElementBlockConfig6_Input_SpanText"></span>
+        </label>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="ElementBlockConfig7_Title" class="ItemFrame_Title"></h1>
+        <p id="ElementBlockConfig7_Description"></p>
+        <form id="ElementBlockConfig7_Form">
             <label class="ElementBlock_Label">
                 <input type="radio" name="resultShow" value="none" checked />
-                <span id="ElementBlockConfig6_Form_Input1_SpanText"></span>
+                <span id="ElementBlockConfig7_Form_Input1_SpanText"></span>
             </label>
             <label class="ElementBlock_Label">
                 <input type="radio" name="resultShow" value="number" />
-                <span id="ElementBlockConfig6_Form_Input2_SpanText"></span>
+                <span id="ElementBlockConfig7_Form_Input2_SpanText"></span>
             </label>
             <label class="ElementBlock_Label">
                 <input type="radio" name="resultShow" value="property" />
-                <span id="ElementBlockConfig6_Form_Input3_SpanText"></span>
+                <span id="ElementBlockConfig7_Form_Input3_SpanText"></span>
             </label>
         </form>
     </div>
@@ -4152,11 +4433,14 @@
                     RootShadow.getElementById("ElementBlockConfig5_Select_Option1").textContent = localeText.DB_elementBlock.uBlacklist_urlOnly;
                     RootShadow.getElementById("ElementBlockConfig5_Select_Option2").textContent = localeText.DB_elementBlock.uBlacklist_titleOnly;
                     RootShadow.getElementById("ElementBlockConfig5_Select_Option3").textContent = localeText.DB_elementBlock.uBlacklist_all;
-                    RootShadow.getElementById("ElementBlockConfig6_Title").textContent = localeText.DB_elementBlock.resultShow_title;
-                    RootShadow.getElementById("ElementBlockConfig6_Description").textContent = localeText.DB_elementBlock.resultShow_description;
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.resultShow_none;
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.resultShow_number;
-                    RootShadow.getElementById("ElementBlockConfig6_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.resultShow_property;
+                    RootShadow.getElementById("ElementBlockConfig6_Title").textContent = localeText.DB_elementBlock.iframeOnly_title;
+                    RootShadow.getElementById("ElementBlockConfig6_Description").textContent = localeText.DB_elementBlock.iframeOnly_description;
+                    RootShadow.getElementById("ElementBlockConfig6_Input_SpanText").textContent = localeText.DB_elementBlock.iframeOnly_enable;
+                    RootShadow.getElementById("ElementBlockConfig7_Title").textContent = localeText.DB_elementBlock.resultShow_title;
+                    RootShadow.getElementById("ElementBlockConfig7_Description").textContent = localeText.DB_elementBlock.resultShow_description;
+                    RootShadow.getElementById("ElementBlockConfig7_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.resultShow_none;
+                    RootShadow.getElementById("ElementBlockConfig7_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.resultShow_number;
+                    RootShadow.getElementById("ElementBlockConfig7_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.resultShow_property;
                     RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = localeText.backButton;
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
@@ -4174,7 +4458,8 @@
                     this.BlockListText_list_Ele = RootShadow.getElementById("ElementBlockConfig4_Select");
                     this.BlockListText_exclude_list_Ele = RootShadow.getElementById("ElementBlockConfig4-2_Select");
                     this.uBlacklist_method_Ele = RootShadow.getElementById("ElementBlockConfig5_Select");
-                    this.resultShow_Ele = RootShadow.getElementById("ElementBlockConfig6_Form");
+                    this.iframeOnly_Ele = RootShadow.getElementById("ElementBlockConfig6_Input");
+                    this.resultShow_Ele = RootShadow.getElementById("ElementBlockConfig7_Form");
 
                     for (let i = 0; i < BlockListTextStorage.length; i++) {
                         const option = document.createElement("option");
@@ -4264,6 +4549,7 @@
                         BlockListText_list: BLT_list_map,
                         BlockListText_exclude_list: BLT_exclude_list_map,
                         uBlacklist_method: this.uBlacklist_method_Ele.value,
+                        iframeOnly: this.iframeOnly_Ele.checked,
                         resultShow: this.resultShow_Ele.querySelector(`input[name="resultShow"]:checked`).value
                     }
                     await this.ListStoSave("ElementBlock", StoObj);
@@ -4293,6 +4579,7 @@
                         this.BlockListText_list_Ele.value = "";
                         this.BlockListText_exclude_list_Ele.value = "";
                         this.uBlacklist_method_Ele.value = "urlonly";
+                        this.iframeOnly_Ele.checked = false;
                         this.resultShow_Ele.querySelector(`input[name="resultShow"][value="number"]`).checked = true;
 
                         this.enable_Ele.checked = true;
@@ -4322,7 +4609,7 @@
     }
 
     input#FetchInterval_Custom_input {
-        width: calc(100% - 65px) !important;
+        width: calc(100% - 70px) !important;
     }
 </style>
 
@@ -4337,6 +4624,12 @@
         <h1 id="PerformanceConfig_Title" class="ItemFrame_Title"></h1>
         <p id="PerformanceConfig_Description"></p>
         <button id="PerformanceConfig_Button"></button>
+    </div>
+
+    <div id="blankScreenConfig" class="ItemFrame_Border">
+        <h1 id="blankScreenConfig_Title" class="ItemFrame_Title"></h1>
+        <p id="blankScreenConfig_Description"></p>
+        <button id="blankScreenConfig_Button"></button>
     </div>
 
     <div id="ButtonHide" class="ItemFrame_Border">
@@ -4373,6 +4666,15 @@
         <input id="FetchInterval_Custom_input" type="number" value="" style="display: none" />
         <button id="FetchInterval_Custom_SaveButton" style="display: none"></button>
         <span id="FetchInterval_Custom_SaveInfoText" style="display: none"></span>
+    </div>
+
+    <div id="iframeSameoriginTarget" class="ItemFrame_Border">
+        <h1 id="iframeSameoriginTarget_Title" class="ItemFrame_Title"></h1>
+        <p id="iframeSameoriginTarget_Description"></p>
+        <label>
+            <input id="iframeSameoriginTarget_Input" type="checkbox" />
+            <span id="iframeSameoriginTarget_Input_SpanText"></span>
+        </label>
     </div>
 
     <div id="DashboardColor" class="ItemFrame_Border">
@@ -4415,9 +4717,14 @@
             RootShadow.getElementById("PerformanceConfig_Title").textContent = localeText.DB_preference.performanceConfig_title;
             RootShadow.getElementById("PerformanceConfig_Description").textContent = localeText.DB_preference.performanceConfig_description;
             RootShadow.getElementById("PerformanceConfig_Button").textContent = localeText.DB_preference.performanceConfig_button;
+            RootShadow.getElementById("blankScreenConfig_Title").textContent = localeText.DB_preference.blankScreenConfig_title;
+            RootShadow.getElementById("blankScreenConfig_Description").textContent = localeText.DB_preference.blankScreenConfig_description;
+            RootShadow.getElementById("blankScreenConfig_Button").textContent = localeText.DB_preference.blankScreenConfig_button;
+
             RootShadow.getElementById("ButtonHide_Title").textContent = localeText.DB_preference.buttonHide_title;
             RootShadow.getElementById("ButtonHide_Description").textContent = localeText.DB_preference.buttonHide_description;
             RootShadow.getElementById("ButtonHide_Input_SpanText").textContent = localeText.DB_preference.buttonHide_boxText;
+
             RootShadow.getElementById("immediatelyLoadSettings_Title").textContent = localeText.DB_preference.nowLoadSet_title;
             RootShadow.getElementById("immediatelyLoadSettings_Description").textContent = localeText.DB_preference.nowLoadSet_description;
             RootShadow.getElementById("immediatelyLoadSettings_Input_SpanText").textContent = localeText.DB_preference.nowLoadSet_boxText;
@@ -4432,8 +4739,12 @@
             RootShadow.getElementById("FetchInterval_Select_Option6").textContent = localeText.DB_preference.fetchInterval_18000000;
             RootShadow.getElementById("FetchInterval_Select_Option7").textContent = localeText.DB_preference.fetchInterval_custom;
             RootShadow.getElementById("FetchInterval_Custom_Description").textContent = localeText.DB_preference.fetchInterval_custom_Description;
-            RootShadow.getElementById("FetchInterval_Custom_SaveButton").textContent = localeText.DB_preference.save;
-            RootShadow.getElementById("FetchInterval_Custom_SaveInfoText").textContent = localeText.DB_preference.saveInfo;
+            RootShadow.getElementById("FetchInterval_Custom_SaveButton").textContent = localeText.save;
+            RootShadow.getElementById("FetchInterval_Custom_SaveInfoText").textContent = localeText.saveInfo;
+
+            RootShadow.getElementById("iframeSameoriginTarget_Title").textContent = localeText.DB_preference.iframeSameoriginTarget_title;
+            RootShadow.getElementById("iframeSameoriginTarget_Description").textContent = localeText.DB_preference.iframeSameoriginTarget_description;
+            RootShadow.getElementById("iframeSameoriginTarget_Input_SpanText").textContent = localeText.DB_preference.iframeSameoriginTarget_boxText;
 
             RootShadow.getElementById("DashboardColor_Title").textContent = localeText.DB_preference.dashboardColor_title;
             RootShadow.getElementById("DashboardColor_Description").textContent = localeText.DB_preference.dashboardColor_Description;
@@ -4456,6 +4767,7 @@
 
             RootShadow.getElementById("ImportAndExport_Button").addEventListener("click", DB_ExportImport, false);
             RootShadow.getElementById("PerformanceConfig_Button").addEventListener("click", DB_performanceConfig, false);
+            RootShadow.getElementById("blankScreenConfig_Button").addEventListener("click", DB_blankScreenConfig, false);
             RootShadow.getElementById("AboutInfo_Button").addEventListener("click", DB_aboutInfo, false);
 
             const ButtonHide_Setting_Input = RootShadow.getElementById("ButtonHide_Input");
@@ -4539,6 +4851,23 @@
                 await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
                 FetchIntervalCustomEle4.style.display = "";
             }, false);
+
+            const iframeSameoriginTarget_Input = RootShadow.getElementById("iframeSameoriginTarget_Input");
+            if (PreferenceSettingStorage.iframeSameoriginTarget) {
+                iframeSameoriginTarget_Input.checked = true;
+            } else {
+                iframeSameoriginTarget_Input.checked = false;
+            }
+            iframeSameoriginTarget_Input.addEventListener("change", async (evt) => {
+                const targetElement = evt.target;
+                if (targetElement.checked) {
+                    PreferenceSettingStorage.iframeSameoriginTarget = true;
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                } else {
+                    PreferenceSettingStorage.iframeSameoriginTarget = false;
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                }
+            });
 
             RootShadow.getElementById("DashboardColor_Select").value = PreferenceSettingStorage.dashboardColor;
             RootShadow.getElementById("DashboardColor_Select").addEventListener("change", async (evt) => {
@@ -5069,8 +5398,8 @@
                 RootShadow.getElementById("PerformanceConfig3_Select5_SpanText").textContent = localeText.DB_performanceConfig.balance;
 
                 RootShadow.getElementById("PerformanceConfig_BackButton").textContent = localeText.backButton;
-                RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = localeText.DB_performanceConfig.save;
-                RootShadow.getElementById("PerformanceConfig_SaveInfoText").textContent = localeText.DB_performanceConfig.saveInfo;
+                RootShadow.getElementById("PerformanceConfig_SaveButton").textContent = localeText.save;
+                RootShadow.getElementById("PerformanceConfig_SaveInfoText").textContent = localeText.saveInfo;
 
 
                 const mode_ELe = RootShadow.getElementById("PerformanceConfig1_Select");
@@ -5164,6 +5493,191 @@
                 }, false);
             }
 
+            async function DB_blankScreenConfig() {
+                ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
+                DashboardMain_div.scroll({ top: 0 });
+                const DB_performanceConfig_div = document.createElement("div");
+                DB_performanceConfig_div.innerHTML = `
+<style type="text/css">
+    label.blankScreenConfig_Label {
+        display: block;
+        margin: 5px 0 0 0;
+    }
+
+    #blankScreenConfig p {
+        margin: 8px 0 0 0;
+    }
+</style>
+
+<div id="blankScreenConfig">
+    <div class="ItemFrame_Border">
+        <h1 id="blankScreenConfig1_Title" class="ItemFrame_Title"></h1>
+        <p id="blankScreenConfig1_Description"></p>
+        <form id="blankScreenConfig1_Form">
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="enableMode" value="allSite" />
+                <span id="blankScreenConfig1_Form_Input1_SpanText"></span>
+            </label>
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="enableMode" value="blt" />
+                <span id="blankScreenConfig1_Form_Input2_SpanText"></span>
+            </label>
+            <select id="blankScreenConfig1_Select" size="1">
+                <option value="">-----</option>
+            </select>
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="enableMode" value="disable" checked />
+                <span id="blankScreenConfig1_Form_Input3_SpanText"></span>
+            </label>
+        </form>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="blankScreenConfig2_Title" class="ItemFrame_Title"></h1>
+        <p id="blankScreenConfig2_Description"></p>
+        <form id="blankScreenConfig2_Form">
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="endTiming" value="bodyIn" checked />
+                <span id="blankScreenConfig2_Form_Input1_SpanText"></span>
+            </label>
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="endTiming" value="loadComplete" />
+                <span id="blankScreenConfig2_Form_Input2_SpanText"></span>
+            </label>
+        </form>
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="blankScreenConfig3_Title" class="ItemFrame_Title"></h1>
+        <p id="blankScreenConfig3_Description"></p>
+        <input id="blankScreenConfig3_InputText" type="text" spellcheck="false" />
+    </div>
+
+    <div class="ItemFrame_Border">
+        <h1 id="blankScreenConfig4_Title" class="ItemFrame_Title"></h1>
+        <p id="blankScreenConfig4_Description"></p>
+        <form id="blankScreenConfig4_Form">
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="darkMode" value="light" checked />
+                <span id="blankScreenConfig4_Form_Input1_SpanText"></span>
+            </label>
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="darkMode" value="dark" />
+                <span id="blankScreenConfig4_Form_Input2_SpanText"></span>
+            </label>
+            <label class="blankScreenConfig_Label">
+                <input type="radio" name="darkMode" value="system" />
+                <span id="blankScreenConfig4_Form_Input3_SpanText"></span>
+            </label>
+        </form>
+    </div>
+
+    <div>
+        <button id="blankScreenConfig_BackButton"></button>
+        <button id="blankScreenConfig_SaveButton"></button>
+        <span id="blankScreenConfig_SaveInfoText" style="display: none"></span>
+    </div>
+</div>
+                `;
+                DashboardMain_div.append(DB_performanceConfig_div);
+                Dashboard_Window_Ele_stack.push(DB_performanceConfig_div);
+
+                RootShadow.getElementById("blankScreenConfig1_Title").textContent = localeText.DB_blankScreenConfig.enableMode_title;
+                RootShadow.getElementById("blankScreenConfig1_Description").textContent = localeText.DB_blankScreenConfig.enableMode_description;
+                RootShadow.getElementById("blankScreenConfig1_Form_Input1_SpanText").textContent = localeText.DB_blankScreenConfig.enableMode_allSite;
+                RootShadow.getElementById("blankScreenConfig1_Form_Input2_SpanText").textContent = localeText.DB_blankScreenConfig.enableMode_BLT;
+                RootShadow.getElementById("blankScreenConfig1_Form_Input3_SpanText").textContent = localeText.DB_blankScreenConfig.enableMode_disable;
+
+                RootShadow.getElementById("blankScreenConfig2_Title").textContent = localeText.DB_blankScreenConfig.endTiming_title;
+                RootShadow.getElementById("blankScreenConfig2_Description").textContent = localeText.DB_blankScreenConfig.endTiming_description;
+                RootShadow.getElementById("blankScreenConfig2_Form_Input1_SpanText").textContent = localeText.DB_blankScreenConfig.endTiming_bodyIn;
+                RootShadow.getElementById("blankScreenConfig2_Form_Input2_SpanText").textContent = localeText.DB_blankScreenConfig.endTiming_loadComplete;
+
+                RootShadow.getElementById("blankScreenConfig3_Title").textContent = localeText.DB_blankScreenConfig.blackTime_title;
+                RootShadow.getElementById("blankScreenConfig3_Description").textContent = localeText.DB_blankScreenConfig.blackTime_description;
+
+                RootShadow.getElementById("blankScreenConfig4_Title").textContent = localeText.DB_blankScreenConfig.darkMode_title;
+                RootShadow.getElementById("blankScreenConfig4_Description").textContent = localeText.DB_blankScreenConfig.darkMode_description;
+                RootShadow.getElementById("blankScreenConfig4_Form_Input1_SpanText").textContent = localeText.DB_blankScreenConfig.darkMode_light;
+                RootShadow.getElementById("blankScreenConfig4_Form_Input2_SpanText").textContent = localeText.DB_blankScreenConfig.darkMode_dark;
+                RootShadow.getElementById("blankScreenConfig4_Form_Input3_SpanText").textContent = localeText.DB_blankScreenConfig.darkMode_system;
+
+                RootShadow.getElementById("blankScreenConfig_BackButton").textContent = localeText.backButton;
+                RootShadow.getElementById("blankScreenConfig_SaveButton").textContent = localeText.save;
+                RootShadow.getElementById("blankScreenConfig_SaveInfoText").textContent = localeText.saveInfo;
+
+
+                const enableMode_ELe = RootShadow.getElementById("blankScreenConfig1_Form");
+                const enableMode_BLT_ELe = RootShadow.getElementById("blankScreenConfig1_Select");
+                const endTiming_Ele = RootShadow.getElementById("blankScreenConfig2_Form");
+                const blackTime_ELe = RootShadow.getElementById("blankScreenConfig3_InputText");
+                const blackDark_Ele = RootShadow.getElementById("blankScreenConfig4_Form");
+
+
+                ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach((eventName) => {
+                    [RootShadow.getElementById("blankScreenConfig3_InputText")].forEach((elemnetObj) => {
+                        elemnetObj.addEventListener(eventName, (evt) => {
+                            if (["-", "+", "e", "."].includes(evt.key)) {
+                                evt.preventDefault();
+                                return;
+                            }
+                            if (/^(?:\d*\.?\d*|0)$/.test(evt.target.value)) {
+                                evt.target.oldValue = evt.target.value;
+                            } else if ("oldValue" in evt.target) {
+                                evt.target.value = evt.target.oldValue;
+                            } else {
+                                evt.target.value = "";
+                            }
+                        });
+                    })
+                });
+
+                for (let i = 0; i < BlockListTextStorage.length; i++) {
+                    const option = document.createElement("option");
+                    option.className = "PerformanceConfig_Option";
+                    option.setAttribute("value", BlockListTextStorage[i].name);
+                    option.textContent = BlockListTextStorage[i].name;
+                    enableMode_BLT_ELe.append(option);
+                }
+
+                const Config_Obj = PreferenceSettingStorage.blankScreenConfig;
+                if (Config_Obj) {
+                    enableMode_ELe.querySelector(`input[name="enableMode"][value="${Config_Obj.enableMode}"]`).checked = true;
+                    enableMode_BLT_ELe.value = Config_Obj.enableMode_BLT;
+                    endTiming_Ele.querySelector(`input[name="endTiming"][value="${Config_Obj.endTiming}"]`).checked = true;
+                    blackTime_ELe.value = Config_Obj.blankTime;
+                    blackDark_Ele.querySelector(`input[name="darkMode"][value="${Config_Obj.darkMode}"]`).checked = true;
+                } else {
+                    enableMode_ELe.querySelector(`input[name="enableMode"][value="disable"]`).checked = true;
+                    enableMode_BLT_ELe.value = "";
+                    endTiming_Ele.querySelector(`input[name="endTiming"][value="bodyIn"]`).checked = true;
+                    blackTime_ELe.value = 0;
+                    blackDark_Ele.querySelector(`input[name="darkMode"][value="light"]`).checked = true;
+                }
+
+                RootShadow.getElementById("blankScreenConfig_SaveButton").addEventListener("click", async () => {
+                    const performanceConfig_setObj = {
+                        enableMode: enableMode_ELe.querySelector(`input[name="enableMode"]:checked`).value,
+                        enableMode_BLT: enableMode_BLT_ELe.value,
+                        endTiming: endTiming_Ele.querySelector(`input[name="endTiming"]:checked`).value,
+                        blankTime: blackTime_ELe.value,
+                        darkMode: blackDark_Ele.querySelector(`input[name="darkMode"]:checked`).value
+                    }
+                    PreferenceSettingStorage.blankScreenConfig = performanceConfig_setObj;
+                    await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorage));
+                    const saveInfo_Ele = RootShadow.getElementById("blankScreenConfig_SaveInfoText");
+                    saveInfo_Ele.style.display = "";
+                    await pauseSleep(3000);
+                    saveInfo_Ele.style.display = "none";
+                }, false);
+
+                RootShadow.getElementById("blankScreenConfig_BackButton").addEventListener("click", () => {
+                    Dashboard_Window_Ele_stack.pop().remove();
+                    ArrayLast(Dashboard_Window_Ele_stack).style.display = "";
+                    DashboardMain_div.scroll({ top: 0 });
+                }, false);
+            }
+
             async function DB_aboutInfo() {
                 ArrayLast(Dashboard_Window_Ele_stack).style.display = "none";
                 DashboardMain_div.scroll({ top: 0 });
@@ -5193,7 +5707,7 @@
                 RootShadow.getElementById("AboutInfoPage_Description").innerHTML = `
 NegativeBlocker<br>
 © 2021-2023 mx5vrota63<br><br>
-Version 1.4.0<br>
+Version 1.5.0<br>
 MIT License<br><br>
 GitHub Repository URL:<br>
 <a href="https://github.com/mx5vrota63/NegativeBlocker" target="_blank" rel="noopener noreferrer">https://github.com/mx5vrota63/NegativeBlocker</a>

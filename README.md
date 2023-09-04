@@ -27,7 +27,13 @@ URLs can also be registered, and it is compatible with the uBlacklist format (Be
 
 Click Install to display the installation confirmation screen, and follow the instructions to install the user script.
 
-### Android (Firefox Beta & Fennec & Iceraven)
+### Android (Firefox)
+
+2023/9/4 Update  
+Because Mozilla recently added Tampermonkey in the default add-on collection of Firefox,  
+The procedure in step 1 is no longer necessary and is now available on the stable version of Firefox.  
+We have left the procedure for your reference, but new users should start from step 2 on the stable version of Firefox.  
+[Click here to download the stable Firefox.](https://play.google.com/store/apps/details?id=org.mozilla.firefox)  
 
 [Firefox Beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta) is somewhat unstable.  
 [Fennec](https://f-droid.org/packages/org.mozilla.fennec_fdroid) is an F-Droid application outside of Google Play.  
@@ -170,7 +176,13 @@ URL も登録可能で、uBlacklist 形式と互換性があります(Beta)。
 
 Install をクリックするとインストール確認画面が表示されますので、指示に従ってインストールしてください。
 
-### Android (Firefox Beta & Fennec & Iceraven)
+### Android (Firefox)
+
+2023/9/4 追記  
+Mozillaは最近、Firefoxのデフォルトのアドオンコレクションにおいて、Tampermonkeyを追加したため、  
+手順1の操作は不要になり、安定板Firefoxでも利用可能になりました。  
+参考までに手順は残しておきますが、新規の方は安定板Firefoxで、手順2から実行してください。  
+[安定板Firefoxのダウンロードはこちらから](https://play.google.com/store/apps/details?id=org.mozilla.firefox)  
 
 [Firefox Beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta) は動作がやや不安定です。  
 [Fennec](https://f-droid.org/packages/org.mozilla.fennec_fdroid) は Google Play 外の F-Droid アプリケーションとなります。  
