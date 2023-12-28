@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.5.0
+// @version        1.6.0
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
 // @downloadURL    https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js
-// @updateURL      https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.user.js
+// @updateURL      https://raw.githubusercontent.com/mx5vrota63/NegativeBlocker/main/NegativeBlocker.meta.js
 // @author         mx5vrota63
 // @match          *://*/*
 // @run-at         document-start
@@ -191,6 +191,7 @@
             resultShow_description: "Select how you want to view the block results on the top page of the dashboard.",
             resultShow_none: "Hide",
             resultShow_number: "Display by number",
+            resultShow_bltSet: "Applicable set name for BlockListText",
             resultShow_property: "Display the value of a property of a search element."
         },
         elementPicker: {
@@ -425,6 +426,7 @@
             resultShow_description: "ダッシュボードのトップページにあるブロック結果の表示方法を選択します。",
             resultShow_none: "非表示",
             resultShow_number: "番号で表示",
+            resultShow_bltSet: "ブロックリストテキストの適用セット名",
             resultShow_property: "検索要素のプロパティの値を表示"
         },
         elementPicker: {
@@ -1453,19 +1455,21 @@
         }
         async ElementBlockExecute(node, EleBlock_SettingArray) {
             await Promise.all(EleBlock_SettingArray.map(async (eleBlockSet) => {
-                const ElementBlock_executeResultList_func = (eleSetObj, eleObj, searchPropertyText) => {
+                const ElementBlock_executeResultList_func = (eleSetObj, eleObj, searchPropertyText, BlockListTextName) => {
                     if (!ElementBlock_executeResultList[eleBlockSet.name]) {
                         ElementBlock_executeResultList[eleBlockSet.name] = new Array();
                     }
                     ElementBlock_executeResultList[eleBlockSet.name].push({
                         settingobj: eleSetObj,
                         element: eleObj,
-                        searchProperty: searchPropertyText
+                        searchProperty: searchPropertyText,
+                        BlockListTextName
                     });
                     BlockCounter++;
                     BlockCounterUpdate();
                 }
 
+                const BLTSet = eleBlockSet.resultShow === "bltSet";
                 let elementNode;
                 if (!node) return;
                 if (!eleBlockSet.elementHide) return;
@@ -1497,11 +1501,11 @@
                         if (eleBlockSet.elementHide_hideMethod === "displayNone") {
                             if (elementObj.style.display !== "none") {
                                 elementObj.style.display = "none";
-                                ElementBlock_executeResultList_func(eleBlockSet, elementObj, "");
+                                ElementBlock_executeResultList_func(eleBlockSet, elementObj, "", "");
                             }
                         } else if (eleBlockSet.elementHide_hideMethod === "remove") {
                             elementObj.remove();
-                            ElementBlock_executeResultList_func(eleBlockSet, undefined, "");
+                            ElementBlock_executeResultList_func(eleBlockSet, undefined, "", "");
                         }
                         return;
                     }
@@ -1558,16 +1562,23 @@
                         }
 
                         const searchResult = await Promise.all(eleBlockSet.BlockListText_list.map(async (BLT_name) => {
+                            let searchResultReturn
                             switch (eleBlockSet.uBlacklist_method) {
                                 case "urlonly":
-                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "href");
+                                    searchResultReturn = await this.BlockListTextSearch(BLT_name, searchProperty, "href");
+                                    break;
                                 case "titleonly":
-                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "text");
+                                    searchResultReturn = await this.BlockListTextSearch(BLT_name, searchProperty, "text");
+                                    break;
                                 case "all":
-                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                                    searchResultReturn = await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                                    break;
                                 default:
-                                    return await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                                    searchResultReturn = await this.BlockListTextSearch(BLT_name, searchProperty, "hrefandtext");
+                                    break;
                             }
+                            if (BLTSet && searchResultReturn.length) searchResultReturn = [BLT_name];
+                            return searchResultReturn
                         }));
 
                         if (searchResult.some(arr => arr.length)) {
@@ -1585,14 +1596,19 @@
                             }));
 
                             if (!searchExcludeResult.some(arr => arr.length)) {
+                                let BLT_applyName = ""
+                                if (BLTSet) {
+                                    BLT_applyName = searchResult.filter(arr => arr.length)[0][0];
+                                }
+
                                 if (eleBlockSet.elementHide_hideMethod === "displayNone") {
                                     if (elementObj.style.display !== "none") {
                                         elementObj.style.display = "none";
-                                        ElementBlock_executeResultList_func(eleBlockSet, elementObj, searchProperty);
+                                        ElementBlock_executeResultList_func(eleBlockSet, elementObj, searchProperty, BLT_applyName);
                                     }
                                 } else if (eleBlockSet.elementHide_hideMethod === "remove") {
                                     elementObj.remove();
-                                    ElementBlock_executeResultList_func(eleBlockSet, undefined, searchProperty);
+                                    ElementBlock_executeResultList_func(eleBlockSet, undefined, searchProperty, BLT_applyName);
                                 }
                             }
                         }
@@ -1774,31 +1790,25 @@
     }
 
     async function DashboardButton_InsertElement() {
-        if (!divElement_RootShadow) {
+        if ((!PreferenceSettingStorage.hideButton || location.href == safeModeURL) && !divElement_RootShadow) {
             divElement_RootShadow = document.createElement("div");
             divElement_RootShadow.style.all = "initial";
             divElement_RootShadow.attachShadow({ mode: "open" });
             document.body.append(divElement_RootShadow);
 
-            await localeTextSetFunction();
-
-            if (!PreferenceSettingStorage.hideButton || location.href == safeModeURL) {
-                if (!inIframeDetect()) {
-                    DashboardButtonEle = document.createElement("button");
-                    DashboardButtonEle.style.position = "fixed";
-                    DashboardButtonEle.style.top = 0;
-                    DashboardButtonEle.style.right = 0;
-                    DashboardButtonEle.style.zIndex = 2147483647;
-                    DashboardButtonEle.style.width = "60px";
-                    DashboardButtonEle.style.height = "40px";
-                    DashboardButtonEle.style.backgroundColor = "#AFFFAF";
-                    DashboardButtonEle.addEventListener("click", DashboardWindow, false);
-                    divElement_RootShadow.shadowRoot.append(DashboardButtonEle);
-                    BlockCounterUpdate();
-                }
+            if (!inIframeDetect()) {
+                DashboardButtonEle = document.createElement("button");
+                DashboardButtonEle.style.position = "fixed";
+                DashboardButtonEle.style.top = 0;
+                DashboardButtonEle.style.right = 0;
+                DashboardButtonEle.style.zIndex = 2147483647;
+                DashboardButtonEle.style.width = "60px";
+                DashboardButtonEle.style.height = "40px";
+                DashboardButtonEle.style.backgroundColor = "#AFFFAF";
+                DashboardButtonEle.addEventListener("click", DashboardWindow, false);
+                divElement_RootShadow.shadowRoot.append(DashboardButtonEle);
+                BlockCounterUpdate();
             }
-
-            GMAPI.menu();
         }
     }
 
@@ -1963,6 +1973,9 @@
         isSafari = false;
     }
     await StorageLoad();
+    await localeTextSetFunction();
+    GMAPI.menu();
+
     if (location.href != safeModeURL) {
         const BG_perModeObj = new BG_performanceMode;
         await BG_perModeObj.init();
@@ -2088,6 +2101,12 @@
 
     async function DashboardWindow() {
         if (Dashboard_Element) return;
+        if (!divElement_RootShadow) {
+            divElement_RootShadow = document.createElement("div");
+            divElement_RootShadow.style.all = "initial";
+            divElement_RootShadow.attachShadow({ mode: "open" });
+            document.body.append(divElement_RootShadow);
+        }
         const RootShadow = divElement_RootShadow.shadowRoot;
         if (DashboardButtonEle) DashboardButtonEle.style.display = "none";
 
@@ -2913,6 +2932,10 @@
                             const indexNumShow = index + 1;
                             div_p.textContent = indexNumShow + localeText.DB_blockResult.elementBlock_Countcase;
                             div.append(div_p);
+                        } else if (arr.settingobj.resultShow === "bltSet") {
+                            const div_p = document.createElement("p");
+                            div_p.textContent = arr.BlockListTextName;
+                            div.append(div_p);
                         } else if (arr.settingobj.resultShow === "property") {
                             const div_p = document.createElement("p");
                             div_p.textContent = arr.searchProperty;
@@ -3675,22 +3698,22 @@
                     await storageAPI.write("ElementBlock", JSON.stringify(ElementBlockStorageTemp));
 
                     const PreferenceSettingStorageTemp = JSON.parse(await storageAPI.read("PreferenceSetting"));
-                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_disable == oldName) {
+                    if (PreferenceSettingStorageTemp.performanceConfig && PreferenceSettingStorageTemp.performanceConfig.overRide_disable == oldName) {
                         PreferenceSettingStorageTemp.performanceConfig.overRide_disable = newName;
                     }
-                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority1 === oldName) {
+                    if (PreferenceSettingStorageTemp.performanceConfig && PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority1 === oldName) {
                         PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority1 = newName;
                     }
-                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority2 === oldName) {
+                    if (PreferenceSettingStorageTemp.performanceConfig && PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority2 === oldName) {
                         PreferenceSettingStorageTemp.performanceConfig.overRide_performancePriority2 = newName;
                     }
-                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_blockPriority === oldName) {
+                    if (PreferenceSettingStorageTemp.performanceConfig && PreferenceSettingStorageTemp.performanceConfig.overRide_blockPriority === oldName) {
                         PreferenceSettingStorageTemp.performanceConfig.overRide_blockPriority = newName;
                     }
-                    if (PreferenceSettingStorageTemp.performanceConfig.overRide_balance === oldName) {
+                    if (PreferenceSettingStorageTemp.performanceConfig && PreferenceSettingStorageTemp.performanceConfig.overRide_balance === oldName) {
                         PreferenceSettingStorageTemp.performanceConfig.overRide_balance = newName;
                     }
-                    if (PreferenceSettingStorageTemp.blankScreenConfig.enableMode_BLT === oldName) {
+                    if (PreferenceSettingStorageTemp.blankScreenConfig && PreferenceSettingStorageTemp.blankScreenConfig.enableMode_BLT === oldName) {
                         PreferenceSettingStorageTemp.blankScreenConfig.enableMode_BLT = newName;
                     }
                     await storageAPI.write("PreferenceSetting", JSON.stringify(PreferenceSettingStorageTemp));
@@ -4388,8 +4411,12 @@
                 <span id="ElementBlockConfig7_Form_Input2_SpanText"></span>
             </label>
             <label class="ElementBlock_Label">
-                <input type="radio" name="resultShow" value="property" />
+                <input type="radio" name="resultShow" value="bltSet" />
                 <span id="ElementBlockConfig7_Form_Input3_SpanText"></span>
+            </label>
+            <label class="ElementBlock_Label">
+                <input type="radio" name="resultShow" value="property" />
+                <span id="ElementBlockConfig7_Form_Input4_SpanText"></span>
             </label>
         </form>
     </div>
@@ -4440,7 +4467,8 @@
                     RootShadow.getElementById("ElementBlockConfig7_Description").textContent = localeText.DB_elementBlock.resultShow_description;
                     RootShadow.getElementById("ElementBlockConfig7_Form_Input1_SpanText").textContent = localeText.DB_elementBlock.resultShow_none;
                     RootShadow.getElementById("ElementBlockConfig7_Form_Input2_SpanText").textContent = localeText.DB_elementBlock.resultShow_number;
-                    RootShadow.getElementById("ElementBlockConfig7_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.resultShow_property;
+                    RootShadow.getElementById("ElementBlockConfig7_Form_Input3_SpanText").textContent = localeText.DB_elementBlock.resultShow_bltSet;
+                    RootShadow.getElementById("ElementBlockConfig7_Form_Input4_SpanText").textContent = localeText.DB_elementBlock.resultShow_property;
                     RootShadow.getElementById("ElementBlockConfig_BackButton").textContent = localeText.backButton;
 
                     this.url_Ele = RootShadow.getElementById("ElementBlockConfig1_Input1");
