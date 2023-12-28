@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           NegativeBlocker
 // @namespace      https://github.com/mx5vrota63/NegativeBlocker
-// @version        1.6.0
+// @version        1.6.1
 // @description    Blocks information on the Web based on the negative and sensitive words you set.
 // @description:ja 設定したネガティブワードやセンシティブワードを元にWeb上の情報をブロックします。
 // @homepageURL    https://github.com/mx5vrota63/NegativeBlocker
